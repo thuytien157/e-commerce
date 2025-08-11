@@ -1,0 +1,35 @@
+<?php
+
+use App\Http\Controllers\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+
+/*
+|--------------------------------------------------------------------------
+| API Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register API routes for your application. These
+| routes are loaded by the RouteServiceProvider and all of them will
+| be assigned to the "api" middleware group. Make something great!
+|
+*/
+
+Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+    return $request->user();
+});
+
+
+Route::get('/{provide}/redirect', [User::class, 'redirect']);
+Route::get('/{provide}/callback', [User::class, 'callback']);
+Route::get('/logout', [User::class, 'logout'])->middleware('auth:sanctum');
+Route::post('/register', [User::class, 'register']);
+Route::post('/login', [User::class, 'login']);
+Route::post('/sendcode', [User::class, 'sendCode']);
+Route::post('/verify-code', [User::class, 'verifyResetCode']);
+Route::post('/reset-password', [User::class, 'resetPassword']);
+Route::get('/user', [User::class, 'getUserById'])->middleware('auth:sanctum');
+Route::post('/insert-address', [User::class, 'insertAddress'])->middleware('auth:sanctum');
+Route::put('/edit-address/{address_id}', [User::class, 'editAddress'])->middleware('auth:sanctum');
+Route::get('/addresses/{address_id}', [User::class, 'getAddressById'])->middleware('auth:sanctum');
+Route::post('/update-avatar', [User::class, 'updateAvatar'])->middleware('auth:sanctum');
