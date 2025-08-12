@@ -1,3 +1,29 @@
+<script setup>
+import axios from 'axios';
+import { onMounted, ref } from 'vue';
+import FormatData from "@/component/store/FormatData";
+
+const props = defineProps({
+    productId: {
+        type: [String, Number],
+        default: null,
+    },
+});
+const product = ref({})
+const getProductById = async (productId) => {
+    try {
+        const res = await axios.get(`http://127.0.0.1:8000/api/products/${productId}`)
+        product.value = res.data.product
+    } catch (error) {
+        console.log(error);
+
+    }
+}
+
+onMounted(async () => {
+    getProductById(props.productId)
+})
+</script>
 <template>
     <!-- Start Item Details -->
     <section class="item-details section pt-2">
@@ -8,89 +34,61 @@
                         <div class="product-images">
                             <main id="gallery">
                                 <div class="main-img">
-                                    <img src="/images/product-details/01.jpg" id="current" alt="#">
+                                    <img :src="product.image" id="current" alt="#"
+                                        style="height: 500px; object-fit: cover;">
                                 </div>
                                 <div class="images">
-                                    <img src="/images/product-details/01.jpg" class="img" alt="#">
-                                    <img src="/images/product-details/02.jpg" class="img" alt="#">
-                                    <img src="/images/product-details/03.jpg" class="img" alt="#">
-                                    <img src="/images/product-details/04.jpg" class="img" alt="#">
-                                    <img src="/images/product-details/05.jpg" class="img" alt="#">
+                                    <img :src="value.image_url" class="img" alt="#" v-for="value in product.images">
+
                                 </div>
                             </main>
                         </div>
                     </div>
                     <div class="col-lg-6 col-md-12 col-12">
                         <div class="product-info">
-                            <h2 class="title">GoPro Karma Camera Drone</h2>
-                            <p class="category"><i class="lni lni-tag"></i> Drones:<a href="javascript:void(0)">Action
-                                    cameras</a></p>
-                            <h3 class="price">$850<span>$945</span></h3>
-                            <p class="info-text">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
+                            <h2 class="title">{{ product.name }}</h2>
+                            <p class="category"><i class="lni lni-tag"></i> Danh mục: <a href="javascript:void(0)">{{
+                                product.category_name }}</a></p>
+                            <h3 class="price">{{ FormatData.formatNumber(product.price) }}VND</h3>
+                            <!-- <p class="info-text">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
                                 tempor incididunt
-                                ut labore et dolore magna aliqua.</p>
+                                ut labore et dolore magna aliqua.</p> -->
                             <div class="row">
                                 <div class="col-lg-4 col-md-4 col-12">
                                     <div class="form-group color-option">
-                                        <label class="title-label" for="size">Choose color</label>
-                                        <div class="single-checkbox checkbox-style-1">
-                                            <input type="checkbox" id="checkbox-1" checked>
-                                            <label for="checkbox-1"><span></span></label>
-                                        </div>
-                                        <div class="single-checkbox checkbox-style-2">
-                                            <input type="checkbox" id="checkbox-2">
-                                            <label for="checkbox-2"><span></span></label>
-                                        </div>
-                                        <div class="single-checkbox checkbox-style-3">
-                                            <input type="checkbox" id="checkbox-3">
-                                            <label for="checkbox-3"><span></span></label>
-                                        </div>
-                                        <div class="single-checkbox checkbox-style-4">
-                                            <input type="checkbox" id="checkbox-4">
-                                            <label for="checkbox-4"><span></span></label>
+                                        <label class="fs-6" for="size">Chọn màu sắc</label>
+                                        <div class="d-flex gap-1 ">
+                                            <div v-for="(value, index) in product.colorName" :key="index"
+                                                class="d-inline-block rounded-circle" :style="{
+                                                    width: '1.75rem',
+                                                    height: '1.75rem',
+                                                    'background-color': value,
+                                                    cursor: 'pointer',
+                                                    border: '1px solid black'
+                                                }"></div>
                                         </div>
                                     </div>
                                 </div>
+                            </div>
+                            <div class="row">
                                 <div class="col-lg-4 col-md-4 col-12">
-                                    <div class="form-group">
-                                        <label for="color">Battery capacity</label>
-                                        <select class="form-control" id="color">
-                                            <option>5100 mAh</option>
-                                            <option>6200 mAh</option>
-                                            <option>8000 mAh</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-lg-4 col-md-4 col-12">
-                                    <div class="form-group quantity">
-                                        <label for="color">Quantity</label>
-                                        <select class="form-control">
-                                            <option>1</option>
-                                            <option>2</option>
-                                            <option>3</option>
-                                            <option>4</option>
-                                            <option>5</option>
-                                        </select>
+                                    <div class="form-group color-option">
+                                        <label class="fs-6" for="size">Chọn kích thước</label>
+                                        <div class="d-flex gap-1 ">
+                                            <button v-for="(value, index) in product.sizeName" :key="index"
+                                                class="d-inline-block btn btn-outline-dark"> {{ value }}</button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                             <div class="bottom-content">
                                 <div class="row align-items-end">
-                                    <div class="col-lg-4 col-md-4 col-12">
+                                    <div class="col-12">
                                         <div class="button cart-button">
                                             <button class="btn" style="width: 100%;">Add to Cart</button>
                                         </div>
                                     </div>
-                                    <div class="col-lg-4 col-md-4 col-12">
-                                        <div class="wish-button">
-                                            <button class="btn"><i class="lni lni-reload"></i> Compare</button>
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-4 col-md-4 col-12">
-                                        <div class="wish-button">
-                                            <button class="btn"><i class="lni lni-heart"></i> To Wishlist</button>
-                                        </div>
-                                    </div>
+
                                 </div>
                             </div>
                         </div>
@@ -100,90 +98,43 @@
             <div class="product-details-info">
                 <div class="single-block">
                     <div class="row">
-                        <div class="col-lg-6 col-12">
+                        <div class="col-12">
                             <div class="info-body custom-responsive-margin">
-                                <h4>Details</h4>
-                                <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
-                                    incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
-                                    exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute
-                                    irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat.</p>
-                                <h4>Features</h4>
-                                <ul class="features">
-                                    <li>Capture 4K30 Video and 12MP Photos</li>
-                                    <li>Game-Style Controller with Touchscreen</li>
-                                    <li>View Live Camera Feed</li>
-                                    <li>Full Control of HERO6 Black</li>
-                                    <li>Use App for Dedicated Camera Operation</li>
-                                </ul>
+                                <h4>Chi tiết sản phẩm</h4>
+                                {{ product.description }}
                             </div>
                         </div>
-                        <div class="col-lg-6 col-12">
-                            <div class="info-body">
-                                <h4>Specifications</h4>
-                                <ul class="normal-list">
-                                    <li><span>Weight:</span> 35.5oz (1006g)</li>
-                                    <li><span>Maximum Speed:</span> 35 mph (15 m/s)</li>
-                                    <li><span>Maximum Distance:</span> Up to 9,840ft (3,000m)</li>
-                                    <li><span>Operating Frequency:</span> 2.4GHz</li>
-                                    <li><span>Manufacturer:</span> GoPro, USA</li>
-                                </ul>
-                                <h4>Shipping Options:</h4>
-                                <ul class="normal-list">
-                                    <li><span>Courier:</span> 2 - 4 days, $22.50</li>
-                                    <li><span>Local Shipping:</span> up to one week, $10.00</li>
-                                    <li><span>UPS Ground Shipping:</span> 4 - 6 days, $18.00</li>
-                                    <li><span>Unishop Global Export:</span> 3 - 4 days, $25.00</li>
-                                </ul>
-                            </div>
-                        </div>
+
                     </div>
                 </div>
                 <div class="row">
                     <div class="col-lg-4 col-12">
                         <div class="single-block give-review">
-                            <h4>4.5 (Overall)</h4>
-                            <ul>
-                                <li>
-                                    <span>5 stars - 38</span>
-                                    <i class="lni lni-star-filled"></i>
-                                    <i class="lni lni-star-filled"></i>
-                                    <i class="lni lni-star-filled"></i>
-                                    <i class="lni lni-star-filled"></i>
-                                    <i class="lni lni-star-filled"></i>
-                                </li>
-                                <li>
-                                    <span>4 stars - 10</span>
-                                    <i class="lni lni-star-filled"></i>
-                                    <i class="lni lni-star-filled"></i>
-                                    <i class="lni lni-star-filled"></i>
-                                    <i class="lni lni-star-filled"></i>
-                                    <i class="lni lni-star"></i>
-                                </li>
-                                <li>
-                                    <span>3 stars - 3</span>
-                                    <i class="lni lni-star-filled"></i>
-                                    <i class="lni lni-star-filled"></i>
-                                    <i class="lni lni-star-filled"></i>
-                                    <i class="lni lni-star"></i>
-                                    <i class="lni lni-star"></i>
-                                </li>
-                                <li>
-                                    <span>2 stars - 1</span>
-                                    <i class="lni lni-star-filled"></i>
-                                    <i class="lni lni-star-filled"></i>
-                                    <i class="lni lni-star"></i>
-                                    <i class="lni lni-star"></i>
-                                    <i class="lni lni-star"></i>
-                                </li>
-                                <li>
-                                    <span>1 star - 0</span>
-                                    <i class="lni lni-star-filled"></i>
-                                    <i class="lni lni-star"></i>
-                                    <i class="lni lni-star"></i>
-                                    <i class="lni lni-star"></i>
-                                    <i class="lni lni-star"></i>
-                                </li>
-                            </ul>
+                            <h4>{{ product.rating }} (Trung bình)</h4>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="5" id="rating-5" />
+                                <label class="form-check-label" for="rating-5" style="font-size: 14px">
+                                    5 <i class="bi bi-star-fill text-warning"></i>
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="4_5" id="rating-4_5" />
+                                <label class="form-check-label" for="rating-4_5" style="font-size: 14px">
+                                    4 - 5 <i class="bi bi-star-fill text-warning"></i>
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="3_4" id="rating-3_4" />
+                                <label class="form-check-label" for="rating-3_4" style="font-size: 14px">
+                                    3 - 4 <i class="bi bi-star-fill text-warning"></i>
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="duoi_3" id="rating-below-3" />
+                                <label class="form-check-label" for="rating-below-3" style="font-size: 14px">
+                                    Dưới 3 <i class="bi bi-star-fill text-warning"></i>
+                                </label>
+                            </div>
                             <!-- Button trigger modal -->
                             <button type="button" class="btn review-btn" data-bs-toggle="modal"
                                 data-bs-target="#exampleModal">
@@ -270,7 +221,7 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Leave a Review</h5>
+                    <h5 class="modal-title" id="exampleModalLabel">Lịch sử</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">

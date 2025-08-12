@@ -4698,10 +4698,10 @@ blockquote span {
 /* Product Sidebar */
 .product-sidebar .single-widget {
   background-color: #fff;
-  padding: 30px;
+  padding: 20px;
   border: 1px solid #eee;
   border-radius: 4px;
-  margin-bottom: 30px;
+  margin-bottom: 10px;
 }
 
 .product-sidebar .single-widget:last-child {
@@ -4710,7 +4710,7 @@ blockquote span {
 
 .product-sidebar .single-widget h3 {
   position: relative;
-  margin-bottom: 24px;
+
   padding-bottom: 12px;
   border-bottom: 1px solid #e5e5e5;
   color: #232323;

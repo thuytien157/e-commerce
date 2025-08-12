@@ -9,6 +9,7 @@ const client = [
         name: "client-home",
         component: () => import("../page/client/home/index.vue"),
         meta: { title: "Trang chủ" },
+        props: true,
       },
     ],
   },
@@ -68,11 +69,13 @@ const client = [
     path: "/products",
     component: () => import("../page/client/product/index.vue"),
     meta: { title: "Sản phẩm" },
+    props: true,
   },
   {
-    path: "/product-detail",
+    path: "/product-detail/:productSlug/:productId",
     component: () => import("../page/client/product/detail.vue"),
     meta: { title: "Chi tiết" },
+    props: true,
   },
   {
     path: "/cart",

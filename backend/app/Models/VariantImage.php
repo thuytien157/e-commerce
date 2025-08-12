@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Atribute_value extends Model
+class VariantImage extends Model
 {
     use HasFactory;
 }

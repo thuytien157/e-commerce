@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\Attribute;
+use App\Http\Controllers\Category;
+use App\Http\Controllers\Product;
 use App\Http\Controllers\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -33,3 +36,11 @@ Route::post('/insert-address', [User::class, 'insertAddress'])->middleware('auth
 Route::put('/edit-address/{address_id}', [User::class, 'editAddress'])->middleware('auth:sanctum');
 Route::get('/addresses/{address_id}', [User::class, 'getAddressById'])->middleware('auth:sanctum');
 Route::post('/update-avatar', [User::class, 'updateAvatar'])->middleware('auth:sanctum');
+
+
+Route::get('/products/{id}', [Product::class, 'getProductById']);
+
+Route::resource('product', Product::class);
+
+Route::resource('category', Category::class);
+Route::resource('attribute', Attribute::class);

@@ -223,7 +223,7 @@ const logout = async () => {
 };
 </script>
 
-<style scoped>
+<style>
 /* Header Styles */
 /* .header {
 } */
@@ -448,20 +448,6 @@ const logout = async () => {
   opacity: 0;
 }
 
-/*andrew-demchenk0*/
-.button {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 9px 12px;
-  gap: 8px;
-  height: 40px;
-  width: 201px;
-  border: none;
-  background: #ff342b;
-  border-radius: 20px;
-  cursor: pointer;
-}
 
 .lable {
   line-height: 22px;
@@ -471,9 +457,6 @@ const logout = async () => {
   letter-spacing: 1px;
 }
 
-.button:hover {
-  background: #e52e26;
-}
 
 .button:hover .svg-icon {
   animation: slope 1s linear infinite;
