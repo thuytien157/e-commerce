@@ -128,27 +128,20 @@ class Product extends Controller
                 }
             });
         }
-
-        // Sau khi đã áp dụng tất cả các bộ lọc, sử dụng clone để tạo từng danh sách.
-
-        // Danh sách "Hàng mới về"
         $newArrivals = (clone $baseQuery)->latest('created_at')->take(4)->get();
 
-        // Danh sách "Hàng bán chạy"
         $variantsWithSales = (clone $baseQuery)
             ->withSum('orderItems', 'quantity')
             ->orderByDesc('order_items_sum_quantity')
             ->take(8)
             ->get();
 
-        // Danh sách "Sản phẩm đánh giá cao nhất"
         $topRatedProducts = (clone $baseQuery)
             ->withAvg('reviews as average_rating', 'rating')
             ->orderByDesc('average_rating')
             ->take(4)
             ->get();
 
-        // (Tùy chọn) Danh sách sản phẩm chính, nếu bạn cần.
         $products = (clone $baseQuery)->get();
 
 
@@ -168,22 +161,7 @@ class Product extends Controller
     private function transformProducts($products)
     {
         return $products->map(function ($item) {
-            $firstVariant = optional($item->variants)->first();
-
-            if (!$firstVariant) {
-                return null;
-            }
-
-            $colorAttributes = $firstVariant->attributes->where('attribute_id', 2);
-            $colorList = $colorAttributes->pluck('value_name');
-            $sizeAttributes = $firstVariant->attributes->where('attribute_id', 1);
-            $sizeList = $sizeAttributes->pluck('value_name');
-
-
             $reviews = $item->reviews;
-
-            $rating = $item->average_rating ?? $item->reviews_avg_rating ?? ($reviews->isEmpty() ? 0 : round($reviews->avg('rating'), 1));
-
             $reviewsData = $reviews->map(function ($review) {
                 return [
                     'id' => $review->id,
@@ -193,22 +171,31 @@ class Product extends Controller
                     'created_at' => $review->created_at,
                 ];
             });
+            $rating = $item->reviews_avg_rating ?? round($reviews->avg('rating'), 1);
 
             return [
                 'id' => $item->id,
                 'name' => $item->name,
-                'price' => $firstVariant->price,
                 'rating' => $rating,
                 'reviews' => $reviewsData,
                 'description' => $item->description,
-                'image' => $firstVariant->main_image_url,
-                'slug' => $firstVariant->slug,
-                'sku' => $firstVariant->sku,
-                'images' => $firstVariant->variantImages,
-                'category_name' => optional($item->category)->name,
-                'variant_id' => $firstVariant->id,
-                'colorName' => $colorList,
-                'sizeName' => $sizeList,
+                'variants' => $item->variants->map(function ($variant) {
+                    return [
+                        'id' => $variant->id,
+                        'price' => $variant->price,
+                        'image' => $variant->main_image_url,
+                        'images' => $variant->variantImages,
+                        'slug' => $variant->slug,
+                        'attributes' => $variant->attributes->map(function ($attr) {
+                            return [
+                                'attribute_id' => $attr->attribute_id,
+                                'attribute_name' => $attr->value_name,
+                                'attribute_value_id' => $attr->pivot->attribute_value_id,
+                            ];
+                        }),
+                    ];
+                }),
+                'category_name' => optional($item->category)->name
             ];
         })->filter()->values();
     }

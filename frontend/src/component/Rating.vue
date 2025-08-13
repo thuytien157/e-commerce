@@ -8,7 +8,7 @@
             <i class="bi bi-star-half text-warning"></i>
         </li>
 
-        <li><span>{{ averageRating.toFixed(1) }} Review(s)</span></li>
+        <li><span>{{ ratings }} Review(s)</span></li>
     </ul>
 </template>
 
@@ -23,15 +23,7 @@ const props = defineProps({
     }
 });
 
-const averageRating = computed(() => {
-    if (!props.ratings || props.ratings.length === 0) {
-        return 0;
-    }
-    const sum = props.ratings.reduce((total, score) => total + score, 0);
-    return sum / props.ratings.length;
-});
-
-const fullStars = computed(() => Math.min(5, Math.max(0, Math.round(averageRating.value))));
+const fullStars = computed(() => Math.min(5, Math.max(0, Math.round(props.ratings))));
 const emptyStars = computed(() => 5 - fullStars.value);
 </script>
 <style>

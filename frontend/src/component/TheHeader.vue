@@ -1,11 +1,18 @@
 <template>
   <!-- top header -->
 
-  <div class="header position-sticky top-0 bg-white bg-opacity-90 shadow-sm z-3">
+  <div
+    class="header position-sticky top-0 bg-white bg-opacity-90 shadow-sm z-3"
+  >
     <div class="container">
       <div class="d-flex align-items-center pt-2 pb-2 border-bottom">
         <a class="navbar-brand me-auto" href="/home">
-          <img src="/images/logo/logo.svg" alt="Logo" class="logo" width="100px" />
+          <img
+            src="/images/logo/logo.svg"
+            alt="Logo"
+            class="logo"
+            width="100px"
+          />
         </a>
 
         <div class="d-none d-lg-flex align-items-center">
@@ -15,9 +22,18 @@
                 <svg width="22px" height="22px" viewBox="0 0 24 24" fill="none">
                   <path
                     d="M11.5 21C16.7 21 21 16.7 21 11.5C21 6.2 16.7 2 11.5 2C6.2 2 2 6.2 2 11.5C2 16.7 6.2 21 11.5 21Z"
-                    stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                  <path d="M22 22L20 20" stroke="#000" stroke-width="1.5" stroke-linecap="round"
-                    stroke-linejoin="round" />
+                    stroke="#000"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                  <path
+                    d="M22 22L20 20"
+                    stroke="#000"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
                 </svg>
               </button>
               <input type="text" class="input-search" placeholder="search..." />
@@ -25,82 +41,103 @@
           </form>
 
           <div class="me-2">
-            <router-link to="/login" class="text-decoration-none text-primary-black" v-if="!store.username">
+            <router-link
+              to="/login"
+              class="text-decoration-none text-primary-black"
+              v-if="!store.username"
+            >
               <button class="icon-btn me-2">
                 <i class="bi bi-people"></i>
               </button>
             </router-link>
             <template v-else>
               <div class="d-flex align-items-center">
-                <router-link to="/account/address-list" class="text-decoration-none me-2" style="color: #3866bc;">
-                  <p v-if="store.username" class="mb-0 username-display">{{ store.username }}</p>
+                <router-link
+                  to="/account/address-list"
+                  class="text-decoration-none me-2"
+                  style="color: #3866bc"
+                >
+                  <p v-if="store.username" class="mb-0 username-display">
+                    {{ store.username }}
+                  </p>
                 </router-link>
                 <button class="icon-btn" @click="logout" title="Đăng xuất">
-                  <i class="bi bi-box-arrow-right"></i> </button>
+                  <i class="bi bi-box-arrow-right"></i>
+                </button>
               </div>
             </template>
           </div>
 
           <div>
             <div class="cart-dropdown position-relative">
-              <a href="/cart" class="icon-btn text-dark" title="Giỏ hàng">
+              <div class="icon-btn text-dark" title="Giỏ hàng">
                 <i class="bi bi-cart position-relative">
-                  <span class="badge rounded-circle position-absolute top-0 start-100 translate-middle"
-                    style="background-color: #3866bc;">2</span>
+                  <span
+                    class="badge rounded-circle position-absolute top-0 start-100 translate-middle"
+                    style="background-color: #3866bc"
+                    >{{ cartStore.cartLength }}</span
+                  >
                 </i>
-              </a>
+              </div>
               <div class="dropdown-menu-cart p-3">
-                <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
-                  <span class="fw-bold">2 món</span>
-                  <a href="/cart" class="text-primary-red text-decoration-none">Xem giỏ hàng</a>
+                <div
+                  class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2"
+                >
+                  <router-link
+                    to="/cart"
+                    class="text-primary text-decoration-none"
+                    >Xem giỏ hàng</router-link
+                  >
                 </div>
                 <ul class="list-unstyled shopping-list m-0 p-0">
-                  <li class="d-flex align-items-center mb-3">
+                  <li
+                    class="d-flex align-items-center mb-3"
+                    v-for="item in cartStore.items"
+                    :key="item.variantId"
+                  >
                     <a href="product-details.html" class="flex-shrink-0 me-3">
-                      <img src="/images/header/cart-items/item1.jpg" alt="Apple Watch Series 6"
-                        class="cart-item-img rounded-3" />
+                      <img
+                        :src="item.image"
+                        alt="Apple Watch Series 6"
+                        class="cart-item-img rounded-3"
+                      />
                     </a>
                     <div class="content flex-grow-1">
                       <h6 class="mb-1">
-                        <a href="product-details.html" class="text-dark text-decoration-none">
-                          Apple Watch Series 6
+                        <a
+                          href="product-details.html"
+                          class="text-dark text-decoration-none product-name-short"
+                        >
+                          {{ item.productName }}
                         </a>
                       </h6>
                       <p class="mb-0 text-muted small">
-                        1x - <span class="fw-bold">$99.00</span>
+                        {{ item.quantity }}x - {{ item.selectedSize }} -
+                        <span class="fw-bold"
+                          >{{ formatNumber(item.price) }}VNĐ</span
+                        >
                       </p>
                     </div>
-                    <a href="javascript:void(0)" class="text-danger ms-auto" title="Xóa món này">
-                      <i class="bi bi-x-lg"></i>
-                    </a>
-                  </li>
-                  <li class="d-flex align-items-center mb-3">
-                    <a href="product-details.html" class="flex-shrink-0 me-3">
-                      <img src="/images/header/cart-items/item2.jpg" alt="Wi-Fi Smart Camera"
-                        class="cart-item-img rounded-3" />
-                    </a>
-                    <div class="content flex-grow-1">
-                      <h6 class="mb-1">
-                        <a href="product-details.html" class="text-dark text-decoration-none">
-                          Wi-Fi Smart Camera
-                        </a>
-                      </h6>
-                      <p class="mb-0 text-muted small">
-                        1x - <span class="fw-bold">$35.00</span>
-                      </p>
-                    </div>
-                    <a href="javascript:void(0)" class="text-danger ms-auto" title="Xóa món này">
-                      <i class="bi bi-x-lg"></i>
-                    </a>
+
+                    <i
+                      class="bi bi-x-lg"
+                      @click.prevent="cartStore.removeItem(item.variantId)"
+                    ></i>
                   </li>
                 </ul>
                 <div class="bottom mt-3 border-top pt-3">
-                  <div class="d-flex justify-content-between align-items-center mb-2">
+                  <div
+                    class="d-flex justify-content-between align-items-center mb-2"
+                  >
                     <span>Tổng cộng</span>
-                    <span class="fw-bold fs-5 text-primary-red">$134.00</span>
+                    <span class="fw-bold fs-5 text-primary"
+                      >{{ formatNumber(cartStore.totalPrice) }} VND</span
+                    >
                   </div>
                   <div class="d-grid gap-2">
-                    <a href="checkout.html" class="btn btn-danger btn-sm">Thanh toán</a>
+                    <a href="checkout.html" class="btn btn-primary btn-sm"
+                      >Thanh toán</a
+                    >
                   </div>
                 </div>
               </div>
@@ -109,13 +146,21 @@
         </div>
 
         <div class="d-flex d-lg-none align-items-center">
-          <button class="navbar-toggler me-3" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasMenu">
+          <button
+            class="navbar-toggler me-3"
+            type="button"
+            data-bs-toggle="offcanvas"
+            data-bs-target="#offcanvasMenu"
+          >
             <span class="navbar-toggler-icon"></span>
           </button>
           <div class="cart-dropdown position-relative">
             <a href="/cart" class="icon-btn text-dark" title="Giỏ hàng">
               <i class="bi bi-cart position-relative">
-                <span class="badge bg-danger rounded-circle position-absolute top-0 start-100 translate-middle">2</span>
+                <span
+                  class="badge bg-danger rounded-circle position-absolute top-0 start-100 translate-middle"
+                  >2</span
+                >
               </i>
             </a>
           </div>
@@ -134,10 +179,20 @@
       </nav>
     </div>
 
-    <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasMenu" aria-labelledby="offcanvasMenuLabel">
+    <div
+      class="offcanvas offcanvas-start"
+      tabindex="-1"
+      id="offcanvasMenu"
+      aria-labelledby="offcanvasMenuLabel"
+    >
       <div class="offcanvas-header">
         <h5 class="offcanvas-title" id="offcanvasMenuLabel">Menu</h5>
-        <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        <button
+          type="button"
+          class="btn-close text-reset"
+          data-bs-dismiss="offcanvas"
+          aria-label="Close"
+        ></button>
       </div>
       <div class="offcanvas-body">
         <ul class="navbar-nav offcanvas-nav-links mb-4">
@@ -155,9 +210,18 @@
               <svg width="23px" height="23px" viewBox="0 0 24 24" fill="none">
                 <path
                   d="M11.5 21C16.7 21 21 16.7 21 11.5C21 6.2 16.7 2 11.5 2C6.2 2 2 6.2 2 11.5C2 16.7 6.2 21 11.5 21Z"
-                  stroke="#000" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                <path d="M22 22L20 20" stroke="#000" stroke-width="1.5" stroke-linecap="round"
-                  stroke-linejoin="round" />
+                  stroke="#000"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+                <path
+                  d="M22 22L20 20"
+                  stroke="#000"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
               </svg>
             </button>
             <input type="text" class="input-search" placeholder="search..." />
@@ -187,9 +251,10 @@
 import axios from "axios";
 import { useTokenUser } from "./store/useTokenUser";
 import Swal from "sweetalert2";
+import { useCartStore } from "./store/cart";
 
-const store = useTokenUser()
-
+const store = useTokenUser();
+const cartStore = useCartStore();
 const logout = async () => {
   try {
     await axios.get("http://127.0.0.1:8000/api/logout", {
@@ -198,7 +263,7 @@ const logout = async () => {
       },
     });
 
-    store.clearAuth()
+    store.clearAuth();
     Swal.fire({
       toast: true,
       position: "top-end",
@@ -221,12 +286,21 @@ const logout = async () => {
     });
   }
 };
+const formatNumber = (num) => {
+  return new Intl.NumberFormat("vi-VN").format(num);
+};
 </script>
 
 <style>
 /* Header Styles */
-/* .header {
-} */
+.product-name-short {
+  display: block;
+  width: 150px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .text-primary-red {
   color: #3866bc !important;
 }
@@ -448,7 +522,6 @@ const logout = async () => {
   opacity: 0;
 }
 
-
 .lable {
   line-height: 22px;
   font-size: 17px;
@@ -457,19 +530,20 @@ const logout = async () => {
   letter-spacing: 1px;
 }
 
-
 .button:hover .svg-icon {
   animation: slope 1s linear infinite;
 }
 
 @keyframes slope {
-  0% {}
+  0% {
+  }
 
   50% {
     transform: rotate(10deg);
   }
 
-  100% {}
+  100% {
+  }
 }
 
 .header .navbar {
@@ -580,7 +654,7 @@ const logout = async () => {
 }
 
 /* Animation khi focus search */
-.input-wrapper .icon-search-submit:focus-within~.input-search,
+.input-wrapper .icon-search-submit:focus-within ~ .input-search,
 .input-wrapper .input-search:focus {
   box-shadow: none;
   width: 130px;

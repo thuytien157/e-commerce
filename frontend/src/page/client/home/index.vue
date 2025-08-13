@@ -3,6 +3,8 @@ import Rating from "@/component/Rating.vue";
 import axios from "axios";
 import { onMounted, ref } from "vue";
 import FormatData from "@/component/store/FormatData";
+import ProductModal from '@/component/ProductModal.vue';
+import { useCartStore } from "@/component/store/cart";
 
 const new_arrivals = ref([]);
 const best_sellers = ref([]);
@@ -19,6 +21,8 @@ const getAllProducts = async () => {
     const res = await axios.get("http://127.0.0.1:8000/api/product");
     const response = await axios.get("http://127.0.0.1:8000/api/category");
     top_rated.value = res.data.top_rated;
+    console.log('sss' + top_rated.value);
+
     best_sellers.value = res.data.best_sellers;
     new_arrivals.value = res.data.new_arrivals;
     categories.value = response.data.categories;
@@ -28,7 +32,6 @@ const getAllProducts = async () => {
     isLoading.value = false;
   }
 };
-
 const sortProducts = async (value, section) => {
   isLoading.value = false;
   try {
@@ -44,12 +47,12 @@ const sortProducts = async (value, section) => {
     const res = await axios.get(apiUrl);
 
     if (section === "new_arrivals") {
-      new_arrivals.value = res.data.new_arrivals;
+      new_arrivals.value = res.data.new_arrivals.variants[0];
       // console.log('sss' + new_arrivals.value);
     } else if (section === "best_sellers") {
-      best_sellers.value = res.data.best_sellers;
+      best_sellers.value = res.data.best_sellers.variants[0];
     } else if (section === "top_rated") {
-      top_rated.value = res.data.top_rated;
+      top_rated.value = res.data.top_rated.variants[0];
     }
   } catch (error) {
     console.log(error);
@@ -61,61 +64,55 @@ const getRatingsArray = (reviews) => {
   return reviews.map((r) => Number(r) || 0);
 };
 
+const showModal = ref(false)
+const productData = ref(null)
+const openModal = async (productId) => {
+  showModal.value = true;
+  const res = await axios.get(`http://127.0.0.1:8000/api/products/${productId}`)
+  productData.value = res.data.product
+}
+function closeModal() {
+  showModal.value = false;
+  productData.value = null
+}
+const cartStore = useCartStore();
+
+const handleAddToCart = (itemToAdd) => {
+  cartStore.addItem(itemToAdd);
+};
 onMounted(async () => {
   await getAllProducts();
+
 });
 </script>
 <template>
   <div class="container-xxl mb-3 p-3">
-    <div
-      id="carouselExampleAutoplaying"
-      class="carousel slide"
-      data-bs-ride="carousel"
-    >
+    <div id="carouselExampleAutoplaying" class="carousel slide" data-bs-ride="carousel">
       <div class="carousel-inner rounded">
         <div class="carousel-item active">
           <picture>
-            <img
-              src="/images/banner/mlb_desktop_en_be560d199f054efa9d99ae5826e2cdde.webp"
-              class="d-block w-100 img-fluid"
-              alt="Banner 1"
-            />
+            <img src="/images/banner/mlb_desktop_en_be560d199f054efa9d99ae5826e2cdde.webp"
+              class="d-block w-100 img-fluid" alt="Banner 1" />
           </picture>
         </div>
         <div class="carousel-item">
           <picture>
-            <img
-              src="/images/banner/msloyalty_mlb_web.webp"
-              class="d-block w-100 img-fluid"
-              alt="Banner 2"
-            />
+            <img src="/images/banner/msloyalty_mlb_web.webp" class="d-block w-100 img-fluid" alt="Banner 2" />
           </picture>
         </div>
         <div class="carousel-item">
           <picture>
-            <img
-              src="/images/banner/1960x640-mua-ngay.webp"
-              class="d-block w-100 img-fluid"
-              alt="Banner 3"
-            />
+            <img src="/images/banner/1960x640-mua-ngay.webp" class="d-block w-100 img-fluid" alt="Banner 3" />
           </picture>
         </div>
       </div>
-      <button
-        class="carousel-control-prev"
-        type="button"
-        data-bs-target="#carouselExampleAutoplaying"
-        data-bs-slide="prev"
-      >
+      <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleAutoplaying"
+        data-bs-slide="prev">
         <span class="carousel-control-prev-icon" aria-hidden="true"></span>
         <span class="visually-hidden">Previous</span>
       </button>
-      <button
-        class="carousel-control-next"
-        type="button"
-        data-bs-target="#carouselExampleAutoplaying"
-        data-bs-slide="next"
-      >
+      <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleAutoplaying"
+        data-bs-slide="next">
         <span class="carousel-control-next-icon" aria-hidden="true"></span>
         <span class="visually-hidden">Next</span>
       </button>
@@ -125,19 +122,15 @@ onMounted(async () => {
   <div class="container-xl">
     <div class="row align-items-center">
       <div class="d-flex justify-content-between w-100 flex-wrap">
-        <h3 class="fw-bolder text-start ms-2">Hàng mới về</h3>
+        <h3 class="fw-bolder text-start ms-2" style="color: blue;">Hàng mới về</h3>
         <div class="d-flex mb-1">
           <div class="me-2">
-            <button
-              type="button"
-              class="btn btn-outline-dark btn-sm p-2 mt-2 fw-semibold"
-              @click="sortProducts('all', 'new_arrivals')"
-              :class="{
-                'btn-dark text-white':
+            <button type="button" class="btn btn-outline-primary btn-sm p-2 mt-2 fw-semibold"
+              @click="sortProducts('all', 'new_arrivals')" :class="{
+                'btn-primary text-white':
                   selectedCategoryNewArrivals === 'all' ||
                   selectedCategoryNewArrivals === null,
-              }"
-            >
+              }">
               Tất cả
             </button>
           </div>
@@ -145,14 +138,10 @@ onMounted(async () => {
             <div class="skeleton-button"></div>
           </div>
           <div v-else class="me-2" v-for="value in categories" :key="value.id">
-            <button
-              type="button"
-              class="btn btn-outline-dark btn-sm p-2 mt-2 fw-semibold"
-              @click="sortProducts(value.id, 'new_arrivals')"
-              :class="{
+            <button type="button" class="btn btn-outline-dark btn-sm p-2 mt-2 fw-semibold"
+              @click="sortProducts(value.id, 'new_arrivals')" :class="{
                 'btn-dark text-white': selectedCategoryNewArrivals === value.id,
-              }"
-            >
+              }">
               {{ value.name }}
             </button>
           </div>
@@ -163,97 +152,59 @@ onMounted(async () => {
     <div class="row g-3">
       <div class="col-12 col-md-6 d-flex">
         <div v-if="isLoading" class="skeleton-banner rounded w-100"></div>
-        <div
-          v-else
-          class="position-relative overflow-hidden w-100 h-100 banner-hover"
-        >
-          <img
-            src="/images/banner/hangmoive_main.jpg"
-            class="w-100 h-100 object-fit-cover rounded"
-            alt="Hàng mới về"
-          />
-          <div
-            class="hover-overlay d-flex align-items-center justify-content-center"
-          >
-            <router-link to="/sanpham" class="btn btn-outline-light btn-sm"
-              >Xem tất cả</router-link
-            >
+        <div v-else class="position-relative overflow-hidden w-100 h-100 banner-hover">
+          <img src="/images/banner/hangmoive_main.jpg" class="w-100 h-100 object-fit-cover rounded" alt="Hàng mới về" />
+          <div class="hover-overlay d-flex align-items-center justify-content-center">
+            <router-link to="/sanpham" class="btn btn-outline-primary btn-sm">Xem tất cả</router-link>
           </div>
         </div>
       </div>
 
       <div class="col-12 col-md-6">
         <div class="row g-2 h-100">
-          <div
-            v-if="isLoading"
-            v-for="n in 4"
-            :key="n"
-            class="col-6"
-            style="height: 420px"
-          >
+          <div v-if="isLoading" v-for="n in 4" :key="n" class="col-6" style="height: 420px">
             <div class="skeleton-product h-100">
               <div class="skeleton-image"></div>
               <div class="skeleton-info">
                 <div class="skeleton-line-long"></div>
                 <div class="skeleton-line-short"></div>
                 <div class="d-flex gap-1 mt-2">
-                  <span
-                    class="skeleton-circle-color"
-                    v-for="i in 3"
-                    :key="i"
-                  ></span>
+                  <span class="skeleton-circle-color" v-for="i in 3" :key="i"></span>
                 </div>
               </div>
             </div>
           </div>
 
-          <div
-            v-else
-            v-for="product in new_arrivals"
-            :key="product.id"
-            class="col-6"
-            style="height: 420px"
-          >
-            <router-link
-              :to="`/product-detail/${product.slug}/${product.id}`"
-              class="single-product h-100"
-            >
+          <div v-else v-for="product in new_arrivals" :key="product.id" class="col-6" style="height: 420px">
+            <div class="single-product h-100">
               <div class="product-image">
-                <img
-                  :src="product.image"
-                  alt="#"
-                  style="height: 250px; object-fit: cover"
-                />
+                <img :src="product.variants[0].image" alt="#" style="height: 250px; object-fit: cover" />
                 <div class="button">
-                  <a href="product-details.html" class="btn">
+                  <button @click="openModal(product.id)" class="btn">
                     <i class="lni lni-cart"></i> Thêm vào giỏ
-                  </a>
+                  </button>
                 </div>
               </div>
               <div class="product-info">
                 <h4 class="title">
-                  <a href="product-grids.html">{{ product.name }}</a>
+                  <router-link :to="`/product-detail/${product.variants[0].slug}/${product.id}`">{{ product.name
+                  }}</router-link>
                 </h4>
                 <Rating :ratings="getRatingsArray(product.rating)" />
                 <div class="price">
-                  <span>{{ FormatData.formatNumber(product.price) }}VNĐ</span>
+                  <span>{{ FormatData.formatNumber(product.variants[0].price) }}VNĐ</span>
                 </div>
                 <div class="d-flex gap-1 mt-2">
-                  <span
-                    v-for="(value, index) in product.colorName"
-                    :key="index"
-                    class="d-inline-block rounded-circle"
-                    style="
+                  <span v-for="value in FormatData.uniqueColors(product.variants)" :key="value.attribute_value_id"
+                    class="d-inline-block rounded-circle" style="
                       width: 0.75rem;
                       height: 0.75rem;
                       border: 1px solid #ccc;
-                    "
-                    :style="{ 'background-color': value }"
-                  >
+                    " :style="{ 'background-color': value.attribute_name }">
                   </span>
                 </div>
               </div>
-            </router-link>
+            </div>
           </div>
         </div>
       </div>
@@ -261,19 +212,15 @@ onMounted(async () => {
 
     <div class="row align-items-center mt-5">
       <div class="d-flex justify-content-between w-100 flex-wrap">
-        <h3 class="fw-bolder text-start ms-2">Hàng bán chạy</h3>
+        <h3 class="fw-bolder text-start ms-2" style="color: blue;">Hàng bán chạy</h3>
         <div class="d-flex mb-1">
           <div class="me-2">
-            <button
-              type="button"
-              class="btn btn-outline-dark btn-sm p-2 mt-2 fw-semibold"
-              @click="sortProducts('all', 'best_sellers')"
-              :class="{
-                'btn-dark text-white':
+            <button type="button" class="btn btn-outline-primary btn-sm p-2 mt-2 fw-semibold"
+              @click="sortProducts('all', 'best_sellers')" :class="{
+                'btn-primary text-white':
                   selectedCategoryBestSellers === 'all' ||
                   selectedCategoryBestSellers === null,
-              }"
-            >
+              }">
               Tất cả
             </button>
           </div>
@@ -281,14 +228,10 @@ onMounted(async () => {
             <div class="skeleton-button"></div>
           </div>
           <div v-else class="me-2" v-for="value in categories" :key="value.id">
-            <button
-              type="button"
-              class="btn btn-outline-dark btn-sm p-2 mt-2 fw-semibold"
-              @click="sortProducts(value.id, 'best_sellers')"
-              :class="{
+            <button type="button" class="btn btn-outline-dark btn-sm p-2 mt-2 fw-semibold"
+              @click="sortProducts(value.id, 'best_sellers')" :class="{
                 'btn-dark text-white': selectedCategoryBestSellers === value.id,
-              }"
-            >
+              }">
               {{ value.name }}
             </button>
           </div>
@@ -296,45 +239,25 @@ onMounted(async () => {
       </div>
     </div>
     <div class="row mb-5">
-      <div
-        v-if="isLoading"
-        v-for="n in 8"
-        :key="n"
-        class="col-lg-3 col-md-6 col-12 mb-3"
-      >
+      <div v-if="isLoading" v-for="n in 8" :key="n" class="col-lg-3 col-md-6 col-12 mb-3">
         <div class="skeleton-product">
           <div class="skeleton-image"></div>
           <div class="skeleton-info">
             <div class="skeleton-line-long"></div>
             <div class="skeleton-line-short"></div>
             <div class="d-flex gap-1 mt-2">
-              <span
-                class="skeleton-circle-color"
-                v-for="i in 3"
-                :key="i"
-              ></span>
+              <span class="skeleton-circle-color" v-for="i in 3" :key="i"></span>
             </div>
           </div>
         </div>
       </div>
 
-      <div
-        v-else
-        class="col-lg-3 col-md-6 col-12 mb-3"
-        v-for="product in best_sellers"
-        :key="product.id"
-      >
+      <div v-else class="col-lg-3 col-md-6 col-12 mb-3" v-for="product in best_sellers" :key="product.id">
         <div class="single-product">
           <div class="product-image">
-            <img
-              :src="product.image"
-              style="height: 250px; object-fit: cover"
-              alt="#"
-            />
+            <img :src="product.variants[0].image" style="height: 250px; object-fit: cover" alt="#" />
             <div class="button">
-              <a href="product-details.html" class="btn"
-                ><i class="lni lni-cart"></i> Add to Cart</a
-              >
+              <a href="product-details.html" class="btn"><i class="lni lni-cart"></i> Add to Cart</a>
             </div>
           </div>
           <div class="product-info">
@@ -343,16 +266,15 @@ onMounted(async () => {
             </h4>
             <Rating :ratings="getRatingsArray(product.rating)" />
             <div class="price">
-              <span>{{ FormatData.formatNumber(product.price) }}VNĐ</span>
+              <span>{{ FormatData.formatNumber(product.variants[0].price) }}VNĐ</span>
             </div>
             <div class="d-flex gap-1 mt-2">
-              <span
-                v-for="(value, index) in product.colorName"
-                :key="index"
-                class="d-inline-block rounded-circle"
-                style="width: 0.75rem; height: 0.75rem; border: 1px solid #ccc"
-                :style="{ 'background-color': value }"
-              >
+              <span v-for="value in FormatData.uniqueColors(product.variants)" :key="value.attribute_value_id"
+                class="d-inline-block rounded-circle" style="
+                      width: 0.75rem;
+                      height: 0.75rem;
+                      border: 1px solid #ccc;
+                    " :style="{ 'background-color': value.attribute_name }">
               </span>
             </div>
           </div>
@@ -362,19 +284,15 @@ onMounted(async () => {
 
     <div class="row align-items-center">
       <div class="d-flex justify-content-between w-100 flex-wrap">
-        <h3 class="fw-bolder text-start ms-2">Sản phẩm đánh giá cao nhất</h3>
+        <h3 class="fw-bolder text-start ms-2" style="color: blue;">Sản phẩm đánh giá cao nhất</h3>
         <div class="d-flex mb-1">
           <div class="me-2">
-            <button
-              type="button"
-              class="btn btn-outline-dark btn-sm p-2 mt-2 fw-semibold"
-              @click="sortProducts('all', 'top_rated')"
-              :class="{
-                'btn-dark text-white':
+            <button type="button" class="btn btn-outline-primary btn-sm p-2 mt-2 fw-semibold"
+              @click="sortProducts('all', 'top_rated')" :class="{
+                'btn-primary text-white':
                   selectedCategoryTopRated === 'all' ||
                   selectedCategoryTopRated === null,
-              }"
-            >
+              }">
               Tất cả
             </button>
           </div>
@@ -382,14 +300,10 @@ onMounted(async () => {
             <div class="skeleton-button"></div>
           </div>
           <div v-else class="me-2" v-for="value in categories" :key="value.id">
-            <button
-              type="button"
-              class="btn btn-outline-dark btn-sm p-2 mt-2 fw-semibold"
-              @click="sortProducts(value.id, 'top_rated')"
-              :class="{
+            <button type="button" class="btn btn-outline-dark btn-sm p-2 mt-2 fw-semibold"
+              @click="sortProducts(value.id, 'top_rated')" :class="{
                 'btn-dark text-white': selectedCategoryTopRated === value.id,
-              }"
-            >
+              }">
               {{ value.name }}
             </button>
           </div>
@@ -400,43 +314,23 @@ onMounted(async () => {
     <div class="row g-3">
       <div class="col-12 col-md-6">
         <div class="row g-2 h-100">
-          <div
-            v-if="isLoading"
-            v-for="n in 4"
-            :key="n"
-            class="col-6"
-            style="height: 420px"
-          >
+          <div v-if="isLoading" v-for="n in 4" :key="n" class="col-6" style="height: 420px">
             <div class="skeleton-product h-100">
               <div class="skeleton-image"></div>
               <div class="skeleton-info">
                 <div class="skeleton-line-long"></div>
                 <div class="skeleton-line-short"></div>
                 <div class="d-flex gap-1 mt-2">
-                  <span
-                    class="skeleton-circle-color"
-                    v-for="i in 3"
-                    :key="i"
-                  ></span>
+                  <span class="skeleton-circle-color" v-for="i in 3" :key="i"></span>
                 </div>
               </div>
             </div>
           </div>
 
-          <div
-            v-else
-            v-for="product in top_rated"
-            :key="product.id"
-            class="col-6"
-            style="height: 420px"
-          >
+          <div v-else v-for="product in top_rated" :key="product.id" class="col-6" style="height: 420px">
             <router-link to="/product-detail" class="single-product h-100">
               <div class="product-image">
-                <img
-                  :src="product.image"
-                  alt="#"
-                  style="height: 250px; object-fit: cover"
-                />
+                <img :src="product.variants[0].image" alt="#" style="height: 250px; object-fit: cover" />
                 <div class="button">
                   <a href="product-details.html" class="btn">
                     <i class="lni lni-cart"></i> Thêm vào giỏ
@@ -449,20 +343,15 @@ onMounted(async () => {
                 </h4>
                 <Rating :ratings="getRatingsArray(product.rating)" />
                 <div class="price">
-                  <span>{{ FormatData.formatNumber(product.price) }}VNĐ</span>
+                  <span>{{ FormatData.formatNumber(product.variants[0].price) }}VNĐ</span>
                 </div>
                 <div class="d-flex gap-1 mt-2">
-                  <span
-                    v-for="(value, index) in product.colorName"
-                    :key="index"
-                    class="d-inline-block rounded-circle"
-                    style="
+                  <span v-for="value in FormatData.uniqueColors(product.variants)" :key="value.attribute_value_id"
+                    class="d-inline-block rounded-circle" style="
                       width: 0.75rem;
                       height: 0.75rem;
                       border: 1px solid #ccc;
-                    "
-                    :style="{ 'background-color': value }"
-                  >
+                    " :style="{ 'background-color': value.attribute_name }">
                   </span>
                 </div>
               </div>
@@ -473,25 +362,17 @@ onMounted(async () => {
 
       <div class="col-12 col-md-6 d-flex">
         <div v-if="isLoading" class="skeleton-banner rounded w-100"></div>
-        <div
-          v-else
-          class="position-relative overflow-hidden w-100 h-100 banner-hover"
-        >
-          <img
-            src="/images/banner/hangmoive_main.jpg"
-            class="w-100 h-100 object-fit-cover rounded"
-            alt="Hàng mới về"
-          />
-          <div
-            class="hover-overlay d-flex align-items-center justify-content-center"
-          >
-            <router-link to="/sanpham" class="btn btn-outline-light btn-sm"
-              >Xem tất cả</router-link
-            >
+        <div v-else class="position-relative overflow-hidden w-100 h-100 banner-hover">
+          <img src="/images/banner/hangmoive_main.jpg" class="w-100 h-100 object-fit-cover rounded" alt="Hàng mới về" />
+          <div class="hover-overlay d-flex align-items-center justify-content-center">
+            <router-link to="/sanpham" class="btn btn-outline-primary btn-sm">Xem tất cả</router-link>
           </div>
         </div>
       </div>
     </div>
+
+    <ProductModal v-if="productData" :product="productData" :is-visible="showModal" @close="closeModal"
+      @add-to-cart="handleAddToCart" />
   </div>
 </template>
 <style scoped>
@@ -747,7 +628,7 @@ onMounted(async () => {
 }
 
 @media only screen and (min-width: 768px) and (max-width: 991px),
-  (max-width: 767px) {
+(max-width: 767px) {
   .single-product .product-info .title a {
     font-size: 15px;
   }

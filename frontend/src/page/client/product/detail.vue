@@ -1,24 +1,55 @@
 <script setup>
 import axios from 'axios';
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import FormatData from "@/component/store/FormatData";
-
+import useProductVariants from '@/component/store/useProductVariants';
 const props = defineProps({
     productId: {
         type: [String, Number],
         default: null,
     },
 });
-const product = ref({})
+const product = ref(null)
 const getProductById = async (productId) => {
     try {
         const res = await axios.get(`http://127.0.0.1:8000/api/products/${productId}`)
         product.value = res.data.product
+        console.log('sss' + product.value);
+
     } catch (error) {
         console.log(error);
-
     }
 }
+const {
+    mainImage,
+    selectedColor,
+    selectedSize,
+    uniqueColors,
+    uniqueSizes,
+    currentVariant,
+    currentVariantImages,
+    isSizeAvailable
+} = useProductVariants(product);
+
+const quantity = ref(1);
+
+const selectOption = (type, value) => {
+    if (type === 'color') {
+        selectedColor.value = value;
+    } else if (type === 'size') {
+        selectedSize.value = value;
+    }
+};
+
+const decrement = () => {
+    if (quantity.value > 1) {
+        quantity.value--;
+    }
+};
+
+const increment = () => {
+    quantity.value++;
+};
 
 onMounted(async () => {
     getProductById(props.productId)
@@ -26,7 +57,7 @@ onMounted(async () => {
 </script>
 <template>
     <!-- Start Item Details -->
-    <section class="item-details section pt-2">
+    <section class="item-details section pt-2" v-if="product">
         <div class="container">
             <div class="top-area">
                 <div class="row">
@@ -34,11 +65,12 @@ onMounted(async () => {
                         <div class="product-images">
                             <main id="gallery">
                                 <div class="main-img">
-                                    <img :src="product.image" id="current" alt="#"
+                                    <img :src="mainImage" id="current" alt="#"
                                         style="height: 500px; object-fit: cover;">
                                 </div>
                                 <div class="images">
-                                    <img :src="value.image_url" class="img" alt="#" v-for="value in product.images">
+                                    <img class="img" v-for="image in currentVariantImages" :key="image.id"
+                                        :src="image.image_url" @click="mainImage = image.image_url">
 
                                 </div>
                             </main>
@@ -49,7 +81,7 @@ onMounted(async () => {
                             <h2 class="title">{{ product.name }}</h2>
                             <p class="category"><i class="lni lni-tag"></i> Danh mục: <a href="javascript:void(0)">{{
                                 product.category_name }}</a></p>
-                            <h3 class="price">{{ FormatData.formatNumber(product.price) }}VND</h3>
+                            <h3 class="price">{{ FormatData.formatNumber(product.variants[0].price) }}VND</h3>
                             <!-- <p class="info-text">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
                                 tempor incididunt
                                 ut labore et dolore magna aliqua.</p> -->
@@ -57,15 +89,17 @@ onMounted(async () => {
                                 <div class="col-lg-4 col-md-4 col-12">
                                     <div class="form-group color-option">
                                         <label class="fs-6" for="size">Chọn màu sắc</label>
-                                        <div class="d-flex gap-1 ">
-                                            <div v-for="(value, index) in product.colorName" :key="index"
+                                        <div class="d-flex gap-2">
+                                            <button @click="selectOption('color', value.attribute_value_id)"
+                                                v-for="value in uniqueColors" :key="value.attribute_value_id"
+                                                :class="['color-option', { 'color-selected': selectedColor === value.attribute_value_id }]"
                                                 class="d-inline-block rounded-circle" :style="{
                                                     width: '1.75rem',
                                                     height: '1.75rem',
-                                                    'background-color': value,
+                                                    'background-color': value.attribute_name,
                                                     cursor: 'pointer',
-                                                    border: '1px solid black'
-                                                }"></div>
+                                                    border: '1px solid #ccc'
+                                                }"></button>
                                         </div>
                                     </div>
                                 </div>
@@ -75,8 +109,12 @@ onMounted(async () => {
                                     <div class="form-group color-option">
                                         <label class="fs-6" for="size">Chọn kích thước</label>
                                         <div class="d-flex gap-1 ">
-                                            <button v-for="(value, index) in product.sizeName" :key="index"
-                                                class="d-inline-block btn btn-outline-dark"> {{ value }}</button>
+                                            <button v-for="value in uniqueSizes" :key="value.attribute_value_id"
+                                                class="d-inline-block btn btn-outline-primary"
+                                                :class="{ active: selectedSize === value.attribute_value_id }"
+                                                @click="selectOption('size', value.attribute_value_id)"> {{
+                                                    value.attribute_name
+                                                }}</button>
                                         </div>
                                     </div>
                                 </div>
@@ -85,7 +123,7 @@ onMounted(async () => {
                                 <div class="row align-items-end">
                                     <div class="col-12">
                                         <div class="button cart-button">
-                                            <button class="btn" style="width: 100%;">Add to Cart</button>
+                                            <button class="btn" style="width: 100%;">Thêm vào giỏ hàng</button>
                                         </div>
                                     </div>
 
@@ -272,3 +310,10 @@ onMounted(async () => {
     </div>
     <!-- End Review Modal -->
 </template>
+<style scoped>
+.color-selected {
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    transform: scale(1.2);
+    transition: box-shadow 0.2s ease-in-out, transform 0.2s ease-in-out;
+}
+</style>

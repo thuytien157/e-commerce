@@ -281,7 +281,7 @@ onMounted(async () => {
                                         <!-- Start Single Product -->
                                         <div class="single-product">
                                             <div class="product-image">
-                                                <img :src="product.image" alt="#"
+                                                <img :src="product.variants[0].image" alt="#"
                                                     style="height: 250px; object-fit: cover" />
                                                 <div class="button">
                                                     <a href="product-details.html" class="btn"><i
@@ -297,16 +297,17 @@ onMounted(async () => {
 
                                                 <div class="price">
                                                     <span>{{
-                                                        FormatData.formatNumber(product.price)
+                                                        FormatData.formatNumber(product.variants[0].price)
                                                         }}VNĐ</span>
                                                 </div>
                                                 <div class="d-flex gap-1 mt-2">
-                                                    <span v-for="(value, index) in product.colorName" :key="index"
+                                                    <span v-for="value in FormatData.uniqueColors(product.variants)"
+                                                        :key="value.attribute_value_id"
                                                         class="d-inline-block rounded-circle" style="
-                              width: 0.75rem;
-                              height: 0.75rem;
-                              border: 1px solid #ccc;
-                            " :style="{ 'background-color': value }">
+                      width: 0.75rem;
+                      height: 0.75rem;
+                      border: 1px solid #ccc;
+                    " :style="{ 'background-color': value.attribute_name }">
                                                     </span>
                                                 </div>
                                             </div>
@@ -366,14 +367,14 @@ onMounted(async () => {
                                                                 FormatData.formatNumber(product.price)
                                                                 }}VNĐ</span>
                                                         </div>
-                                                        <div class="d-flex gap-2 mt-2">
-                                                            <span v-for="(value, index) in product.colorName"
-                                                                :key="index" class="d-inline-block rounded-circle"
-                                                                style="
-                                  width: 1.75rem;
-                                  height: 1.75rem;
-                                  border: 1px solid #ccc;
-                                " :style="{ 'background-color': value }">
+                                                        <div class="d-flex gap-1 mt-2">
+                                                            <span v-for="value in FormatData.uniqueColors(product.variants)"
+                                                                :key="value.attribute_value_id"
+                                                                class="d-inline-block rounded-circle" style="
+                      width: 0.75rem;
+                      height: 0.75rem;
+                      border: 1px solid #ccc;
+                    " :style="{ 'background-color': value.attribute_name }">
                                                             </span>
                                                         </div>
                                                     </div>

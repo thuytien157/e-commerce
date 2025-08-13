@@ -1,58 +1,321 @@
+<script setup>
+import { useCartStore } from '@/component/store/cart';
+import { useTokenUser } from '@/component/store/useTokenUser';
+import axios from 'axios';
+import Swal from 'sweetalert2';
+import { computed, onMounted, ref, watch } from 'vue';
+
+const cartItems = ref([]);
+const formatNumber = (num) => {
+    return new Intl.NumberFormat('vi-VN').format(num);
+};
+
+
+const store = useTokenUser();
+const cartStore = useCartStore()
+const address = ref({
+    customer_name: '',
+    phone: '',
+    province_id: '',
+    district_id: '',
+    ward_code: '',
+    address: ''
+});
+const defaultAddressFromApi = ref(null);
+
+const provinces = ref([]);
+const districts = ref([]);
+const wards = ref([]);
+const services = ref([]);
+const selectedServiceId = ref(null);
+const selectedProvince = ref(null);
+const selectedDistrict = ref(null);
+const selectedWard = ref(null);
+const ghnToken = import.meta.env.VITE_GHN_TOKEN;
+const shippingFee = ref(0);
+
+const totalPayment = computed(() => {
+    return cartStore.totalPrice + shippingFee.value;
+});
+
+const getUserById = async () => {
+    try {
+        const res = await axios.get("http://127.0.0.1:8000/api/user", {
+            headers: {
+                Authorization: `Bearer ${store.token}`,
+            },
+        });
+        defaultAddressFromApi.value = res.data.defaultAddress;
+    } catch (error) {
+        console.error("Lỗi khi lấy dữ liệu người dùng:", error);
+    }
+};
+
+const fetchProvinces = async () => {
+    try {
+        const res = await axios.get(
+            "https://online-gateway.ghn.vn/shiip/public-api/master-data/province",
+            { headers: { Token: ghnToken } }
+        );
+        provinces.value = res.data.data;
+    } catch (err) {
+        console.error("fetchProvinces error:", err);
+    }
+};
+
+const fetchDistricts = async (provinceId = selectedProvince.value) => {
+    selectedDistrict.value = null;
+    selectedWard.value = null;
+    districts.value = [];
+    wards.value = [];
+    shippingFee.value = 0;
+
+    if (!provinceId) return;
+
+    const provinceIdAsNumber = Number(provinceId);
+
+    try {
+        const res = await axios.post(
+            "https://online-gateway.ghn.vn/shiip/public-api/master-data/district",
+            { province_id: provinceIdAsNumber },
+            { headers: { Token: ghnToken } }
+        );
+        districts.value = res.data.data;
+    } catch (err) {
+        console.error("fetchDistricts error:", err);
+    }
+};
+
+const fetchWards = async (districtId = selectedDistrict.value) => {
+    selectedWard.value = null;
+    wards.value = [];
+    shippingFee.value = 0;
+
+    if (!districtId) return;
+
+    const districtIdAsNumber = Number(selectedDistrict.value);
+
+    try {
+        const res = await axios.post(
+            "https://online-gateway.ghn.vn/shiip/public-api/master-data/ward",
+            { district_id: districtIdAsNumber },
+            { headers: { Token: ghnToken } }
+        );
+        wards.value = res.data.data;
+    } catch (err) {
+        console.error("fetchWards error:", err);
+    }
+};
+
+const fetchServices = async () => {
+    if (!selectedDistrict.value) {
+        services.value = [];
+        return;
+    }
+    try {
+        const res = await axios.post(
+            "http://127.0.0.1:8000/api/ghn/service",
+            {
+                to_district_id: selectedDistrict.value,
+            }
+        );
+        services.value = res.data;
+        selectedServiceId.value = services.value.length > 0 ? services.value[0].service_id : null;
+    } catch (err) {
+        console.error("Lỗi khi lấy dịch vụ vận chuyển:", err);
+    }
+};
+
+
+const calculateShippingFee = async () => {
+    if (!selectedDistrict.value || !selectedWard.value || !selectedServiceId.value) {
+        shippingFee.value = 0;
+        return;
+    }
+
+    try {
+        const res = await axios.post(
+            "https://online-gateway.ghn.vn/shiip/public-api/v2/shipping-order/fee",
+            {
+                service_id: Number(selectedServiceId.value),
+                to_district_id: Number(selectedDistrict.value),
+                to_ward_code: selectedWard.value.toString(),
+                insurance_value: cartStore.totalPrice,
+                from_district_id: 1454,
+                weight: 100,
+                length: 20,
+                width: 20,
+                height: 10,
+            },
+            {
+                headers: {
+                    Token: ghnToken,
+                    "Content-Type": "application/json"
+                }
+            }
+        );
+
+        shippingFee.value = res.data.data.total;
+    } catch (err) {
+        console.error("Lỗi khi tính phí ship:", err);
+        shippingFee.value = 0;
+    }
+};
+
+const fillFormWithDefaultAddress = async () => {
+    const defaultAddress = defaultAddressFromApi.value;
+
+    address.value.customer_name = defaultAddress.customer_name;
+    address.value.phone = defaultAddress.phone;
+    address.value.address = defaultAddress.address;
+
+    selectedProvince.value = defaultAddress.province_id;
+    await fetchDistricts();
+    selectedDistrict.value = defaultAddress.district_id;
+    await fetchWards();
+    selectedWard.value = defaultAddress.ward_code;
+
+    await fetchServices();
+    await calculateShippingFee();
+};
+const errors = ref({});
+const order = async () => {
+    try {
+        const provinceName = provinces.value.find(p => p.ProvinceID === selectedProvince.value)?.ProvinceName || '';
+        const districtName = districts.value.find(d => d.DistrictID === selectedDistrict.value)?.DistrictName || '';
+        const wardName = wards.value.find(w => w.WardCode === String(selectedWard.value))?.WardName || '';
+        const orderData = {
+            shipping_address: defaultAddressFromApi.value.id,
+            guest_name: address.value.customer_name,
+            customer_id: store.userId,
+            guest_phone: address.value.phone,
+            wards: selectedWard.value,
+            provinces: selectedProvince.value,
+            districts: selectedDistrict.value,
+            address: address.value.address,
+            guest_address: `${address.value.address || ''}, ${wardName}, ${districtName}, ${provinceName}`,
+            total_amount: totalPayment.value,
+            shipping_money: shippingFee.value,
+            cartItems: cartStore.items,
+        };
+
+        const res = await axios.post('http://127.0.0.1:8000/api/order', orderData);
+        Swal.fire({
+            toast: true,
+            position: "top-end",
+            icon: "success",
+            title: "Đặt hàng thành công!",
+            showConfirmButton: false,
+            timer: 1000,
+            timerProgressBar: true,
+        });
+
+        cartStore.removeCart()
+
+
+    } catch (error) {
+        if (error.response && error.response.status === 422) {
+            errors.value = {};
+            errors.value = error.response.data.errors;
+        }
+    }
+}
+
+
+onMounted(async () => {
+    cartStore.loadCart();
+    await fetchProvinces();
+    await getUserById();
+
+    if (defaultAddressFromApi.value) {
+        await fillFormWithDefaultAddress();
+    }
+});
+
+watch([selectedDistrict, selectedWard], async () => {
+    if (selectedDistrict.value) {
+        await fetchServices();
+    }
+    if (selectedDistrict.value && selectedWard.value) {
+        await calculateShippingFee();
+    }
+});
+</script>
+
+
 <template>
     <section class="checkout-wrapper section pt-2">
         <div class="container py-4">
             <div class="row gx-5">
                 <div class="col-md-6">
                     <div class="p-4 border rounded shadow-sm bg-white">
-                        <h5 class="mb-4">Thông tin đặt hàng</h5>
-                        <form>
+                        <h5 class="mb-4" style="color: blue;">Thông tin đặt hàng</h5>
+                        <form @submit.prevent="order">
                             <div class="mb-3">
-                                <input type="text" class="form-control" placeholder="Tên của bạn" />
+                                <small class="text-danger" v-if="errors.guest_name">{{
+                                    errors.guest_name[0]
+                                    }}</small>
+                                <input type="text" class="form-control" placeholder="Tên của bạn"
+                                    v-model="address.customer_name" />
                             </div>
                             <div class="mb-3">
-                                <input type="email" class="form-control" placeholder="Email của bạn" />
+                                <small class="text-danger" v-if="errors.guest_phone">{{
+                                    errors.guest_phone[0]
+                                    }}</small>
+                                <input type="text" class="form-control" placeholder="Số điện thoại"
+                                    v-model="address.phone" />
                             </div>
                             <div class="mb-3">
-                                <input type="text" class="form-control" placeholder="Số điện thoại" />
-                            </div>
-                            <div class="mb-3">
-                                <select class="form-control">
-                                    <option value="">Chọn tỉnh / thành</option>
-                                    <option value="1">Hồ Chí Minh</option>
-                                    <option value="2">Hà Nội</option>
-                                    <option value="3">Đà Nẵng</option>
+                                <small class="text-danger" v-if="errors.provinces">{{
+                                    errors.provinces[0]
+                                    }}</small>
+                                <select v-model="selectedProvince" @change="fetchDistricts" class="form-control">
+                                    <option :value="null">Chọn tỉnh / thành</option>
+                                    <option v-for="province in provinces" :key="province.ProvinceID"
+                                        :value="province.ProvinceID">
+                                        {{ province.ProvinceName }}
+                                    </option>
                                 </select>
                             </div>
-
                             <div class="mb-3">
-                                <select class="form-control">
-                                    <option value="">Chọn quận / huyện</option>
-                                    <option value="1">Quận 1</option>
-                                    <option value="2">Quận 3</option>
-                                    <option value="3">Quận 5</option>
+                                <small class="text-danger" v-if="errors.districts">{{
+                                    errors.districts[0]
+                                    }}</small>
+                                <select v-model="selectedDistrict" @change="fetchWards" :disabled="!selectedProvince"
+                                    class="form-control">
+                                    <option :value="null">Chọn quận / huyện</option>
+                                    <option v-for="district in districts" :key="district.DistrictID"
+                                        :value="district.DistrictID">
+                                        {{ district.DistrictName }}
+                                    </option>
                                 </select>
                             </div>
-
                             <div class="mb-3">
-                                <select class="form-control">
-                                    <option value="">Chọn phường / xã</option>
-                                    <option value="1">Phường Bến Nghé</option>
-                                    <option value="2">Phường 6</option>
-                                    <option value="3">Phường 8</option>
+                                <small class="text-danger" v-if="errors.wards">{{
+                                    errors.wards[0]
+                                    }}</small>
+                                <select class="form-control" v-model="selectedWard" :disabled="!selectedDistrict">
+                                    <option :value="null">Chọn phường / xã</option>
+                                    <option v-for="ward in wards" :key="ward.WardCode" :value="ward.WardCode">
+                                        {{ ward.WardName }}
+                                    </option>
                                 </select>
                             </div>
-
                             <div class="mb-3">
-                                <input type="text" class="form-control" placeholder="Địa chỉ" />
+                                <small class="text-danger" v-if="errors.address">{{
+                                    errors.address[0]
+                                    }}</small>
+                                <input type="text" class="form-control" placeholder="Địa chỉ"
+                                    v-model="address.address" />
                             </div>
                             <div class="mb-3">
                                 <textarea class="form-control" rows="3" placeholder="Ghi chú"></textarea>
                             </div>
                             <div class="d-flex justify-content-between align-items-center">
-                                <a href="/cart" class="btn btn-outline-secondary">
+                                <a href="/cart" class="btn btn-outline-primary">
                                     <i class="bi bi-chevron-left"></i> Quay về giỏ hàng
                                 </a>
-                                <button type="submit" class="btn btn-check-out">
+                                <button type="submit" class="btn btn-primary">
                                     Đặt hàng
                                 </button>
                             </div>
@@ -62,51 +325,36 @@
 
                 <div class="col-md-6 pe-0">
                     <div class="p-4 border rounded shadow-sm bg-white">
-                        <h5 class="mb-3">Đơn hàng (2 sản phẩm)</h5>
+                        <h5 class="mb-3" style="color: blue;">Đơn hàng ({{ cartStore.items.length }} sản phẩm) </h5>
                         <hr />
 
                         <div class="list-product-scroll mb-2">
-                            <div class="d-flex mb-3">
-                                <img src="/images/products/product-1.jpg" alt="" class="me-3 rounded" width="50"
-                                    height="50" />
+                            <div class="d-flex mb-3" v-for="item in cartStore.items" :key="item.variantId">
+                                <img :src="item.image" alt="" class="me-3 rounded" width="50" height="50" />
                                 <div class="flex-grow-1">
-                                    <strong>Tên Sản Phẩm 1</strong>
+                                    <strong class="product-name-short">{{ item.productName }}</strong>
 
                                     <div class="text-muted small ps-2 mb-1" style="font-size: 11px">
-                                        <div>+ Size: S - Màu: đỏ</div>
+                                        <div>+ Size: {{ item.selectedSize }}</div>
                                     </div>
-                                    <div style="font-size: 12px">Số lượng: 1</div>
-                                    <div style="font-size: 12px">Giá: 100.000 VNĐ</div>
+                                    <div style="font-size: 12px">Số lượng: {{ item.quantity }}</div>
+                                    <div style="font-size: 12px">Giá: {{ formatNumber(item.price) }} VNĐ</div>
                                 </div>
-                                <div class="text-end ms-2">
-                                    <strong>135.000 VNĐ</strong>
+                                <div class="text-end ms-2 fw-semibold" style="color: blue;">
+                                    {{ formatNumber(item.price * item.quantity) }} VNĐ
                                 </div>
                             </div>
-                            <div class="d-flex mb-3">
-                                <img src="/images/products/product-1.jpg" alt="" class="me-3 rounded" width="50"
-                                    height="50" />
-                                <div class="flex-grow-1">
-                                    <strong>Tên Sản Phẩm 2</strong>
 
-                                    <div class="text-muted small ps-2 mb-1" style="font-size: 11px">
-                                        <div>+ Size: S - Màu: đỏ</div>
-                                    </div>
-                                    <div style="font-size: 12px">Số lượng: 1</div>
-                                    <div style="font-size: 12px">Giá: 100.000 VNĐ</div>
-                                </div>
-                                <div class="text-end ms-2">
-                                    <strong>80.000 VNĐ</strong>
-                                </div>
-                            </div>
                         </div>
 
                         <hr />
 
                         <div class="d-flex justify-content-between mb-2">
-                            <span>Tạm tính</span><span>215.000 VNĐ</span>
+                            <span>Tạm tính</span><span class="fw-semibold">{{ formatNumber(cartStore.totalPrice) }}
+                                VNĐ</span>
                         </div>
                         <div class="d-flex justify-content-between mb-2">
-                            <span>Phí ship</span><span>15.000 VNĐ</span>
+                            <span>Phí ship</span><span class="fw-semibold">{{ formatNumber(shippingFee) }} VNĐ</span>
                         </div>
                         <!-- <div class="d-flex justify-content-between mb-2">
                             <span>10 Tpoints</span>
@@ -130,8 +378,9 @@
                         <div class="d-flex justify-content-between mb-2 text-success">
                             <span>Giảm giá phí ship</span> <span>-15.000 VNĐ</span>
                         </div> -->
-                        <div style="color: #c92c3c" class="d-flex justify-content-between mb-2 fw-bold">
-                            <span>Tổng thanh toán:</span><span>180.000 VNĐ</span>
+                        <div style="color: blue" class="d-flex justify-content-between mb-2 fw-bold">
+                            <span>Tổng thanh toán:</span><span class="fw-semibold" style="color: blue;">{{
+                                formatNumber(totalPayment) }} VNĐ</span>
                         </div>
 
                         <!-- <div class="mb-3">
@@ -212,13 +461,6 @@
                                 </label>
                             </div>
                             <div class="form-check">
-                                <input class="form-check-input" type="radio" name="payment" id="momo" value="MOMO" />
-                                <label class="form-check-label d-flex align-items-center" for="momo">
-                                    <span class="me-2">Thanh toán qua Momo</span>
-                                    <img src="/images/products/product-1.jpg" height="20" width="20" alt="" />
-                                </label>
-                            </div>
-                            <div class="form-check">
                                 <input class="form-check-input" type="radio" name="payment" id="cod" value="COD"
                                     checked />
                                 <label class="form-check-label d-flex align-items-center" for="cod">
@@ -232,9 +474,18 @@
             </div>
         </div>
     </section>
-    <!--====== Checkout Form Steps Part Ends ======-->
 </template>
 <style scoped>
+.product-name-short {
+    display: block;
+    width: 300px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 14px;
+    font-weight: 600;
+}
+
 .isLoading-overlay {
     position: fixed;
     top: 0;

@@ -309,9 +309,15 @@ class User extends Controller
         }
 
         $user = ModelsUser::with('addresses')->find($id);
-
+        $defaultAddress = null;
+        if ($user && $user->addresses) {
+            $defaultAddress = $user->addresses->first(function ($address) {
+                return $address->default == true;
+            });
+        }
         return response()->json([
-            'user' => $user
+            'user' => $user,
+            'defaultAddress' => $defaultAddress
         ], 200);
     }
     function getAddressById(string $address_id)
@@ -392,7 +398,8 @@ class User extends Controller
             $request->all(),
             [
                 'customer_name' => 'required|string',
-                'phone' => 'required|digits:9',
+                // Sửa rule digits thành 10 hoặc sử dụng regex để chặt chẽ hơn
+                'phone' => ['required', 'regex:/^0[0-9]{9}$/'],
                 ValidationRule::unique('addresses', 'phone')->ignore($address_id),
                 'address' => 'required',
             ],
@@ -400,7 +407,7 @@ class User extends Controller
                 'customer_name.required' => 'Vui lòng nhập tên',
                 'customer_name.string' => 'Tên không đúng định dạng',
                 'phone.required' => 'Vui lòng nhập số điện thoại',
-                'phone.digits' => 'Số điện thoại phải đủ 10 chữ số',
+                'phone.regex' => 'Số điện thoại phải đủ 10 chữ số và bắt đầu bằng số 0.',
                 'phone.unique' => 'Số điện thoại đã tồn tại',
                 'address.required' => 'Vui lòng nhập địa chỉ',
             ]

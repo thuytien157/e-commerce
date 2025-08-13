@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Attribute;
 use App\Http\Controllers\Category;
+use App\Http\Controllers\Order;
 use App\Http\Controllers\Product;
 use App\Http\Controllers\User;
 use Illuminate\Http\Request;
@@ -44,3 +45,7 @@ Route::resource('product', Product::class);
 
 Route::resource('category', Category::class);
 Route::resource('attribute', Attribute::class);
+
+
+Route::post('/ghn/service', [Order::class, 'getGHNServices']);
+Route::post('/order', [Order::class, 'createOrder']);

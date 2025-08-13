@@ -1,69 +1,66 @@
+<script setup>
+import { useCartStore } from '@/component/store/cart';
+import { ref } from 'vue';
+
+const cartItems = ref([]);
+const cartStore = useCartStore()
+const formatNumber = (num) => {
+    return new Intl.NumberFormat('vi-VN').format(num);
+};
+
+</script>
 <template>
     <div class="shopping-cart section pt-4">
         <div class="container bg-white p-3">
             <h5 class="">Giỏ hàng của bạn</h5>
             <div class="row">
                 <div class="col-12 col-lg-8">
-                    <div class="list-group mt-5" id="cart">
-                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <div class="list-group " id="cart" v-if="cartStore.items.length > 0">
+                        <div v-for="item in cartStore.items" :key="item.variantId"
+                            class="list-group-item d-flex justify-content-between align-items-center">
                             <div class="d-flex align-items-center flex-grow-1">
-                                <input class="form-check-input me-3" type="checkbox" checked>
-                                <img src="/images/products/product-1.jpg" alt="Sản phẩm 1" class="img-thumbnail">
+                                <img :src="item.image" alt="Sản phẩm" class="img-thumbnail">
                                 <div class="ms-3">
-                                    <p class="mb-1 fw-bold">Tên Sản Phẩm 1</p>
-                                    <div class="text-muted small">Số lượng: 2</div>
-                                    <div class="text-muted small">Số lượng: 2</div>
+                                    <p class="mb-1 fw-bold">{{ item.productName }}</p>
+                                    <div class="text-muted small">Kích cỡ: {{ item.selectedSize }}</div>
                                 </div>
                             </div>
                             <div class="cart-action-col d-flex justify-content-between">
-                                <p class="fw-bold mb-2">250.000<sup class="fw-bold">đ</sup></p>
+                                <p class="fw-bold mb-2" style="color: blue;">{{ formatNumber(item.price * item.quantity)
+                                }}VND</p>
                                 <div class="input-group input-group-sm quantity-control mb-2">
-                                    <button class="btn btn-quantity" type="button">−</button>
+                                    <button class="btn btn-quantity" type="button"
+                                        @click="cartStore.decrement(item.variantId)">−</button>
                                     <input type="number" class="form-control text-center form-control-quantity"
-                                        value="1" min="1" readonly>
-                                    <button class="btn btn-quantity" type="button">+</button>
+                                        :value="item.quantity" min="1" readonly>
+                                    <button class="btn btn-quantity" type="button"
+                                        @click="cartStore.increment(item.variantId)">+</button>
                                 </div>
-                                <a class="btn btn-danger btn-sm" href="#">Xoá</a>
-                            </div>
-                        </div>
+                                <i class="bi bi-trash3-fill" @click.prevent="cartStore.removeItem(item.variantId)"
+                                    style="color: red;"></i>
 
-                        <div class="list-group-item d-flex justify-content-between align-items-center">
-                            <div class="d-flex align-items-center flex-grow-1">
-                                <input class="form-check-input me-3" type="checkbox" checked>
-                                <img src="/images/products/product-2.jpg" alt="Sản phẩm 2" class="img-thumbnail">
-                                <div class="ms-3">
-                                    <p class="mb-1 fw-bold">Tên Sản Phẩm 2</p>
-                                    <div class="text-muted small">Số lượng: 2</div>
-                                    <div class="text-muted small">Số lượng: 2</div>
-                                </div>
-                            </div>
-                            <div class="cart-action-col d-flex justify-content-between">
-                                <p class="fw-bold mb-2">150.000<sup class="fw-bold">đ</sup></p>
-                                <div class="input-group input-group-sm quantity-control mb-2">
-                                    <button class="btn btn-quantity" type="button">−</button>
-                                    <input type="number" class="form-control text-center form-control-quantity"
-                                        value="1" min="1" readonly>
-                                    <button class="btn btn-quantity" type="button">+</button>
-                                </div>
-                                <a class="btn btn-danger btn-sm" href="#">Xoá</a>
                             </div>
                         </div>
+                    </div>
+                    <div v-else class="text-center p-5">
+                        <p>Giỏ hàng của bạn trống.</p>
                     </div>
                 </div>
 
                 <div class="col-12 col-lg-4 mt-lg-0">
-                    <div class="card mt-5">
+                    <div class="card">
                         <div class="card-body" id="tomtat">
-                            <h5 class="card-title fw-bold">Tóm tắt đơn hàng</h5>
-                            <div class="d-flex justify-content-between">
+                            <h5 class="card-title fw-bold" style="color: blue;">Tóm tắt đơn hàng</h5>
+                            <!-- <div class="d-flex justify-content-between">
                                 <p>Tổng sản phẩm:</p>
-                                <p>3</p>
-                            </div>
+                                <p style="color: blue;">{{ cartItems.length }}</p>
+                            </div> -->
                             <div class="d-flex justify-content-between">
                                 <p>Tổng tiền:</p>
-                                <p class="fw-bold">650.000 VND</p>
+                                <p class="fw-bold" style="color: blue;">{{ formatNumber(cartStore.totalPrice) }} VND</p>
                             </div>
-                            <router-link to="/checkout" class="btn btn-dark w-100 mt-3">Tiến hành thanh toán</router-link>
+                            <router-link to="/checkout" class="btn btn-primary w-100 mt-3">Tiến hành thanh
+                                toán</router-link>
                         </div>
                     </div>
                 </div>
@@ -133,8 +130,6 @@ input[type=number]::-webkit-outer-spin-button {
     width: 50%;
 }
 
-/* --- Responsive CSS --- */
-/* Điều chỉnh cho màn hình nhỏ hơn 992px (máy tính bảng và điện thoại) */
 @media (max-width: 991px) {
     .list-group-item {
         flex-direction: column;
