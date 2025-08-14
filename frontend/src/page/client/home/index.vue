@@ -192,7 +192,7 @@ onMounted(async () => {
                 </h4>
                 <Rating :ratings="getRatingsArray(product.rating)" />
                 <div class="price">
-                  <span>{{ FormatData.formatNumber(product.variants[0].price) }}VNĐ</span>
+                  <span>{{ FormatData.formatNumber(product.price) }}VNĐ</span>
                 </div>
                 <div class="d-flex gap-1 mt-2">
                   <span v-for="value in FormatData.uniqueColors(product.variants)" :key="value.attribute_value_id"
@@ -253,20 +253,23 @@ onMounted(async () => {
       </div>
 
       <div v-else class="col-lg-3 col-md-6 col-12 mb-3" v-for="product in best_sellers" :key="product.id">
-        <div class="single-product">
+        <div class="single-product h-100">
           <div class="product-image">
-            <img :src="product.variants[0].image" style="height: 250px; object-fit: cover" alt="#" />
+            <img :src="product.variants[0].image" alt="#" style="height: 250px; object-fit: cover" />
             <div class="button">
-              <a href="product-details.html" class="btn"><i class="lni lni-cart"></i> Add to Cart</a>
+              <button @click="openModal(product.id)" class="btn">
+                <i class="lni lni-cart"></i> Thêm vào giỏ
+              </button>
             </div>
           </div>
           <div class="product-info">
             <h4 class="title">
-              <a href="product-grids.html">{{ product.name }}</a>
+              <router-link :to="`/product-detail/${product.variants[0].slug}/${product.id}`">{{ product.name
+              }}</router-link>
             </h4>
             <Rating :ratings="getRatingsArray(product.rating)" />
             <div class="price">
-              <span>{{ FormatData.formatNumber(product.variants[0].price) }}VNĐ</span>
+              <span>{{ FormatData.formatNumber(product.price) }}VNĐ</span>
             </div>
             <div class="d-flex gap-1 mt-2">
               <span v-for="value in FormatData.uniqueColors(product.variants)" :key="value.attribute_value_id"
@@ -328,22 +331,23 @@ onMounted(async () => {
           </div>
 
           <div v-else v-for="product in top_rated" :key="product.id" class="col-6" style="height: 420px">
-            <router-link to="/product-detail" class="single-product h-100">
+            <div class="single-product h-100">
               <div class="product-image">
                 <img :src="product.variants[0].image" alt="#" style="height: 250px; object-fit: cover" />
                 <div class="button">
-                  <a href="product-details.html" class="btn">
+                  <button @click="openModal(product.id)" class="btn">
                     <i class="lni lni-cart"></i> Thêm vào giỏ
-                  </a>
+                  </button>
                 </div>
               </div>
               <div class="product-info">
                 <h4 class="title">
-                  <a href="product-grids.html">{{ product.name }}</a>
+                  <router-link :to="`/product-detail/${product.variants[0].slug}/${product.id}`">{{ product.name
+                  }}</router-link>
                 </h4>
                 <Rating :ratings="getRatingsArray(product.rating)" />
                 <div class="price">
-                  <span>{{ FormatData.formatNumber(product.variants[0].price) }}VNĐ</span>
+                  <span>{{ FormatData.formatNumber(product.price) }}VNĐ</span>
                 </div>
                 <div class="d-flex gap-1 mt-2">
                   <span v-for="value in FormatData.uniqueColors(product.variants)" :key="value.attribute_value_id"
@@ -355,7 +359,7 @@ onMounted(async () => {
                   </span>
                 </div>
               </div>
-            </router-link>
+            </div>
           </div>
         </div>
       </div>

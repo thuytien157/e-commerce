@@ -179,13 +179,17 @@ const fillFormWithDefaultAddress = async () => {
     await calculateShippingFee();
 };
 const errors = ref({});
+const payment_method = ref('COD')
 const order = async () => {
+
+
     try {
         const provinceName = provinces.value.find(p => p.ProvinceID === selectedProvince.value)?.ProvinceName || '';
         const districtName = districts.value.find(d => d.DistrictID === selectedDistrict.value)?.DistrictName || '';
         const wardName = wards.value.find(w => w.WardCode === String(selectedWard.value))?.WardName || '';
         const orderData = {
             shipping_address: defaultAddressFromApi.value.id,
+            payment_method: payment_method.value,
             guest_name: address.value.customer_name,
             customer_id: store.userId,
             guest_phone: address.value.phone,
@@ -200,16 +204,13 @@ const order = async () => {
         };
 
         const res = await axios.post('http://127.0.0.1:8000/api/order', orderData);
-        Swal.fire({
-            toast: true,
-            position: "top-end",
-            icon: "success",
-            title: "Đặt hàng thành công!",
-            showConfirmButton: false,
-            timer: 1000,
-            timerProgressBar: true,
-        });
 
+        if (res.data.return_url) {
+            window.location.href = res.data.return_url;
+        } else {
+            Swal.fire('Thành công', 'Đơn hàng của bạn đã được tạo.', 'success');
+
+        }
         cartStore.removeCart()
 
 
@@ -254,21 +255,21 @@ watch([selectedDistrict, selectedWard], async () => {
                             <div class="mb-3">
                                 <small class="text-danger" v-if="errors.guest_name">{{
                                     errors.guest_name[0]
-                                    }}</small>
+                                }}</small>
                                 <input type="text" class="form-control" placeholder="Tên của bạn"
                                     v-model="address.customer_name" />
                             </div>
                             <div class="mb-3">
                                 <small class="text-danger" v-if="errors.guest_phone">{{
                                     errors.guest_phone[0]
-                                    }}</small>
+                                }}</small>
                                 <input type="text" class="form-control" placeholder="Số điện thoại"
                                     v-model="address.phone" />
                             </div>
                             <div class="mb-3">
                                 <small class="text-danger" v-if="errors.provinces">{{
                                     errors.provinces[0]
-                                    }}</small>
+                                }}</small>
                                 <select v-model="selectedProvince" @change="fetchDistricts" class="form-control">
                                     <option :value="null">Chọn tỉnh / thành</option>
                                     <option v-for="province in provinces" :key="province.ProvinceID"
@@ -280,7 +281,7 @@ watch([selectedDistrict, selectedWard], async () => {
                             <div class="mb-3">
                                 <small class="text-danger" v-if="errors.districts">{{
                                     errors.districts[0]
-                                    }}</small>
+                                }}</small>
                                 <select v-model="selectedDistrict" @change="fetchWards" :disabled="!selectedProvince"
                                     class="form-control">
                                     <option :value="null">Chọn quận / huyện</option>
@@ -293,7 +294,7 @@ watch([selectedDistrict, selectedWard], async () => {
                             <div class="mb-3">
                                 <small class="text-danger" v-if="errors.wards">{{
                                     errors.wards[0]
-                                    }}</small>
+                                }}</small>
                                 <select class="form-control" v-model="selectedWard" :disabled="!selectedDistrict">
                                     <option :value="null">Chọn phường / xã</option>
                                     <option v-for="ward in wards" :key="ward.WardCode" :value="ward.WardCode">
@@ -304,7 +305,7 @@ watch([selectedDistrict, selectedWard], async () => {
                             <div class="mb-3">
                                 <small class="text-danger" v-if="errors.address">{{
                                     errors.address[0]
-                                    }}</small>
+                                }}</small>
                                 <input type="text" class="form-control" placeholder="Địa chỉ"
                                     v-model="address.address" />
                             </div>
@@ -356,116 +357,25 @@ watch([selectedDistrict, selectedWard], async () => {
                         <div class="d-flex justify-content-between mb-2">
                             <span>Phí ship</span><span class="fw-semibold">{{ formatNumber(shippingFee) }} VNĐ</span>
                         </div>
-                        <!-- <div class="d-flex justify-content-between mb-2">
-                            <span>10 Tpoints</span>
-                            <label class="toggle-switch">
-                                <input type="checkbox" />
-                                <div class="toggle-switch-background">
-                                    <div class="toggle-switch-handle"></div>
-                                </div>
-                            </label>
-                        </div>
-                        <div class="d-flex justify-content-between mb-2 text-success mb-2">
-                            Giảm 10.000 VNĐ từ Tpoints
-                            <br />
-                            <span class="text-muted">
-                                Còn lại 0 Tpoints
-                            </span>
-                        </div>
-                        <div class="d-flex justify-content-between mb-2 text-success">
-                            <span>Giảm giá sản phẩm</span> <span>-20.000 VNĐ</span>
-                        </div>
-                        <div class="d-flex justify-content-between mb-2 text-success">
-                            <span>Giảm giá phí ship</span> <span>-15.000 VNĐ</span>
-                        </div> -->
                         <div style="color: blue" class="d-flex justify-content-between mb-2 fw-bold">
                             <span>Tổng thanh toán:</span><span class="fw-semibold" style="color: blue;">{{
                                 formatNumber(totalPayment) }} VNĐ</span>
                         </div>
 
-                        <!-- <div class="mb-3">
-                            <div class="text-green-600 mb-2">
-                                Mã <strong style="color: #c92c3c">SALE10</strong> đã được áp dụng ✅.
-                            </div>
-                            <label for="discount" class="form-label">Mã giảm giá</label>
-                            <div class="input-group">
-                                <input type="text" id="discount" class="form-control"
-                                    placeholder="Nhập mã giảm giá..." />
-                                <button class="btn btn-outline-primary">Áp dụng</button>
-                            </div>
-                            <div class="order-tabs d-flex flex-nowrap overflow-auto gap-3 mb-4 mt-3">
-                                <div class="tab-item active">
-                                    Tất cả mã
-                                </div>
-                                <div class="tab-item">
-                                    Mã của tôi
-                                </div>
-                            </div>
-                            <div class="discount-scroll-wrapper">
-                                <div class="voucher-card mb-3 disabled-voucher">
-                                    <div class="voucher-card-left freeship">
-                                        <img src="/img/freeship-icon.png" alt="icon" />
-                                        <div class="voucher-card-label">FREESHIP</div>
-                                    </div>
-                                    <div class="voucher-card-right">
-                                        <div>
-                                            <div class="voucher-code">Mã: FREESHIP25</div>
-                                            <div class="voucher-condition">
-                                                <i class="fa-regular fa-clock me-1"></i>Hết hạn: 2025-08-31
-                                            </div>
-                                            <div class="voucher-condition">
-                                                Miễn phí vận chuyển cho đơn trên 100k
-                                            </div>
-                                        </div>
-                                        <div class="voucher-footer">
-                                            <div class="voucher-coins">
-                                                Đã dùng: 50/100
-                                            </div>
-                                            <button class="voucher-button">Dùng ngay</button>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="voucher-card mb-3">
-                                    <div class="voucher-card-left salefood">
-                                        <img src="/img/discount-icon.png" alt="icon" />
-                                        <div class="voucher-card-label">GIẢM GIÁ</div>
-                                    </div>
-                                    <div class="voucher-card-right">
-                                        <div>
-                                            <div class="voucher-code">Mã: SALE20</div>
-                                            <div class="voucher-condition">
-                                                <i class="fa-regular fa-clock me-1"></i>Hết hạn: 2025-08-31
-                                            </div>
-                                            <div class="voucher-condition">
-                                                Giảm 20k cho đơn trên 150k
-                                            </div>
-                                        </div>
-                                        <div class="voucher-footer">
-                                            <div class="voucher-coins">
-                                                Đã dùng: 10/50
-                                            </div>
-                                            <button class="voucher-button">Dùng ngay</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div> -->
-
                         <div>
                             <h6 class="mb-2">Phương thức thanh toán</h6>
                             <div class="form-check">
-                                <input class="form-check-input" type="radio" name="payment" id="vnpay" value="VNPAY" />
+                                <input class="form-check-input" type="radio" name="payment" id="vnpay" value="VNPAY"
+                                    v-model="payment_method" />
                                 <label class="form-check-label d-flex align-items-center" for="vnpay">
                                     <span class="me-2">Thanh toán qua VNPAY</span>
-                                    <img src="/images/products/product-1.jpg" height="20" width="60" alt="" />
                                 </label>
                             </div>
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="payment" id="cod" value="COD"
-                                    checked />
+                                    v-model="payment_method" />
                                 <label class="form-check-label d-flex align-items-center" for="cod">
                                     <span class="me-2">Thanh toán khi nhận hàng (COD)</span>
-                                    <img src="/images/products/product-1.jpg" height="30" width="30" alt="" />
                                 </label>
                             </div>
                         </div>

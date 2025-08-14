@@ -15,7 +15,6 @@ return new class extends Migration
             $table->id();
             $table->foreignId('product_id')->constrained('products')->onDelete('cascade');
             $table->string('sku');
-            $table->float('price', 10, 2);
             $table->integer('stock_quantity');
             $table->string('slug');
             $table->string('main_image_url');

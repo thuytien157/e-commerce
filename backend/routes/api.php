@@ -37,15 +37,21 @@ Route::post('/insert-address', [User::class, 'insertAddress'])->middleware('auth
 Route::put('/edit-address/{address_id}', [User::class, 'editAddress'])->middleware('auth:sanctum');
 Route::get('/addresses/{address_id}', [User::class, 'getAddressById'])->middleware('auth:sanctum');
 Route::post('/update-avatar', [User::class, 'updateAvatar'])->middleware('auth:sanctum');
-
+Route::get('/order-history-user', [User::class, 'getOrderByUser'])->middleware('auth:sanctum');
 
 Route::get('/products/{id}', [Product::class, 'getProductById']);
-
 Route::resource('product', Product::class);
 
 Route::resource('category', Category::class);
+
 Route::resource('attribute', Attribute::class);
 
 
 Route::post('/ghn/service', [Order::class, 'getGHNServices']);
 Route::post('/order', [Order::class, 'createOrder']);
+Route::get('/order-info/{id}', [Order::class, 'getOrderById']);
+Route::put('/cancel-order', [Order::class, 'cancelOrder']);
+Route::put('/update-order-address', [Order::class, 'updateAddresslOrder']);
+Route::match(['GET', 'POST'], '/vnpay-ipn', [Order::class, 'handleVnpayIpn']);
+Route::get('/payment-return', [Order::class, 'paymentOrderReturn']);
+Route::post('/order/{orderId}/repay', [Order::class, 'repayOrder']);

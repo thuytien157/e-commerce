@@ -5,19 +5,15 @@ import { useTokenUser } from "./useTokenUser";
 export const useCartStore = defineStore("cart", () => {
   const store = useTokenUser();
   const items = ref([]);
-
-  // Định nghĩa một key động dựa trên userId
+  const quantity = ref(1)
   const cartKey = computed(() => {
-    // Trả về key riêng cho user nếu đã đăng nhập, ngược lại dùng key cho khách
     return store.userId ? `cart_huce_${store.userId}` : "cart_huce_guest";
   });
 
-  // Hàm để lưu giỏ hàng
   const saveCart = () => {
     localStorage.setItem(cartKey.value, JSON.stringify(items.value));
   };
 
-  // Hàm để tải giỏ hàng
   const loadCart = () => {
     const savedCart = localStorage.getItem(cartKey.value);
     items.value = savedCart ? JSON.parse(savedCart) : [];
@@ -32,9 +28,8 @@ export const useCartStore = defineStore("cart", () => {
       loadCart();
     },
     { immediate: true }
-  ); // `immediate: true` để chạy loadCart ngay khi store được khởi tạo
-
-  // Các computed properties
+  );
+  
   const cartLength = computed(() => items.value.length);
   const totalPrice = computed(() => {
     return items.value.reduce(
@@ -43,7 +38,6 @@ export const useCartStore = defineStore("cart", () => {
     );
   });
 
-  // Các actions
   const addItem = (product) => {
     const existingItem = items.value.find(
       (item) => item.variantId === product.variantId
@@ -51,7 +45,7 @@ export const useCartStore = defineStore("cart", () => {
     if (existingItem) {
       existingItem.quantity++;
     } else {
-      items.value.push({ ...product, quantity: 1 });
+      items.value.push({ ...product, quantity: quantity.value });
     }
     saveCart();
   };
@@ -92,5 +86,6 @@ export const useCartStore = defineStore("cart", () => {
     increment,
     decrement,
     loadCart,
+    quantity
   };
 });

@@ -15,7 +15,7 @@
                 <div class="product-details">
                     <h2>{{ product.name }}</h2>
                     <h3 class="price" style="color: blue">
-                        {{ product.variants[0].price }}VND
+                        {{ FormatData.formatNumber(product.price) }}VND
                     </h3>
                     <div v-if="product.variants" class="option-group">
                         <p class="option-label">Màu sắc:</p>
@@ -55,7 +55,7 @@
                         <button class="btn btn-outline-primary" @click="decrement">
                             -
                         </button>
-                        <div min="1" class="w-100 text-center">{{ quantity }}</div>
+                        <div min="1" class="w-100 text-center">{{ cartStore.quantity }}</div>
                         <button class="btn btn-outline-primary" @click="increment">
                             +
                         </button>
@@ -76,6 +76,8 @@
 <script setup>
 import { ref, toRefs, watch } from "vue";
 import useProductVariants from "./store/useProductVariants";
+import FormatData from "./store/FormatData";
+import { useCartStore } from "./store/cart";
 
 const props = defineProps({
     product: {
@@ -89,7 +91,7 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["close", "add-to-cart"]);
-
+const cartStore = useCartStore()
 const { product } = toRefs(props);
 const {
     mainImage,
@@ -101,8 +103,6 @@ const {
     currentVariantImages,
     isSizeAvailable,
 } = useProductVariants(product);
-
-const quantity = ref(1);
 
 const closeModal = () => {
     emit("close");
@@ -117,13 +117,13 @@ const selectOption = (type, value) => {
 };
 
 const decrement = () => {
-    if (quantity.value > 1) {
-        quantity.value--;
+    if (cartStore.quantity > 1) {
+        cartStore.quantity--;
     }
 };
 
 const increment = () => {
-    quantity.value++;
+    cartStore.quantity++;
 };
 
 const addToCart = () => {
@@ -141,8 +141,8 @@ const addToCart = () => {
     const item = {
         id: props.product.id,
         variantId: currentVariant.value.id,
-        quantity: quantity.value,
-        price: currentVariant.value.price,
+        quantity: cartStore.quantity,
+        price: props.product.price,
         productName: props.product.name,
         selectedColor: color.attribute_name,
         selectedSize: size.attribute_name,
@@ -150,7 +150,7 @@ const addToCart = () => {
     };
 
     emit("add-to-cart", item);
-    quantity.value = 1;
+    // quantity.value = 1;
     closeModal();
 };
 </script>

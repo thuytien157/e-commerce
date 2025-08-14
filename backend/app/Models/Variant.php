@@ -14,7 +14,6 @@ class Variant extends Model
     protected $fillable = [
         'product_id',
         'sku',
-        'price',
         'stock_quantity',
         'slug',
         'main_image_url'
@@ -30,7 +29,12 @@ class Variant extends Model
         return $this->hasMany(OrderItem::class, 'variant_id');
     }
 
-    public function variantImages(){
+    public function variantImages()
+    {
         return $this->hasMany(VariantImage::class);
+    }
+
+    public function product(){
+        return $this->belongsTo(Product::class, 'product_id');
     }
 }

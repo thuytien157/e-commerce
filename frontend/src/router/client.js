@@ -54,11 +54,13 @@ const client = [
     path: "/order-history",
     component: () => import("../page/client/order/history.vue"),
     meta: { title: "Lịch sử đơn hàng" },
+    props: true,
   },
   {
-    path: "/order-history-detail",
+    path: "/order-history-detail/:orderId",
     component: () => import("../page/client/order/detail.vue"),
     meta: { title: "Chi tiết đơn hàng" },
+    props: true,
   },
   {
     path: "/forgot-password",
@@ -86,6 +88,12 @@ const client = [
     path: "/checkout",
     component: () => import("../page/client/order/checkout.vue"),
     meta: { title: "Tạo đơn hàng" },
+  },
+  {
+    path: "/payment-result/:id",
+    component: () => import("../page/client/order/result.vue"),
+    meta: { title: "Kết quả thanh toán" },
+    props: true,
   },
 ];
 

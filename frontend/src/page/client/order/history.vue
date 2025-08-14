@@ -1,153 +1,307 @@
+<script setup>
+import SidebarAccount from "@/component/SidebarAccount.vue";
+import FormatData from "@/component/store/FormatData";
+import { useTokenUser } from "@/component/store/useTokenUser";
+import axios from "axios";
+import { onMounted, ref } from "vue";
+const store = useTokenUser();
+const orders = ref(null);
+const isLoading = ref(true);
+const getOrder = async () => {
+    isLoading.value = true;
+    try {
+        const res = await axios.get(
+            "http://127.0.0.1:8000/api/order-history-user",
+            {
+                headers: { Authorization: `Bearer ${store.token}` },
+            }
+        );
+        orders.value = res.data.orders;
+    } catch (error) {
+        console.log(error);
+    } finally {
+        isLoading.value = false;
+    }
+};
+const currentStatus = ref("pendingConfirmation");
+const filterOrderByStatus = async (status) => {
+    currentStatus.value = status;
+    isLoading.value = true;
+    try {
+        const res = await axios.get(
+            `http://127.0.0.1:8000/api/order-history-user?status=${status}`,
+            {
+                headers: { Authorization: `Bearer ${store.token}` },
+            }
+        );
+        orders.value = res.data.orders;
+    } catch (error) {
+        console.log(error);
+    } finally {
+        isLoading.value = false;
+    }
+};
+const getStatusClass = (status) => {
+    switch (status) {
+        case "Chờ xác nhận":
+            return "bg-secondary text-white";
+        case "Đã xác nhận":
+            return "bg-info text-white";
+        case "Đang xử lý":
+            return "bg-primary text-white";
+        case "Đang giao hàng":
+            return "bg-warning text-dark";
+        case "Hoàn thành":
+            return "bg-success text-white";
+        case "Đã hủy":
+        case "Thất bại":
+            return "bg-danger text-white";
+        default:
+            return "bg-secondary text-white";
+    }
+};
+
+const repayOrder = async (orderId) => {
+    try {
+        const response = await axios.post(`http://127.0.0.1:8000/api/order/${orderId}/repay`);
+        if (response.data.return_url) {
+            window.location.href = response.data.return_url;
+        }
+    } catch (error) {
+        console.log(error);
+
+    }
+}
+onMounted(async () => {
+    await getOrder();
+});
+</script>
+
 <template>
     <section class="account-page py-5 fade-in">
         <div class="container">
             <div class="row g-4">
-                <div class="col-12 col-md-4 col-lg-3">
-                    <div class="card h-100 shadow-sm border-0 text-center p-4">
-                        <div class="avatar-wrapper mb-3 mx-auto">
-                            <img src="/images/products/product-1.jpg" alt="Ảnh đại diện"
-                                class="rounded-circle avatar-img" />
-                            <div class="avatar-overlay">
-                                <label class="btn btn-light btn-sm m-0 cursor-pointer">
-                                    Đổi ảnh
-                                    <input type="file" hidden />
-                                </label>
-                            </div>
-                        </div>
-
-                        <h5 class="fw-bold mb-1">Chưa có tên</h5>
-                        <p class="text-muted small mb-3">Tên người dùng</p>
-
-                        <hr class="my-3">
-
-                        <div class="list-group list-group-flush text-start">
-                            <a href="/update-user"
-                                class="list-group-item list-group-item-action text-decoration-none rounded mb-2">
-                                <i class="bi bi-person me-2"></i>
-                                Thông tin tài khoản
-                            </a>
-                            <a href="/history-order"
-                                class="list-group-item list-group-item-action text-decoration-none rounded mb-2">
-                                <i class="bi bi-box-seam me-2"></i>
-                                Lịch sử đơn hàng
-                            </a>
-                            <a href="#" class="list-group-item list-group-item-action text-danger rounded">
-                                <i class="bi bi-box-arrow-right me-2"></i>
-                                Đăng xuất
-                            </a>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-12 col-md-8 col-lg-9 bg-white p-3" style="border-radius: 10px;">
+                <SidebarAccount></SidebarAccount>
+                <div class="col-12 col-md-8 col-lg-9 bg-white p-3" style="border-radius: 10px">
                     <h4 class="fw-bold mb-4">Đơn hàng đã mua</h4>
-
-
                     <!-- Tabs -->
-                    <div class="order-tabs d-flex flex-nowrap overflow-auto gap-3 mb-4">
-                        <a href="#" class="tab-item active">Chờ xác nhận</a>
-                        <a href="#" class="tab-item">Đã xác nhận</a>
-                        <a href="#" class="tab-item">Đang xử lý</a>
-                        <a href="#" class="tab-item">Bắt đầu giao</a>
-                        <a href="#" class="tab-item">Giao thành công</a>
-                        <a href="#" class="tab-item">Đã hủy</a>
+                    <div class="order-tabs d-flex flex-nowrap overflow-auto gap-3 mb-1">
+                        <button class="tab-item" :class="{ active: currentStatus === 'pendingConfirmation' }"
+                            @click="filterOrderByStatus('pendingConfirmation')">
+                            Chờ xác nhận
+                        </button>
+
+                        <button class="tab-item" :class="{ active: currentStatus === 'confirmation' }"
+                            @click="filterOrderByStatus('confirmation')">
+                            Đã xác nhận
+                        </button>
+
+                        <button class="tab-item" :class="{ active: currentStatus === 'pending' }"
+                            @click="filterOrderByStatus('pending')">
+                            Đang xử lý
+                        </button>
+
+                        <button class="tab-item" :class="{ active: currentStatus === 'shipping' }"
+                            @click="filterOrderByStatus('shipping')">
+                            Đang giao hàng
+                        </button>
+
+                        <button class="tab-item" :class="{ active: currentStatus === 'done' }"
+                            @click="filterOrderByStatus('done')">
+                            Hoàn thành
+                        </button>
+
+                        <button class="tab-item" :class="{ active: currentStatus === 'cancel' }"
+                            @click="filterOrderByStatus('cancel')">
+                            Đã hủy
+                        </button>
                     </div>
 
                     <!-- Table for desktop -->
                     <div class="card border-0 p-0 d-none d-md-block">
-                        <table class="table table-hover table-borderless align-middle">
-                            <thead class="table-light rounded">
-                                <tr>
-                                    <th scope="col">Mã đơn</th>
-                                    <th scope="col">Ngày đặt</th>
-                                    <th scope="col">Tổng tiền</th>
-                                    <th scope="col">Trạng thái</th>
-                                    <th scope="col">Thao tác</th>
-                                </tr>
-                            </thead>
+                        <table class="table" v-if="isLoading">
                             <tbody>
-                                <tr>
-                                    <td>#123456</td>
-                                    <td>08/08/2025 10:30</td>
-                                    <td>150.000 VND</td>
-                                    <td><span class="badge bg-warning text-dark">Chờ xác nhận</span></td>
-                                    <td><a href="/history-order-detail/123456"
-                                            class="btn btn-sm btn-outline-primary">Xem</a></td>
-                                </tr>
-                                <tr>
-                                    <td>#123457</td>
-                                    <td>07/08/2025 15:00</td>
-                                    <td>250.000 VND</td>
-                                    <td><span class="badge bg-success">Giao thành công</span></td>
-                                    <td><a href="/history-order-detail/123457"
-                                            class="btn btn-sm btn-outline-primary">Xem</a></td>
-                                </tr>
-                                <tr>
-                                    <td>#123458</td>
-                                    <td>06/08/2025 11:45</td>
-                                    <td>95.000 VND</td>
-                                    <td><span class="badge bg-danger">Đã hủy</span></td>
-                                    <td><a href="/history-order-detail/123458"
-                                            class="btn btn-sm btn-outline-primary">Xem</a></td>
+                                <tr v-for="n in 10" :key="n">
+                                    <td>
+                                        <div class="skeleton-line" style="width: 60px"></div>
+                                    </td>
+                                    <td>
+                                        <div class="skeleton-line" style="width: 120px"></div>
+                                    </td>
+                                    <td>
+                                        <div class="skeleton-line" style="width: 100px"></div>
+                                    </td>
+                                    <td>
+                                        <div class="skeleton-line" style="width: 80px"></div>
+                                    </td>
+                                    <td>
+                                        <div class="skeleton-line" style="width: 50px"></div>
+                                    </td>
                                 </tr>
                             </tbody>
                         </table>
+                        <div class="table-responsive-scroll" v-else>
+                            <table class="table table-hover table-borderless align-middle">
+                                <thead class="table-light rounded">
+                                    <tr>
+                                        <th scope="col">Mã đơn</th>
+                                        <th scope="col">Ngày đặt</th>
+                                        <th scope="col">Tổng tiền</th>
+                                        <th scope="col">Trạng thái</th>
+                                        <th scope="col">Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="value in orders" :key="value.id">
+                                        <td>#{{ value.id }}</td>
+                                        <td>{{ FormatData.formatDateTime(value.order_date) }}</td>
+                                        <td>
+                                            {{ FormatData.formatNumber(value.total_amount) }} VND
+                                        </td>
+                                        <td>
+                                            <span class="badge" :class="getStatusClass(value.status)">
+                                                {{ value.status }}
+                                            </span>
+                                        </td>
+                                        <td class="d-flex gap-2">
+                                            <router-link :to="`/order-history-detail/${value.id}`"
+                                                href="/history-order-detail/123456"
+                                                class="btn btn-sm btn-outline-primary">Xem</router-link>
+                                            <button class="btn btn-sm btn-outline-dark" @click="repayOrder(value.id)"
+                                                v-if="value.payment_method == 'VNPAY' && value.status_payments == 'Chưa thanh toán'">Thanh
+                                                toán</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
 
                     <!-- Cards for mobile -->
                     <div class="d-md-none">
-                        <div class="order-card card border-0 shadow-sm mb-3">
+                        <div class="order-card card border-0 shadow-sm mb-3" v-if="isLoading" v-for="n in 3" :key="n">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <h6 class="fw-bold mb-0">Mã đơn: #123456</h6>
-                                    <span class="badge bg-warning text-dark">Chờ xác nhận</span>
+                                    <div class="skeleton-line" style="width: 120px"></div>
+                                    <div class="skeleton-line" style="width: 80px"></div>
                                 </div>
-                                <p class="mb-1 text-muted"><i class="bi bi-calendar me-2"></i>08/08/2025 10:30</p>
-                                <p class="mb-2 text-muted"><i class="bi bi-cash me-2"></i>Tổng tiền: <strong>150.000
-                                        VND</strong></p>
+                                <div class="skeleton-line mb-1" style="width: 150px"></div>
+                                <div class="skeleton-line mb-2" style="width: 180px"></div>
                                 <div class="text-end">
-                                    <a href="/history-order-detail/123456" class="btn btn-sm btn-outline-primary">Xem
-                                        chi tiết</a>
+                                    <div class="skeleton-line" style="width: 80px; height: 32px"></div>
                                 </div>
                             </div>
                         </div>
-
-                        <div class="order-card card border-0 shadow-sm mb-3">
+                        <div class="order-card card border-0 shadow-sm mb-3" v-else v-for="value in orders"
+                            :key="value.id">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <h6 class="fw-bold mb-0">Mã đơn: #123457</h6>
-                                    <span class="badge bg-success">Giao thành công</span>
+                                    <h6 class="fw-bold mb-0">Mã đơn: #{{ value.id }}</h6>
+                                    <span class="badge bg-warning text-dark">{{
+                                        value.status
+                                        }}</span>
                                 </div>
-                                <p class="mb-1 text-muted"><i class="bi bi-calendar me-2"></i>07/08/2025 15:00</p>
-                                <p class="mb-2 text-muted"><i class="bi bi-cash me-2"></i>Tổng tiền: <strong>250.000
-                                        VND</strong></p>
+                                <p class="mb-1 text-muted">
+                                    <i class="bi bi-calendar me-2"></i>{{ FormatData.formatDateTime(value.order_date) }}
+                                </p>
+                                <p class="mb-2 text-muted">
+                                    <i class="bi bi-cash me-2"></i>Tổng tiền:
+                                    <strong>{{
+                                        FormatData.formatNumber(value.total_amount)
+                                        }}
+                                        VND</strong>
+                                </p>
                                 <div class="text-end">
-                                    <a href="/history-order-detail/123457" class="btn btn-sm btn-outline-primary">Xem
-                                        chi tiết</a>
+                                    <router-link :to="`/order-history-detail/${value.id}`"
+                                        class="btn btn-sm btn-outline-primary">Xem chi tiết</router-link>
+                                    <button class="btn btn-sm btn-outline-dark"
+                                        v-if="value.payment_method == 'VNPAY' && value.status_payments == 'Chưa thanh toán'">Thanh
+                                        toán</button>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-
-
-
-
             </div>
         </div>
     </section>
 </template>
 
 <style scoped>
-.tab-item.active {
+.skeleton-line {
+    background-color: #e2e5e7;
+    height: 1em;
+    border-radius: 4px;
+    animation: pulse 1.5s infinite ease-in-out;
+}
 
-    border: 1px solid #0d6efd;
-    /* border-color: #0d6efd; */
+.skeleton-line.mb-1 {
+    margin-bottom: 0.5rem;
+}
+
+.skeleton-line.mb-2 {
+    margin-bottom: 1rem;
+}
+
+@keyframes pulse {
+    0% {
+        background-color: #e2e5e7;
+    }
+
+    50% {
+        background-color: #c9cbcc;
+    }
+
+    100% {
+        background-color: #e2e5e7;
+    }
+}
+
+.table-responsive-scroll {
+    max-height: 300px;
+    /* Đặt chiều cao tối đa mà bạn muốn */
+    overflow-y: auto;
+    /* Thêm thanh cuộn dọc khi nội dung tràn ra */
+    display: block;
+    /* Quan trọng để cuộn hoạt động */
+    width: 100%;
+    /* Đảm bảo div chiếm toàn bộ chiều rộng */
+}
+
+.order-tabs {
+    position: relative;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.tab-item {
+    background: none;
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 16px;
+    color: #333;
+    outline: none;
+    transition: color 0.3s ease;
+    position: relative;
+    /* Thêm position relative để gạch dưới con hoạt động */
 }
 
 .tab-item:hover {
-    background-color: #0d6efd;
-    color: white !important;
+    color: #1e88e5;
+}
+
+.tab-item.active {
+    color: #1e88e5;
+}
+
+.tab-item.active::after {
+    content: "";
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background-color: #1e88e5;
 }
 
 .table th,

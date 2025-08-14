@@ -12,15 +12,18 @@ class Product extends Model
     protected $fillable = [
         'category_id',
         'name',
+        'price',
         'description',
         'status'
     ];
 
-    public function reviews(){
+    public function reviews()
+    {
         return $this->hasMany(Review::class);
     }
 
-    public function variants(){
+    public function variants()
+    {
         return $this->hasMany(Variant::class);
     }
 
@@ -40,6 +43,4 @@ class Product extends Model
     {
         return $this->belongsTo(Category::class);
     }
-
-
 }

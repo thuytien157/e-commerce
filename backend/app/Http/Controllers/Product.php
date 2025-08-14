@@ -21,16 +21,8 @@ class Product extends Controller
         $rating = $request->query('rating');
         $price = $request->query('price');
 
-        // Tạo một query cơ sở và áp dụng tất cả các bộ lọc vào nó.
         $baseQuery = ModelsProduct::with('variants.attributes', 'reviews');
 
-        // Áp dụng bộ lọc giá và sắp xếp giá
-        if ($price || in_array($sortBy, ['price_asc', 'price_desc'])) {
-            $baseQuery->join('variants', 'products.id', '=', 'variants.product_id')
-                ->select('products.*', 'variants.price');
-        }
-
-        // Áp dụng bộ lọc sắp xếp (tạm thời không sắp xếp mặc định ở đây)
         switch ($sortBy) {
             case 'name_asc':
                 $baseQuery->orderBy('name', 'asc');
@@ -39,18 +31,16 @@ class Product extends Controller
                 $baseQuery->orderBy('name', 'desc');
                 break;
             case 'price_asc':
-                $baseQuery->orderBy('variants.price', 'asc');
+                $baseQuery->orderBy('price', 'asc');
                 break;
             case 'price_desc':
-                $baseQuery->orderBy('variants.price', 'desc');
+                $baseQuery->orderBy('price', 'desc');
                 break;
-            // Loại bỏ sắp xếp latest() ở đây để mỗi danh sách có thể tự sắp xếp.
             default:
                 break;
         }
 
-        // Áp dụng bộ lọc danh mục
-        // Thêm điều kiện $categoryIds !== 'all' để không lọc khi chọn "Tất cả"
+
         if ($categoryIds && $categoryIds !== 'all') {
             $selectedCategoryIds = explode(',', $categoryIds);
             $allCategoryIdsToFilter = collect($selectedCategoryIds);
@@ -64,7 +54,6 @@ class Product extends Controller
             $baseQuery->whereIn('category_id', $allCategoryIdsToFilter->unique()->toArray());
         }
 
-        // Áp dụng bộ lọc màu sắc, kích thước, đánh giá và giá (giữ nguyên logic của bạn)
         if ($colors || $sizes) {
             $baseQuery->whereHas('variants', function ($q) use ($colors, $sizes) {
                 $q->whereHas('attributes', function ($attValQuery) use ($colors, $sizes) {
@@ -109,25 +98,31 @@ class Product extends Controller
 
         if ($price) {
             $priceFilters = explode(',', $price);
-            $baseQuery->where(function ($q) use ($priceFilters) {
-                foreach ($priceFilters as $filter) {
-                    switch ($filter) {
-                        case '1':
-                            $q->orWhere('variants.price', '<', 1000000);
-                            break;
-                        case '1_2':
-                            $q->orWhereBetween('variants.price', [1000000, 2000000]);
-                            break;
-                        case '3_4':
-                            $q->orWhereBetween('variants.price', [3000000, 4000000]);
-                            break;
-                        case 'tren_4':
-                            $q->orWhere('variants.price', '>', 4000000);
-                            break;
+            $baseQuery->whereHas('variants', function ($q) use ($priceFilters) {
+                $q->where(function ($query) use ($priceFilters) {
+                    foreach ($priceFilters as $filter) {
+                        switch ($filter) {
+                            case '1':
+                                $query->orWhere('price', '<', 1000000);
+                                break;
+                            case '1_2':
+                                $query->orWhereBetween('price', [1000000, 2000000]);
+                                break;
+                            case '2_3':
+                                $query->orWhereBetween('price', [2000000, 3000000]);
+                                break;
+                            case '3_4':
+                                $query->orWhereBetween('price', [3000000, 4000000]);
+                                break;
+                            case 'tren_4':
+                                $query->orWhere('price', '>', 4000000);
+                                break;
+                        }
                     }
-                }
+                });
             });
         }
+
         $newArrivals = (clone $baseQuery)->latest('created_at')->take(4)->get();
 
         $variantsWithSales = (clone $baseQuery)
@@ -142,9 +137,7 @@ class Product extends Controller
             ->take(4)
             ->get();
 
-        $products = (clone $baseQuery)->get();
-
-
+        $products = (clone $baseQuery)->groupBy('products.id')->get();
         $transformedProducts = $this->transformProducts($products);
         $transformedNewArrivals = $this->transformProducts($newArrivals);
         $transformedVariantsWithSales = $this->transformProducts($variantsWithSales);
@@ -176,13 +169,13 @@ class Product extends Controller
             return [
                 'id' => $item->id,
                 'name' => $item->name,
+                'price' => $item->price,
                 'rating' => $rating,
                 'reviews' => $reviewsData,
                 'description' => $item->description,
                 'variants' => $item->variants->map(function ($variant) {
                     return [
                         'id' => $variant->id,
-                        'price' => $variant->price,
                         'image' => $variant->main_image_url,
                         'images' => $variant->variantImages,
                         'slug' => $variant->slug,

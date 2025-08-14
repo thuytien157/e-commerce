@@ -45,12 +45,12 @@
                     <i class="bi bi-person me-2"></i>
                     Thông tin tài khoản
                 </a>
-                <a href="/history-order"
+                <router-link to="/order-history"
                     class="list-group-item list-group-item-action text-decoration-none rounded mb-2">
                     <i class="bi bi-box-seam me-2"></i>
-                    Lịch sử đơn hàng
-                </a>
-                <a href="#" class="list-group-item list-group-item-action text-danger rounded">
+                    Lịch sử mua hàng
+                </router-link>
+                <a href="#" class="list-group-item list-group-item-action text-primary rounded">
                     <i class="bi bi-box-arrow-right me-2"></i>
                     Đăng xuất
                 </a>

@@ -3,6 +3,8 @@ import Rating from "@/component/Rating.vue";
 import axios from "axios";
 import { computed, onMounted, ref } from "vue";
 import FormatData from "@/component/store/FormatData";
+import { useCartStore } from "@/component/store/cart";
+import ProductModal from "@/component/ProductModal.vue";
 const products = ref([]);
 const categories = ref([]);
 const colors = ref([]);
@@ -37,7 +39,6 @@ const selectedSize = ref([]);
 const selectedColor = ref([]);
 const selectedRating = ref([]);
 const selectedPrice = ref([]);
-
 
 const queryParams = computed(() => {
     const params = new URLSearchParams();
@@ -93,6 +94,25 @@ const isColorSelected = computed(() => (colorName) => {
     return selectedColor.value.includes(colorName);
 });
 
+const showModal = ref(false);
+const productData = ref(null);
+const openModal = async (productId) => {
+    showModal.value = true;
+    const res = await axios.get(
+        `http://127.0.0.1:8000/api/products/${productId}`
+    );
+    productData.value = res.data.product;
+};
+function closeModal() {
+    showModal.value = false;
+    productData.value = null;
+}
+const cartStore = useCartStore();
+
+const handleAddToCart = (itemToAdd) => {
+    cartStore.addItem(itemToAdd);
+};
+
 onMounted(async () => {
     await getAllProducts();
 });
@@ -109,7 +129,13 @@ onMounted(async () => {
                         <!-- Start Single Widget -->
                         <div class="single-widget condition">
                             <h3>Danh mục</h3>
-                            <div class="form-check" v-for="value in categories" :key="value.id">
+                            <div v-if="isLoading">
+                                <div class="form-check my-2" v-for="n in 5" :key="n">
+                                    <div class="skeleton-checkbox"></div>
+                                    <div class="skeleton-text"></div>
+                                </div>
+                            </div>
+                            <div class="form-check" v-else v-for="value in categories" :key="value.id">
                                 <input class="form-check-input" type="checkbox" :value="value.id"
                                     :id="'category-' + value.id" v-model="selectedCategories" @change="fetchProducts" />
                                 <label class="form-check-label" :for="'category-' + value.id">
@@ -132,7 +158,15 @@ onMounted(async () => {
                         <!-- Start Single Widget -->
                         <div class="single-widget condition">
                             <h3>Kích thước</h3>
-                            <div class="d-flex gap-4">
+                            <div v-if="isLoading">
+                                <div class="d-flex gap-4">
+                                    <div class="form-check" v-for="n in 3" :key="n">
+                                        <div class="skeleton-checkbox"></div>
+                                        <div class="skeleton-text short"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="d-flex gap-4" v-else>
                                 <div class="form-check" v-for="value in sizes.attribute_values"
                                     :key="value.attribute_id">
                                     <input class="form-check-input" type="checkbox" :value="value.value_name"
@@ -147,7 +181,10 @@ onMounted(async () => {
                         <!-- Start Single Widget -->
                         <div class="single-widget condition">
                             <h3>Màu sắc</h3>
-                            <div class="d-flex gap-1 mt-2">
+                            <div v-if="isLoading" class="d-flex gap-1 mt-2">
+                                <div v-for="n in 5" :key="n" class="skeleton-color"></div>
+                            </div>
+                            <div class="d-flex gap-1 mt-2" v-else>
                                 <div v-for="value in colors.attribute_values" :key="value.id"
                                     class="d-inline-block rounded-circle" :class="{
                                         'border-2 border-primary': isColorSelected(
@@ -186,10 +223,17 @@ onMounted(async () => {
                                 </label>
                             </div>
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" value="3_4" id="flexCheckDefault3"
+                                <input class="form-check-input" type="checkbox" value="2_3" id="flexCheckDefault3"
                                     v-model="selectedPrice" @change="fetchProducts" />
                                 <label class="form-check-label" for="flexCheckDefault3" style="font-size: 14px">
                                     2,000,000VNĐ - 3,000,000VNĐ
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" value="3_4" id="flexCheckDefault3"
+                                    v-model="selectedPrice" @change="fetchProducts" />
+                                <label class="form-check-label" for="flexCheckDefault3" style="font-size: 14px">
+                                    3,000,000VNĐ - 4,000,000VNĐ
                                 </label>
                             </div>
                             <div class="form-check">
@@ -276,38 +320,53 @@ onMounted(async () => {
                             <div class="tab-pane fade show active" id="nav-grid" role="tabpanel"
                                 aria-labelledby="nav-grid-tab">
                                 <div class="row">
-                                    <div class="col-lg-4 col-md-6 col-12" v-for="product in products" :key="product.id"
-                                        style="height: 420px">
+
+                                    <div class="col-lg-4 col-md-6 col-12" v-if="isLoading" v-for="n in 6"
+                                        :key="'skeleton-grid-' + n">
+                                        <div class="single-product h-100">
+                                            <div class="product-image skeleton-image"></div>
+                                            <div class="product-info">
+                                                <div class="skeleton-title"></div>
+                                                <div class="skeleton-rating"></div>
+                                                <div class="skeleton-price"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-4 col-md-6 col-12" v-else v-for="product in products"
+                                        :key="product.id">
                                         <!-- Start Single Product -->
-                                        <div class="single-product">
+                                        <div class="single-product h-100">
                                             <div class="product-image">
                                                 <img :src="product.variants[0].image" alt="#"
                                                     style="height: 250px; object-fit: cover" />
                                                 <div class="button">
-                                                    <a href="product-details.html" class="btn"><i
-                                                            class="lni lni-cart"></i> Thêm vào giỏ</a>
+                                                    <button @click="openModal(product.id)" class="btn">
+                                                        <i class="lni lni-cart"></i> Thêm vào giỏ
+                                                    </button>
                                                 </div>
                                             </div>
                                             <div class="product-info">
-                                                <!-- <span class="category">Watches</span> -->
                                                 <h4 class="title">
-                                                    <a href="product-grids.html">{{ product.name }}</a>
+                                                    <router-link
+                                                        :to="`/product-detail/${product.variants[0].slug}/${product.id}`">{{
+                                                            product.name }}</router-link>
                                                 </h4>
                                                 <Rating :ratings="getRatingsArray(product.rating)" />
-
                                                 <div class="price">
-                                                    <span>{{
-                                                        FormatData.formatNumber(product.variants[0].price)
-                                                        }}VNĐ</span>
+                                                    <span>{{ FormatData.formatNumber(product.price) }}VNĐ</span>
+
                                                 </div>
                                                 <div class="d-flex gap-1 mt-2">
-                                                    <span v-for="value in FormatData.uniqueColors(product.variants)"
-                                                        :key="value.attribute_value_id"
+                                                    <span v-for="value in FormatData.uniqueColors(
+                                                        product.variants
+                                                    )" :key="value.attribute_value_id"
                                                         class="d-inline-block rounded-circle" style="
-                      width: 0.75rem;
-                      height: 0.75rem;
-                      border: 1px solid #ccc;
-                    " :style="{ 'background-color': value.attribute_name }">
+                              width: 0.75rem;
+                              height: 0.75rem;
+                              border: 1px solid #ccc;
+                            " :style="{
+                                'background-color': value.attribute_name,
+                            }">
                                                     </span>
                                                 </div>
                                             </div>
@@ -338,17 +397,39 @@ onMounted(async () => {
                             </div>
                             <div class="tab-pane fade" id="nav-list" role="tabpanel" aria-labelledby="nav-list-tab">
                                 <div class="row">
-                                    <div class="col-lg-12 col-md-12 col-12" v-for="product in products"
+
+                                    <div class="col-lg-12 col-md-12 col-12" v-if="isLoading" v-for="n in 4"
+                                        :key="'skeleton-list-' + n">
+                                        <div class="single-product">
+                                            <div class="row align-items-center">
+                                                <div class="col-lg-4 col-md-4 col-12">
+                                                    <div class="product-image skeleton-image-list"></div>
+                                                </div>
+                                                <div class="col-lg-8 col-md-8 col-12">
+                                                    <div class="product-info">
+                                                        <div class="skeleton-title-list"></div>
+                                                        <div class="skeleton-rating"></div>
+                                                        <div class="skeleton-price"></div>
+                                                        <div class="skeleton-description"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+
+                                    <div class="col-lg-12 col-md-12 col-12" v-else v-for="product in products"
                                         :key="product.id">
                                         <!-- Start Single Product -->
                                         <div class="single-product">
                                             <div class="row align-items-center">
                                                 <div class="col-lg-4 col-md-4 col-12">
                                                     <div class="product-image">
-                                                        <img :src="product.image" alt="#" />
+                                                        <img :src="product.variants[0].image" alt="#" />
                                                         <div class="button">
-                                                            <a href="product-details.html" class="btn"><i
-                                                                    class="lni lni-cart"></i> Thêm vào giỏ</a>
+                                                            <button @click="openModal(product.id)" class="btn">
+                                                                <i class="lni lni-cart"></i> Thêm vào giỏ
+                                                            </button>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -356,25 +437,28 @@ onMounted(async () => {
                                                     <div class="product-info">
                                                         <!-- <span class="category">Watches</span> -->
                                                         <h4 class="title">
-                                                            <a href="product-grids.html">{{
-                                                                product.name
-                                                                }}</a>
+                                                            <router-link
+                                                                :to="`/product-detail/${product.variants[0].slug}/${product.id}`">{{
+                                                                    product.name }}</router-link>
                                                         </h4>
                                                         <Rating :ratings="getRatingsArray(product.rating)" />
 
                                                         <div class="price">
                                                             <span>{{
                                                                 FormatData.formatNumber(product.price)
-                                                                }}VNĐ</span>
+                                                            }}VNĐ</span>
                                                         </div>
                                                         <div class="d-flex gap-1 mt-2">
-                                                            <span v-for="value in FormatData.uniqueColors(product.variants)"
-                                                                :key="value.attribute_value_id"
+                                                            <span v-for="value in FormatData.uniqueColors(
+                                                                product.variants
+                                                            )" :key="value.attribute_value_id"
                                                                 class="d-inline-block rounded-circle" style="
-                      width: 0.75rem;
-                      height: 0.75rem;
-                      border: 1px solid #ccc;
-                    " :style="{ 'background-color': value.attribute_name }">
+                                  width: 1.75rem;
+                                  height: 1.75rem;
+                                  border: 1px solid #ccc;
+                                " :style="{
+                                    'background-color': value.attribute_name,
+                                }">
                                                             </span>
                                                         </div>
                                                     </div>
@@ -410,17 +494,103 @@ onMounted(async () => {
                 </div>
             </div>
         </div>
+        <ProductModal v-if="productData" :product="productData" :is-visible="showModal" @close="closeModal"
+            @add-to-cart="handleAddToCart" />
     </section>
     <!-- End Product Grids -->
 </template>
 <style scoped>
+.skeleton-image {
+    background-color: #e2e2e2;
+    height: 250px;
+    width: 100%;
+    animation: pulse 1.5s infinite ease-in-out;
+}
+
+.skeleton-image-list {
+    background-color: #e2e2e2;
+    height: 200px;
+    width: 100%;
+    animation: pulse 1.5s infinite ease-in-out;
+}
+
+.skeleton-title,
+.skeleton-price,
+.skeleton-rating,
+.skeleton-description {
+    background-color: #e2e2e2;
+    border-radius: 4px;
+    animation: pulse 1.5s infinite ease-in-out;
+    margin-bottom: 8px;
+}
+
+.skeleton-title {
+    height: 20px;
+    width: 80%;
+}
+
+.skeleton-price {
+    height: 18px;
+    width: 60%;
+}
+
+.skeleton-rating {
+    height: 16px;
+    width: 40%;
+}
+
+.skeleton-description {
+    height: 14px;
+    width: 100%;
+}
+
+@keyframes pulse {
+    0% {
+        background-color: #e2e2e2;
+    }
+
+    50% {
+        background-color: #f0f0f0;
+    }
+
+    100% {
+        background-color: #e2e2e2;
+    }
+}
+
+.skeleton-checkbox {
+    width: 1rem;
+    height: 1rem;
+    background-color: #f0f0f0;
+    display: inline-block;
+    border-radius: 4px;
+}
+
+.skeleton-text {
+    width: 70%;
+    height: 1rem;
+    background-color: #f0f0f0;
+    display: inline-block;
+    margin-left: 8px;
+    border-radius: 4px;
+}
+
+.skeleton-color {
+    width: 1.35rem;
+    height: 1.35rem;
+    background-color: #f0f0f0;
+    border-radius: 50%;
+    animation: pulse 1.5s infinite ease-in-out;
+}
+
+.skeleton-text.short {
+    width: 30%;
+}
+
 .color-selected {
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-    /* Tạo bóng */
     transform: scale(1.1);
-    /* Phóng to 10% */
     transition: box-shadow 0.2s ease-in-out, transform 0.2s ease-in-out;
-    /* Hiệu ứng mượt mà */
 }
 
 .form-check-label {

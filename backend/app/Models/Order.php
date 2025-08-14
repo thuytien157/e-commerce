@@ -19,6 +19,11 @@ class Order extends Model
         'guest_address',
         'total_amount',
         'shipping_money',
-        'order_date'
+        'order_date',
+        'cancellation_reason'
     ];
+
+    public function orderItems(){
+        return $this->hasMany(OrderItem::class);
+    }
 }

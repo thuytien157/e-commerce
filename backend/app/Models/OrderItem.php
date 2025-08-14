@@ -18,4 +18,9 @@ class OrderItem extends Model
         'unit_price',
         'subtotal',
     ];
+
+    public function variant()
+    {
+        return $this->belongsTo(Variant::class, 'variant_id');
+    }
 }

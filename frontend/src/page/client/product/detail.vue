@@ -1,25 +1,31 @@
 <script setup>
-import axios from 'axios';
-import { computed, onMounted, ref, watch } from 'vue';
+import axios from "axios";
+import { computed, onMounted, ref, watch } from "vue";
 import FormatData from "@/component/store/FormatData";
-import useProductVariants from '@/component/store/useProductVariants';
+import useProductVariants from "@/component/store/useProductVariants";
+import { useCartStore } from "@/component/store/cart";
 const props = defineProps({
     productId: {
         type: [String, Number],
         default: null,
     },
 });
-const product = ref(null)
+const product = ref(null);
+const isLoading = ref(true)
 const getProductById = async (productId) => {
+    isLoading.value = true
     try {
-        const res = await axios.get(`http://127.0.0.1:8000/api/products/${productId}`)
-        product.value = res.data.product
-        console.log('sss' + product.value);
-
+        const res = await axios.get(
+            `http://127.0.0.1:8000/api/products/${productId}`
+        );
+        product.value = res.data.product;
+        // console.log("sss" + product.value);
     } catch (error) {
         console.log(error);
+    } finally {
+        isLoading.value = false
     }
-}
+};
 const {
     mainImage,
     selectedColor,
@@ -28,50 +34,92 @@ const {
     uniqueSizes,
     currentVariant,
     currentVariantImages,
-    isSizeAvailable
+    isSizeAvailable,
 } = useProductVariants(product);
 
-const quantity = ref(1);
-
 const selectOption = (type, value) => {
-    if (type === 'color') {
+    if (type === "color") {
         selectedColor.value = value;
-    } else if (type === 'size') {
+    } else if (type === "size") {
         selectedSize.value = value;
     }
 };
 
 const decrement = () => {
-    if (quantity.value > 1) {
-        quantity.value--;
+    if (cartStore.quantity > 1) {
+        cartStore.quantity--;
     }
 };
 
 const increment = () => {
-    quantity.value++;
+    cartStore.quantity++;
+};
+
+const cartStore = useCartStore();
+
+const handleAddToCart = (itemToAdd) => {
+    cartStore.addItem(itemToAdd);
 };
 
 onMounted(async () => {
-    getProductById(props.productId)
-})
+    getProductById(props.productId);
+});
 </script>
 <template>
     <!-- Start Item Details -->
-    <section class="item-details section pt-2" v-if="product">
+    <section class="item-details section pt-2">
         <div class="container">
-            <div class="top-area">
+
+            <div v-if="isLoading">
                 <div class="row">
+                    <div class="col-lg-6 col-md-12 col-12">
+                        <div class="skeleton-box" style="height: 500px; width: 100%;"></div>
+                        <div class="images d-flex mt-2 gap-2">
+                            <div class="skeleton-box" v-for="n in 4" :key="n" style="height: 100px; width: 100px;">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6 col-md-12 col-12">
+                        <div class="product-info-skeleton">
+                            <div class="skeleton-text" style="width: 80%; height: 2rem;"></div>
+                            <div class="skeleton-text short my-2" style="width: 40%;"></div>
+                            <div class="skeleton-text short my-2" style="width: 50%;"></div>
+                            <div class="skeleton-text" style="width: 100%;"></div>
+                            <div class="skeleton-text" style="width: 90%;"></div>
+                            <div class="skeleton-text" style="width: 95%;"></div>
+                            <div class="row mt-4">
+                                <div class="col-lg-4 col-md-4 col-12">
+                                    <div class="skeleton-text short mb-2"></div>
+                                    <div class="d-flex gap-2">
+                                        <div class="skeleton-circle" v-for="n in 3" :key="n"></div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-4 col-md-4 col-12">
+                                    <div class="skeleton-text short mb-2"></div>
+                                    <div class="d-flex gap-2">
+                                        <div class="skeleton-button" v-for="n in 3" :key="n"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="skeleton-button-large mt-4"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="top-area" v-else>
+                <div class="row" v-if="product">
                     <div class="col-lg-6 col-md-12 col-12">
                         <div class="product-images">
                             <main id="gallery">
                                 <div class="main-img">
                                     <img :src="mainImage" id="current" alt="#"
-                                        style="height: 500px; object-fit: cover;">
+                                        style="height: 500px; object-fit: cover" />
                                 </div>
                                 <div class="images">
                                     <img class="img" v-for="image in currentVariantImages" :key="image.id"
-                                        :src="image.image_url" @click="mainImage = image.image_url">
-
+                                        :src="image.image_url" @click="mainImage = image.image_url" />
                                 </div>
                             </main>
                         </div>
@@ -79,9 +127,13 @@ onMounted(async () => {
                     <div class="col-lg-6 col-md-12 col-12">
                         <div class="product-info">
                             <h2 class="title">{{ product.name }}</h2>
-                            <p class="category"><i class="lni lni-tag"></i> Danh mục: <a href="javascript:void(0)">{{
-                                product.category_name }}</a></p>
-                            <h3 class="price">{{ FormatData.formatNumber(product.variants[0].price) }}VND</h3>
+                            <p class="category">
+                                <i class="lni lni-tag"></i> Danh mục:
+                                <a href="javascript:void(0)">{{ product.category_name }}</a>
+                            </p>
+                            <h3 class="price">
+                                {{ FormatData.formatNumber(product.price) }}VND
+                            </h3>
                             <!-- <p class="info-text">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
                                 tempor incididunt
                                 ut labore et dolore magna aliqua.</p> -->
@@ -91,14 +143,18 @@ onMounted(async () => {
                                         <label class="fs-6" for="size">Chọn màu sắc</label>
                                         <div class="d-flex gap-2">
                                             <button @click="selectOption('color', value.attribute_value_id)"
-                                                v-for="value in uniqueColors" :key="value.attribute_value_id"
-                                                :class="['color-option', { 'color-selected': selectedColor === value.attribute_value_id }]"
-                                                class="d-inline-block rounded-circle" :style="{
+                                                v-for="value in uniqueColors" :key="value.attribute_value_id" :class="[
+                                                    'color-option',
+                                                    {
+                                                        'color-selected':
+                                                            selectedColor === value.attribute_value_id,
+                                                    },
+                                                ]" class="d-inline-block rounded-circle" :style="{
                                                     width: '1.75rem',
                                                     height: '1.75rem',
                                                     'background-color': value.attribute_name,
                                                     cursor: 'pointer',
-                                                    border: '1px solid #ccc'
+                                                    border: '1px solid #ccc',
                                                 }"></button>
                                         </div>
                                     </div>
@@ -108,32 +164,63 @@ onMounted(async () => {
                                 <div class="col-lg-4 col-md-4 col-12">
                                     <div class="form-group color-option">
                                         <label class="fs-6" for="size">Chọn kích thước</label>
-                                        <div class="d-flex gap-1 ">
+                                        <div class="d-flex gap-1">
                                             <button v-for="value in uniqueSizes" :key="value.attribute_value_id"
-                                                class="d-inline-block btn btn-outline-primary"
-                                                :class="{ active: selectedSize === value.attribute_value_id }"
-                                                @click="selectOption('size', value.attribute_value_id)"> {{
-                                                    value.attribute_name
-                                                }}</button>
+                                                class="d-inline-block btn btn-outline-primary" :class="{
+                                                    active: selectedSize === value.attribute_value_id,
+                                                }" @click="selectOption('size', value.attribute_value_id)">
+                                                {{ value.attribute_name }}
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             <div class="bottom-content">
                                 <div class="row align-items-end">
-                                    <div class="col-12">
-                                        <div class="button cart-button">
-                                            <button class="btn" style="width: 100%;">Thêm vào giỏ hàng</button>
+                                    <div class="col-12 my-3">
+                                        <label for="quantity" class="form-label fw-bold">Số lượng</label>
+                                        <div class="input-group quantity-control border overflow-hidden rounded-1">
+                                            <button class="btn btn-outline-primary rounded-1 fw-bold"
+                                                @click="decrement">
+                                                +
+                                            </button>
+                                            <input type="text"
+                                                class="form-control text-center border-0 bg-light text-dark"
+                                                v-model="cartStore.quantity" readonly />
+                                            <button class="btn btn-outline-primary rounded-1 fw-bold"
+                                                @click="increment">
+                                                -
+                                            </button>
                                         </div>
                                     </div>
-
+                                    <div class="col-12">
+                                        <div class="button cart-button">
+                                            <button class="btn" style="width: 100%" @click="
+                                                handleAddToCart({
+                                                    id: product.id,
+                                                    variantId: currentVariant.id,
+                                                    quantity: cartStore.quantity, price: product.price,
+                                                    productName: product.name,
+                                                    selectedColor: uniqueColors.find(
+                                                        (c) => c.attribute_value_id === selectedColor
+                                                    )?.attribute_name,
+                                                    selectedSize: uniqueSizes.find(
+                                                        (s) => s.attribute_value_id === selectedSize
+                                                    )?.attribute_name,
+                                                    image: mainImage,
+                                                })
+                                                ">
+                                                Thêm vào giỏ hàng
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-            <div class="product-details-info">
+            <div class="product-details-info" v-if="product">
                 <div class="single-block">
                     <div class="row">
                         <div class="col-12">
@@ -142,7 +229,6 @@ onMounted(async () => {
                                 {{ product.description }}
                             </div>
                         </div>
-
                     </div>
                 </div>
                 <div class="row">
@@ -186,11 +272,11 @@ onMounted(async () => {
                                 <h4 class="title">Latest Reviews</h4>
                                 <!-- Start Single Review -->
                                 <div class="single-review">
-                                    <img src="/images/blog/comment1.jpg" alt="#">
+                                    <img src="/images/blog/comment1.jpg" alt="#" />
                                     <div class="review-info">
-                                        <h4>Awesome quality for the price
-                                            <span>Jacob Hammond
-                                            </span>
+                                        <h4>
+                                            Awesome quality for the price
+                                            <span>Jacob Hammond </span>
                                         </h4>
                                         <ul class="stars">
                                             <li><i class="lni lni-star-filled"></i></li>
@@ -199,18 +285,20 @@ onMounted(async () => {
                                             <li><i class="lni lni-star-filled"></i></li>
                                             <li><i class="lni lni-star-filled"></i></li>
                                         </ul>
-                                        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
-                                            tempor...</p>
+                                        <p>
+                                            Lorem ipsum dolor sit amet, consectetur adipiscing elit,
+                                            sed do eiusmod tempor...
+                                        </p>
                                     </div>
                                 </div>
                                 <!-- End Single Review -->
                                 <!-- Start Single Review -->
                                 <div class="single-review">
-                                    <img src="/images/blog/comment2.jpg" alt="#">
+                                    <img src="/images/blog/comment2.jpg" alt="#" />
                                     <div class="review-info">
-                                        <h4>My husband love his new...
-                                            <span>Alex Jaza
-                                            </span>
+                                        <h4>
+                                            My husband love his new...
+                                            <span>Alex Jaza </span>
                                         </h4>
                                         <ul class="stars">
                                             <li><i class="lni lni-star-filled"></i></li>
@@ -219,18 +307,20 @@ onMounted(async () => {
                                             <li><i class="lni lni-star-filled"></i></li>
                                             <li><i class="lni lni-star"></i></li>
                                         </ul>
-                                        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
-                                            tempor...</p>
+                                        <p>
+                                            Lorem ipsum dolor sit amet, consectetur adipiscing elit,
+                                            sed do eiusmod tempor...
+                                        </p>
                                     </div>
                                 </div>
                                 <!-- End Single Review -->
                                 <!-- Start Single Review -->
                                 <div class="single-review">
-                                    <img src="/images/blog/comment3.jpg" alt="#">
+                                    <img src="/images/blog/comment3.jpg" alt="#" />
                                     <div class="review-info">
-                                        <h4>I love the built quality...
-                                            <span>Jacob Hammond
-                                            </span>
+                                        <h4>
+                                            I love the built quality...
+                                            <span>Jacob Hammond </span>
                                         </h4>
                                         <ul class="stars">
                                             <li><i class="lni lni-star-filled"></i></li>
@@ -239,8 +329,10 @@ onMounted(async () => {
                                             <li><i class="lni lni-star-filled"></i></li>
                                             <li><i class="lni lni-star-filled"></i></li>
                                         </ul>
-                                        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
-                                            tempor...</p>
+                                        <p>
+                                            Lorem ipsum dolor sit amet, consectetur adipiscing elit,
+                                            sed do eiusmod tempor...
+                                        </p>
                                     </div>
                                 </div>
                                 <!-- End Single Review -->
@@ -267,13 +359,13 @@ onMounted(async () => {
                         <div class="col-sm-6">
                             <div class="form-group">
                                 <label for="review-name">Your Name</label>
-                                <input class="form-control" type="text" id="review-name" required>
+                                <input class="form-control" type="text" id="review-name" required />
                             </div>
                         </div>
                         <div class="col-sm-6">
                             <div class="form-group">
                                 <label for="review-email">Your Email</label>
-                                <input class="form-control" type="email" id="review-email" required>
+                                <input class="form-control" type="email" id="review-email" required />
                             </div>
                         </div>
                     </div>
@@ -281,7 +373,7 @@ onMounted(async () => {
                         <div class="col-sm-6">
                             <div class="form-group">
                                 <label for="review-subject">Subject</label>
-                                <input class="form-control" type="text" id="review-subject" required>
+                                <input class="form-control" type="text" id="review-subject" required />
                             </div>
                         </div>
                         <div class="col-sm-6">
@@ -315,5 +407,57 @@ onMounted(async () => {
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
     transform: scale(1.2);
     transition: box-shadow 0.2s ease-in-out, transform 0.2s ease-in-out;
+}
+
+.skeleton-box,
+.skeleton-text,
+.skeleton-circle,
+.skeleton-button {
+    background: #f0f0f0;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    border-radius: 4px;
+}
+
+.skeleton-text {
+    height: 1.25rem;
+    margin-bottom: 0.5rem;
+}
+
+.skeleton-text.short {
+    width: 50%;
+}
+
+.skeleton-circle {
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 50%;
+}
+
+.skeleton-button {
+    width: 60px;
+    height: 38px;
+    border-radius: 4px;
+}
+
+.skeleton-button-large {
+    width: 100%;
+    height: 48px;
+    border-radius: 4px;
+    background: #f0f0f0;
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
 }
 </style>

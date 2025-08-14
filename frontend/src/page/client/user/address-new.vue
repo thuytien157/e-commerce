@@ -43,7 +43,7 @@
                     </div>
 
 
-                    <div class="card shadow-sm border-0 p-4">
+                    <div class="card shadow-sm border-0 p-4" v-else>
                         <h4 class="mb-4 fw-bold text-center text-md-start">
                             {{ isEditMode ? 'Sửa địa chỉ' : 'Thêm địa chỉ' }}
                         </h4>

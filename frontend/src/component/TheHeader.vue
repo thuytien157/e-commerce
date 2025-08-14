@@ -135,9 +135,8 @@
                     >
                   </div>
                   <div class="d-grid gap-2">
-                    <a href="checkout.html" class="btn btn-primary btn-sm"
-                      >Thanh toán</a
-                    >
+                    <router-link to="/checkout" class="btn btn-primary btn-sm"
+                      >Thanh toán</router-link>
                   </div>
                 </div>
               </div>

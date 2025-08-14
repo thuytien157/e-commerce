@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Mail\ResetPassword;
 use App\Models\Address;
+use App\Models\Order;
 use App\Models\Password_reset_token;
 use App\Models\User as ModelsUser;
 use Illuminate\Contracts\Validation\Rule;
@@ -480,5 +481,47 @@ class User extends Controller
         }
         $user->save();
         return response()->json(['message' => 'Cập nhật avatar thành công', 'avatar' => $user->avatar]);
+    }
+
+    function getOrderByUser(Request $request)
+    {
+        $id = Auth::id();
+        if (!$id) {
+            return response()->json([
+                'mess' => 'Người dùng chưa đăng nhập'
+            ], 404);
+        }
+
+        $status = $request->query('status');
+        $orders = Order::where('customer_id', $id);
+
+        switch ($status) {
+            case 'pendingConfirmation':
+                $orders->where('status', 'Chờ xác nhận');
+                break;
+            case 'confirmation':
+                $orders->where('status', 'Đã xác nhận');
+                break;
+            case 'pending':
+                $orders->where('status', 'Đang xử lý');
+                break;
+            case 'done':
+                $orders->where('status', 'Hoàn thành');
+                break;
+            case 'shipping':
+                $orders->where('status', 'Đang giao hàng');
+                break;
+            case 'cancel':
+                $orders->where('status', 'Thất bại');
+                break;
+            default:
+                break;
+        }
+
+        $orders = $orders->get();
+
+        return response()->json([
+            'orders' => $orders
+        ]);
     }
 }

@@ -2,7 +2,6 @@
 import { ref } from "vue";
 import SidebarAccount from "@/component/SidebarAccount.vue";
 import axios from "axios";
-import Login from "./login.vue";
 
 const address = ref([]);
 const isLoading = ref(true);
