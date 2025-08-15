@@ -4,6 +4,7 @@ import { computed, onMounted, ref, watch } from "vue";
 import FormatData from "@/component/store/FormatData";
 import useProductVariants from "@/component/store/useProductVariants";
 import { useCartStore } from "@/component/store/cart";
+import Rating from "@/component/Rating.vue";
 const props = defineProps({
     productId: {
         type: [String, Number],
@@ -16,7 +17,7 @@ const getProductById = async (productId) => {
     isLoading.value = true
     try {
         const res = await axios.get(
-            `http://127.0.0.1:8000/api/products/${productId}`
+            `http://127.0.0.1:8000/api/products/${productId}?${queryParams.value}`
         );
         product.value = res.data.product;
         // console.log("sss" + product.value);
@@ -26,6 +27,19 @@ const getProductById = async (productId) => {
         isLoading.value = false
     }
 };
+const selectedRating = ref([]);
+const queryParams = computed(() => {
+    const params = new URLSearchParams();
+    if (selectedRating.value.length) {
+        params.append("rating", selectedRating.value.join(","));
+    }
+    return params.toString();
+});
+watch(queryParams, (newParams, oldParams) => {
+    if (newParams !== oldParams) {
+        getProductById(props.productId);
+    }
+})
 const {
     mainImage,
     selectedColor,
@@ -60,7 +74,17 @@ const cartStore = useCartStore();
 const handleAddToCart = (itemToAdd) => {
     cartStore.addItem(itemToAdd);
 };
+const showModal = ref(false);
+const selectedImage = ref('');
 
+function openImage(img) {
+    selectedImage.value = img;
+    showModal.value = true;
+}
+
+function closeImage() {
+    showModal.value = false;
+}
 onMounted(async () => {
     getProductById(props.productId);
 });
@@ -186,7 +210,7 @@ onMounted(async () => {
                                             </button>
                                             <input type="text"
                                                 class="form-control text-center border-0 bg-light text-dark"
-                                                v-model="cartStore.quantity" readonly />
+                                                v-model="cartStore.quantity" />
                                             <button class="btn btn-outline-primary rounded-1 fw-bold"
                                                 @click="increment">
                                                 -
@@ -234,175 +258,156 @@ onMounted(async () => {
                 <div class="row">
                     <div class="col-lg-4 col-12">
                         <div class="single-block give-review">
-                            <h4>{{ product.rating }} (Trung bình)</h4>
+
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" value="5" id="rating-5" />
+                                <input class="form-check-input" type="checkbox" value="5" id="rating-5"
+                                    v-model="selectedRating" />
                                 <label class="form-check-label" for="rating-5" style="font-size: 14px">
                                     5 <i class="bi bi-star-fill text-warning"></i>
                                 </label>
                             </div>
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" value="4_5" id="rating-4_5" />
+                                <input class="form-check-input" type="checkbox" value="4_5" id="rating-4_5"
+                                    v-model="selectedRating" />
                                 <label class="form-check-label" for="rating-4_5" style="font-size: 14px">
                                     4 - 5 <i class="bi bi-star-fill text-warning"></i>
                                 </label>
                             </div>
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" value="3_4" id="rating-3_4" />
+                                <input class="form-check-input" type="checkbox" value="3_4" id="rating-3_4"
+                                    v-model="selectedRating" />
                                 <label class="form-check-label" for="rating-3_4" style="font-size: 14px">
                                     3 - 4 <i class="bi bi-star-fill text-warning"></i>
                                 </label>
                             </div>
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" value="duoi_3" id="rating-below-3" />
+                                <input class="form-check-input" type="checkbox" value="duoi_3" id="rating-below-3"
+                                    v-model="selectedRating" />
                                 <label class="form-check-label" for="rating-below-3" style="font-size: 14px">
                                     Dưới 3 <i class="bi bi-star-fill text-warning"></i>
                                 </label>
                             </div>
-                            <!-- Button trigger modal -->
-                            <button type="button" class="btn review-btn" data-bs-toggle="modal"
-                                data-bs-target="#exampleModal">
-                                Leave a Review
-                            </button>
+
                         </div>
                     </div>
                     <div class="col-lg-8 col-12">
                         <div class="single-block">
-                            <div class="reviews">
-                                <h4 class="title">Latest Reviews</h4>
+                            <div class="reviews" v-if="product.reviews.length > 0"
+                                style="max-height: 800px; overflow-y: auto;">
+                                <h4 class="title">Đánh giá</h4>
                                 <!-- Start Single Review -->
-                                <div class="single-review">
-                                    <img src="/images/blog/comment1.jpg" alt="#" />
+                                <div class="single-review" v-for="value in product.reviews">
+                                    <img :src="value.customer_avatar" alt="#" class="border avatar" />
                                     <div class="review-info">
-                                        <h4>
-                                            Awesome quality for the price
-                                            <span>Jacob Hammond </span>
-                                        </h4>
-                                        <ul class="stars">
-                                            <li><i class="lni lni-star-filled"></i></li>
-                                            <li><i class="lni lni-star-filled"></i></li>
-                                            <li><i class="lni lni-star-filled"></i></li>
-                                            <li><i class="lni lni-star-filled"></i></li>
-                                            <li><i class="lni lni-star-filled"></i></li>
-                                        </ul>
-                                        <p>
-                                            Lorem ipsum dolor sit amet, consectetur adipiscing elit,
-                                            sed do eiusmod tempor...
-                                        </p>
+                                        <div class="d-flex justify-content-between">
+                                            <h4>
+                                                {{ value.comment }}
+                                                <span>{{ value.customer_name }}</span>
+                                            </h4>
+                                            <Rating :rating="value.rating" />
+                                        </div>
+
+                                        <img v-for="img in value.image" :key="img.id" :src="img.image_url" alt=""
+                                            class="w-25" @click="openImage(img.image_url)" style="cursor: pointer" />
+                                        <hr>
+                                        <div v-if="value.reply_text" class="admin-reply-container">
+                                            <div class="admin-reply-header">
+                                                <span class="admin-tag">Shop <i
+                                                        class="bi bi-cart-check-fill"></i></span>
+                                            </div>
+                                            <div class="admin-reply-text">
+                                                <p>{{ value.reply_text }}</p>
+                                            </div>
+                                        </div>
                                     </div>
+
+
+
+                                    <!-- Modal xem ảnh -->
+                                    <div v-if="showModal" class="modal-backdrop" @click="closeImage">
+                                        <img :src="selectedImage" class="modal-image" />
+                                    </div>
+
                                 </div>
                                 <!-- End Single Review -->
-                                <!-- Start Single Review -->
-                                <div class="single-review">
-                                    <img src="/images/blog/comment2.jpg" alt="#" />
-                                    <div class="review-info">
-                                        <h4>
-                                            My husband love his new...
-                                            <span>Alex Jaza </span>
-                                        </h4>
-                                        <ul class="stars">
-                                            <li><i class="lni lni-star-filled"></i></li>
-                                            <li><i class="lni lni-star-filled"></i></li>
-                                            <li><i class="lni lni-star-filled"></i></li>
-                                            <li><i class="lni lni-star-filled"></i></li>
-                                            <li><i class="lni lni-star"></i></li>
-                                        </ul>
-                                        <p>
-                                            Lorem ipsum dolor sit amet, consectetur adipiscing elit,
-                                            sed do eiusmod tempor...
-                                        </p>
-                                    </div>
-                                </div>
-                                <!-- End Single Review -->
-                                <!-- Start Single Review -->
-                                <div class="single-review">
-                                    <img src="/images/blog/comment3.jpg" alt="#" />
-                                    <div class="review-info">
-                                        <h4>
-                                            I love the built quality...
-                                            <span>Jacob Hammond </span>
-                                        </h4>
-                                        <ul class="stars">
-                                            <li><i class="lni lni-star-filled"></i></li>
-                                            <li><i class="lni lni-star-filled"></i></li>
-                                            <li><i class="lni lni-star-filled"></i></li>
-                                            <li><i class="lni lni-star-filled"></i></li>
-                                            <li><i class="lni lni-star-filled"></i></li>
-                                        </ul>
-                                        <p>
-                                            Lorem ipsum dolor sit amet, consectetur adipiscing elit,
-                                            sed do eiusmod tempor...
-                                        </p>
-                                    </div>
-                                </div>
-                                <!-- End Single Review -->
+
+                            </div>
+                            <div v-else>
+                                Chưa có đánh giá
                             </div>
                         </div>
                     </div>
+
                 </div>
             </div>
         </div>
     </section>
     <!-- End Item Details -->
-
-    <!-- Review Modal -->
-    <div class="modal fade review-modal" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Lịch sử</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-sm-6">
-                            <div class="form-group">
-                                <label for="review-name">Your Name</label>
-                                <input class="form-control" type="text" id="review-name" required />
-                            </div>
-                        </div>
-                        <div class="col-sm-6">
-                            <div class="form-group">
-                                <label for="review-email">Your Email</label>
-                                <input class="form-control" type="email" id="review-email" required />
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-sm-6">
-                            <div class="form-group">
-                                <label for="review-subject">Subject</label>
-                                <input class="form-control" type="text" id="review-subject" required />
-                            </div>
-                        </div>
-                        <div class="col-sm-6">
-                            <div class="form-group">
-                                <label for="review-rating">Rating</label>
-                                <select class="form-control" id="review-rating">
-                                    <option>5 Stars</option>
-                                    <option>4 Stars</option>
-                                    <option>3 Stars</option>
-                                    <option>2 Stars</option>
-                                    <option>1 Star</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="review-message">Review</label>
-                        <textarea class="form-control" id="review-message" rows="8" required></textarea>
-                    </div>
-                </div>
-                <div class="modal-footer button">
-                    <button type="button" class="btn">Submit Review</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- End Review Modal -->
 </template>
 <style scoped>
+.modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(179, 177, 177, 0.377);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+
+.modal-image {
+    max-width: 90%;
+    max-height: 90%;
+    border-radius: 8px;
+}
+
+.review {
+    margin-top: 0px;
+}
+
+.admin-reply-container {
+    padding: 15px;
+    background-color: #f0f2f5;
+    border-radius: 8px;
+    border-left: 4px solid #007bff;
+
+}
+
+.admin-reply-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+
+/* Tag for "Admin" */
+.admin-tag {
+    background-color: #007bff;
+    /* Blue background for the tag */
+    color: white;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    margin-right: 10px;
+}
+
+/* Admin's name */
+.reply-user-name {
+    color: #007bff;
+    /* Blue color for the name */
+}
+
+/* Reply text content */
+.admin-reply-text p {
+    margin: 0;
+    line-height: 1.5;
+    color: #495057;
+    /* Darker text for readability */
+}
+
 .color-selected {
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
     transform: scale(1.2);

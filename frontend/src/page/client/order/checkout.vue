@@ -1,25 +1,22 @@
 <script setup>
-import { useCartStore } from '@/component/store/cart';
-import { useTokenUser } from '@/component/store/useTokenUser';
-import axios from 'axios';
-import Swal from 'sweetalert2';
-import { computed, onMounted, ref, watch } from 'vue';
-
-const cartItems = ref([]);
-const formatNumber = (num) => {
-    return new Intl.NumberFormat('vi-VN').format(num);
-};
-
-
+import { useCartStore } from "@/component/store/cart";
+import FormatData from "@/component/store/FormatData";
+import { useTokenUser } from "@/component/store/useTokenUser";
+import axios from "axios";
+import Swal from "sweetalert2";
+import { useRouter } from "vue-router";
+import { computed, onMounted, ref, watch } from "vue";
+const route = useRouter()
 const store = useTokenUser();
-const cartStore = useCartStore()
+const cartStore = useCartStore();
 const address = ref({
-    customer_name: '',
-    phone: '',
-    province_id: '',
-    district_id: '',
-    ward_code: '',
-    address: ''
+    customer_name: "",
+    phone: "",
+    province_id: "",
+    district_id: "",
+    ward_code: "",
+    address: "",
+    email: "",
 });
 const defaultAddressFromApi = ref(null);
 
@@ -37,15 +34,20 @@ const shippingFee = ref(0);
 const totalPayment = computed(() => {
     return cartStore.totalPrice + shippingFee.value;
 });
-
+const email = ref('')
 const getUserById = async () => {
     try {
-        const res = await axios.get("http://127.0.0.1:8000/api/user", {
-            headers: {
-                Authorization: `Bearer ${store.token}`,
-            },
-        });
-        defaultAddressFromApi.value = res.data.defaultAddress;
+        if (store.token) {
+            const res = await axios.get("http://127.0.0.1:8000/api/user", {
+                headers: {
+                    Authorization: `Bearer ${store.token}`,
+                },
+            });
+            defaultAddressFromApi.value = res.data.defaultAddress;
+            email.value = res.data.user.email
+        } else {
+            defaultAddressFromApi.value = {};
+        }
     } catch (error) {
         console.error("Lỗi khi lấy dữ liệu người dùng:", error);
     }
@@ -113,22 +115,23 @@ const fetchServices = async () => {
         return;
     }
     try {
-        const res = await axios.post(
-            "http://127.0.0.1:8000/api/ghn/service",
-            {
-                to_district_id: selectedDistrict.value,
-            }
-        );
+        const res = await axios.post("http://127.0.0.1:8000/api/ghn/service", {
+            to_district_id: selectedDistrict.value,
+        });
         services.value = res.data;
-        selectedServiceId.value = services.value.length > 0 ? services.value[0].service_id : null;
+        selectedServiceId.value =
+            services.value.length > 0 ? services.value[0].service_id : null;
     } catch (err) {
         console.error("Lỗi khi lấy dịch vụ vận chuyển:", err);
     }
 };
 
-
 const calculateShippingFee = async () => {
-    if (!selectedDistrict.value || !selectedWard.value || !selectedServiceId.value) {
+    if (
+        !selectedDistrict.value ||
+        !selectedWard.value ||
+        !selectedServiceId.value
+    ) {
         shippingFee.value = 0;
         return;
     }
@@ -150,8 +153,8 @@ const calculateShippingFee = async () => {
             {
                 headers: {
                     Token: ghnToken,
-                    "Content-Type": "application/json"
-                }
+                    "Content-Type": "application/json",
+                },
             }
         );
 
@@ -179,49 +182,90 @@ const fillFormWithDefaultAddress = async () => {
     await calculateShippingFee();
 };
 const errors = ref({});
-const payment_method = ref('COD')
+const payment_method = ref("COD");
+
 const order = async () => {
-
-
     try {
-        const provinceName = provinces.value.find(p => p.ProvinceID === selectedProvince.value)?.ProvinceName || '';
-        const districtName = districts.value.find(d => d.DistrictID === selectedDistrict.value)?.DistrictName || '';
-        const wardName = wards.value.find(w => w.WardCode === String(selectedWard.value))?.WardName || '';
+        if (cartStore.items.length <= 0) {
+            Swal.fire({
+                toast: true,
+                position: "top-end",
+                icon: "error",
+                title: "Giỏ hàng trống",
+                showConfirmButton: false,
+                timer: 2000,
+                timerProgressBar: true,
+            });
+            return
+        }
+        const provinceName =
+            provinces.value.find((p) => p.ProvinceID === selectedProvince.value)
+                ?.ProvinceName || "";
+        const districtName =
+            districts.value.find((d) => d.DistrictID === selectedDistrict.value)
+                ?.DistrictName || "";
+        const wardName =
+            wards.value.find((w) => w.WardCode === String(selectedWard.value))
+                ?.WardName || "";
         const orderData = {
             shipping_address: defaultAddressFromApi.value.id,
             payment_method: payment_method.value,
             guest_name: address.value.customer_name,
             customer_id: store.userId,
             guest_phone: address.value.phone,
+            guest_email: address.value.email || email.value,
             wards: selectedWard.value,
             provinces: selectedProvince.value,
             districts: selectedDistrict.value,
             address: address.value.address,
-            guest_address: `${address.value.address || ''}, ${wardName}, ${districtName}, ${provinceName}`,
+            guest_address: `${address.value.address || ""
+                }, ${wardName}, ${districtName}, ${provinceName}`,
             total_amount: totalPayment.value,
             shipping_money: shippingFee.value,
             cartItems: cartStore.items,
         };
+        const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
+        if (!store.token && address.value.email == "") {
+            errors.value.email = "Vui lòng nhập email";
+            return;
+        }
 
-        const res = await axios.post('http://127.0.0.1:8000/api/order', orderData);
+        if (!store.token && !emailRegex.test(address.value.email)) {
+            errors.value.email = "Email không đúng định dạng";
+            return;
+        }
+        const res = await axios.post("http://127.0.0.1:8000/api/order", orderData);
 
         if (res.data.return_url) {
             window.location.href = res.data.return_url;
-        } else {
-            Swal.fire('Thành công', 'Đơn hàng của bạn đã được tạo.', 'success');
-
+            return;
         }
+        if (res.data.order_id) {
+            Swal.fire({
+                title: 'Đặt hàng thành công',
+                icon: 'success',
+                showCancelButton: true,
+                confirmButtonColor: '#55acee',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Xem chi tiết đơn hàng',
+                cancelButtonText: 'Tiếp tục mua sắm'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    route.push(`/order-history-detail/${res.data.order_id}`);
+                } else {
+                    route.push(`/home`);
+                }
+            })
+        }
+
         cartStore.removeCart()
-
-
     } catch (error) {
         if (error.response && error.response.status === 422) {
             errors.value = {};
             errors.value = error.response.data.errors;
         }
     }
-}
-
+};
 
 onMounted(async () => {
     cartStore.loadCart();
@@ -243,14 +287,13 @@ watch([selectedDistrict, selectedWard], async () => {
 });
 </script>
 
-
 <template>
     <section class="checkout-wrapper section pt-2">
         <div class="container py-4">
             <div class="row gx-5">
                 <div class="col-md-6">
                     <div class="p-4 border rounded shadow-sm bg-white">
-                        <h5 class="mb-4" style="color: blue;">Thông tin đặt hàng</h5>
+                        <h5 class="mb-4" style="color: blue">Thông tin đặt hàng</h5>
                         <form @submit.prevent="order">
                             <div class="mb-3">
                                 <small class="text-danger" v-if="errors.guest_name">{{
@@ -265,6 +308,12 @@ watch([selectedDistrict, selectedWard], async () => {
                                 }}</small>
                                 <input type="text" class="form-control" placeholder="Số điện thoại"
                                     v-model="address.phone" />
+                            </div>
+                            <div class="mb-3" v-if="!store.token">
+                                <small class="text-danger" v-if="errors.email">{{
+                                    errors.email
+                                }}</small>
+                                <input type="text" class="form-control" placeholder="Email" v-model="address.email" />
                             </div>
                             <div class="mb-3">
                                 <small class="text-danger" v-if="errors.provinces">{{
@@ -316,9 +365,7 @@ watch([selectedDistrict, selectedWard], async () => {
                                 <a href="/cart" class="btn btn-outline-primary">
                                     <i class="bi bi-chevron-left"></i> Quay về giỏ hàng
                                 </a>
-                                <button type="submit" class="btn btn-primary">
-                                    Đặt hàng
-                                </button>
+                                <button :disabled="!shippingFee" type="submit" class="btn btn-primary">Đặt hàng</button>
                             </div>
                         </form>
                     </div>
@@ -326,40 +373,52 @@ watch([selectedDistrict, selectedWard], async () => {
 
                 <div class="col-md-6 pe-0">
                     <div class="p-4 border rounded shadow-sm bg-white">
-                        <h5 class="mb-3" style="color: blue;">Đơn hàng ({{ cartStore.items.length }} sản phẩm) </h5>
+                        <h5 class="mb-3" style="color: blue">
+                            Đơn hàng ({{ cartStore.items.length }} sản phẩm)
+                        </h5>
                         <hr />
 
                         <div class="list-product-scroll mb-2">
-                            <div class="d-flex mb-3" v-for="item in cartStore.items" :key="item.variantId">
+                            <div v-if="cartStore.items.length > 0" class="d-flex mb-3" v-for="item in cartStore.items"
+                                :key="item.variantId">
                                 <img :src="item.image" alt="" class="me-3 rounded" width="50" height="50" />
                                 <div class="flex-grow-1">
-                                    <strong class="product-name-short">{{ item.productName }}</strong>
+                                    <strong class="product-name-short">{{
+                                        item.productName
+                                    }}</strong>
 
                                     <div class="text-muted small ps-2 mb-1" style="font-size: 11px">
                                         <div>+ Size: {{ item.selectedSize }}</div>
                                     </div>
-                                    <div style="font-size: 12px">Số lượng: {{ item.quantity }}</div>
-                                    <div style="font-size: 12px">Giá: {{ formatNumber(item.price) }} VNĐ</div>
+                                    <div style="font-size: 12px">
+                                        Số lượng: {{ item.quantity }}
+                                    </div>
+                                    <div style="font-size: 12px">
+                                        Giá: {{ FormatData.formatNumber(item.price) }} VNĐ
+                                    </div>
                                 </div>
-                                <div class="text-end ms-2 fw-semibold" style="color: blue;">
-                                    {{ formatNumber(item.price * item.quantity) }} VNĐ
+                                <div class="text-end ms-2 fw-semibold" style="color: blue">
+                                    {{ FormatData.formatNumber(item.price * item.quantity) }} VNĐ
                                 </div>
                             </div>
-
+                            <small v-else class="text-danger d-flex justify-content-center">
+                                Giỏ hàng trống
+                            </small>
                         </div>
 
                         <hr />
 
                         <div class="d-flex justify-content-between mb-2">
-                            <span>Tạm tính</span><span class="fw-semibold">{{ formatNumber(cartStore.totalPrice) }}
-                                VNĐ</span>
+                            <span>Tạm tính</span><span class="fw-semibold">{{
+                                FormatData.formatNumber(cartStore.totalPrice) }} VNĐ</span>
                         </div>
                         <div class="d-flex justify-content-between mb-2">
-                            <span>Phí ship</span><span class="fw-semibold">{{ formatNumber(shippingFee) }} VNĐ</span>
+                            <span>Phí ship</span><span class="fw-semibold">{{ FormatData.formatNumber(shippingFee) }}
+                                VNĐ</span>
                         </div>
                         <div style="color: blue" class="d-flex justify-content-between mb-2 fw-bold">
-                            <span>Tổng thanh toán:</span><span class="fw-semibold" style="color: blue;">{{
-                                formatNumber(totalPayment) }} VNĐ</span>
+                            <span>Tổng thanh toán:</span><span class="fw-semibold" style="color: blue">{{
+                                FormatData.formatNumber(totalPayment) }} VNĐ</span>
                         </div>
 
                         <div>

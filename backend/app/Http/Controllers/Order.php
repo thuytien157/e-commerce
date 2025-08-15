@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Events\OrderUpdated;
+use App\Jobs\sendMail;
 use App\Models\Order as ModelsOrder;
 use App\Models\OrderItem;
 use Illuminate\Http\Request;
@@ -70,6 +71,7 @@ class Order extends Controller
                 'districts.required' => 'Vui lòng nhập quận huyện',
                 'address.required' => 'Vui lòng nhập địa chỉ',
                 'guest_address.required' => 'thiếu địa chỉ',
+                'cartItems.required' => 'Giỏ hàng trống'
             ]
         );
 
@@ -88,6 +90,7 @@ class Order extends Controller
             $order->guest_name = $request->guest_name;
             $order->guest_phone = $request->guest_phone;
             $order->guest_address = $request->guest_address;
+            $order->guest_email = $request->guest_email;
             $order->total_amount = $request->total_amount;
             $order->shipping_money = $request->shipping_money;
             $order->order_date = SupportCarbon::now();
@@ -116,6 +119,7 @@ class Order extends Controller
 
             OrderItem::insert($orderItemsData);
 
+            dispatch(new SendMail($order->id));
 
             DB::commit();
             if ($request->payment_method == 'VNPAY') {

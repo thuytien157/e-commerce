@@ -40,7 +40,6 @@ class Product extends Controller
                 break;
         }
 
-
         if ($categoryIds && $categoryIds !== 'all') {
             $selectedCategoryIds = explode(',', $categoryIds);
             $allCategoryIdsToFilter = collect($selectedCategoryIds);
@@ -154,24 +153,23 @@ class Product extends Controller
     private function transformProducts($products)
     {
         return $products->map(function ($item) {
-            $reviews = $item->reviews;
-            $reviewsData = $reviews->map(function ($review) {
+            $reviewData = $item->reviews->map(function ($value) {
                 return [
-                    'id' => $review->id,
-                    'rating' => $review->rating,
-                    'comment' => $review->comment,
-                    'user_name' => optional($review->user)->name,
-                    'created_at' => $review->created_at,
+                    'customer_name' => $value->customer->username,
+                    'customer_avatar' => $value->customer->avatar,
+                    'comment' => $value->comment,
+                    'reply_text' => $value->reply_text,
+                    'image' => $value->images,
+                    'rating' => $value->rating,
                 ];
             });
-            $rating = $item->reviews_avg_rating ?? round($reviews->avg('rating'), 1);
 
             return [
                 'id' => $item->id,
                 'name' => $item->name,
                 'price' => $item->price,
-                'rating' => $rating,
-                'reviews' => $reviewsData,
+                'rating' => round($item->reviews->avg('rating'), 1),
+                'reviews' => $reviewData,
                 'description' => $item->description,
                 'variants' => $item->variants->map(function ($variant) {
                     return [
@@ -194,24 +192,44 @@ class Product extends Controller
     }
 
 
-
-    function getProductById(string $id)
+    function getProductById(Request $request, string $id)
     {
-        $product = ModelsProduct::with('variants.attributes', 'reviews')
-            ->withAvg('reviews', 'rating')
+        $rating = $request->query('rating');
+
+        $product = ModelsProduct::with(['variants.attributes'])
             ->find($id);
 
         if (!$product) {
             return response()->json([
-                'message' => 'Sản phẩm không tồn tại'
+                'message' => 'Sản phẩm không tồn tại.'
             ], 404);
         }
 
-        // Nếu muốn dùng format giống index()
-        $transformed = $this->transformProducts(collect([$product]))->first();
+        $reviewsQuery = $product->reviews()->with(['customer', 'admin']);
+
+        if ($rating) {
+            switch ($rating) {
+                case '5':
+                    $reviewsQuery->where('rating', '=', 5);
+                    break;
+                case '4_5':
+                    $reviewsQuery->where('rating', '>=', 4)->where('rating', '<', 5);
+                    break;
+                case '3_4':
+                    $reviewsQuery->where('rating', '>=', 3)->where('rating', '<', 4);
+                    break;
+                case 'duoi_3':
+                    $reviewsQuery->where('rating', '<', 3);
+                    break;
+            }
+        }
+
+        $filteredReviews = $reviewsQuery->get();
+        $product->setRelation('reviews', $filteredReviews);
+        $transformedProduct = $this->transformProducts(collect([$product]))->first();
 
         return response()->json([
-            'product' => $transformed
+            'product' => $transformedProduct
         ]);
     }
 

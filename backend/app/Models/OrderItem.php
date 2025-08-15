@@ -17,8 +17,11 @@ class OrderItem extends Model
         'quantity',
         'unit_price',
         'subtotal',
+        'reviewed',
     ];
-
+    protected $casts = [
+        'reviewed' => 'boolean',
+    ];
     public function variant()
     {
         return $this->belongsTo(Variant::class, 'variant_id');

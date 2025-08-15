@@ -4413,7 +4413,7 @@ blockquote span {
   margin-bottom: 0;
 }
 
-.product-details-info .reviews .single-review img {
+.product-details-info .reviews .single-review .avatar {
   height: 60px;
   width: 60px;
   border-radius: 50%;
@@ -4423,7 +4423,7 @@ blockquote span {
 }
 
 @media (max-width: 767px) {
-  .product-details-info .reviews .single-review img {
+  .product-details-info .reviews .single-review .avatar {
     height: 40px;
     width: 40px;
   }
@@ -4433,12 +4433,12 @@ blockquote span {
   position: relative;
   border: 1px solid #eee;
   border-radius: 4px;
-  padding: 25px;
+  padding: 15px;
 }
 
 @media (max-width: 767px) {
   .product-details-info .reviews .single-review .review-info {
-    padding: 20px;
+    padding: 10px;
   }
 }
 
@@ -4512,9 +4512,7 @@ blockquote span {
   font-size: 14px;
 }
 
-.product-details-info .reviews .single-review .review-info p {
-  margin-top: 15px;
-}
+
 
 .review-modal .modal-dialog {
   max-width: 600px;

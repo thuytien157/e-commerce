@@ -9,6 +9,7 @@ class Review extends Model
 {
     use HasFactory;
     protected $table = 'reviews';
+    public $timestamps = false;
     protected $fillable = [
         'customer_id',
         'product_id',
@@ -18,7 +19,16 @@ class Review extends Model
         'comment',
         'created_at',
     ];
-    protected $appends = ['reviews_avg_rating'];
 
+    public function customer(){
+        return $this->belongsTo(User::class, 'customer_id');
+    }
+    public function admin(){
+        return $this->belongsTo(User::class, 'reply_customer_id');
+    }
+
+    public function images(){
+        return $this->hasMany(Review_image::class);
+    }
 
 }

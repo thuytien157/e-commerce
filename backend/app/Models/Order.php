@@ -16,6 +16,7 @@ class Order extends Model
         'customer_id',
         'guest_name',
         'guest_phone',
+        'guest_email',
         'guest_address',
         'total_amount',
         'shipping_money',

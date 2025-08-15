@@ -4,9 +4,14 @@ import FormatData from "@/component/store/FormatData";
 import { useTokenUser } from "@/component/store/useTokenUser";
 import axios from "axios";
 import { onMounted, ref } from "vue";
+import { Modal } from 'bootstrap';
+
 const store = useTokenUser();
 const orders = ref(null);
 const isLoading = ref(true);
+const currentStatus = ref("pendingConfirmation");
+const orderToReview = ref(null);
+
 const getOrder = async () => {
     isLoading.value = true;
     try {
@@ -19,11 +24,12 @@ const getOrder = async () => {
         orders.value = res.data.orders;
     } catch (error) {
         console.log(error);
+
     } finally {
         isLoading.value = false;
     }
 };
-const currentStatus = ref("pendingConfirmation");
+
 const filterOrderByStatus = async (status) => {
     currentStatus.value = status;
     isLoading.value = true;
@@ -37,10 +43,12 @@ const filterOrderByStatus = async (status) => {
         orders.value = res.data.orders;
     } catch (error) {
         console.log(error);
+
     } finally {
         isLoading.value = false;
     }
 };
+
 const getStatusClass = (status) => {
     switch (status) {
         case "Chờ xác nhận":
@@ -63,20 +71,101 @@ const getStatusClass = (status) => {
 
 const repayOrder = async (orderId) => {
     try {
-        const response = await axios.post(`http://127.0.0.1:8000/api/order/${orderId}/repay`);
+        const response = await axios.post(
+            `http://127.0.0.1:8000/api/order/${orderId}/repay`
+        );
         if (response.data.return_url) {
             window.location.href = response.data.return_url;
         }
     } catch (error) {
         console.log(error);
+    }
+};
+
+const openReviewModal = async (orderId) => {
+    try {
+        const res = await axios.get(`http://127.0.0.1:8000/api/order-info/${orderId}`, {
+            headers: { Authorization: `Bearer ${store.token}` },
+        });
+        const orderData = res.data.order;
+
+        if (orderData && orderData.order_items) {
+            orderData.order_items.forEach(detail => {
+                if (!detail.review_temp) {
+                    detail.review_temp = {
+                        rating: 0,
+                        comment: '',
+                        images: [],
+                    };
+                }
+            });
+        }
+        orderToReview.value = orderData;
+    } catch (error) {
+        console.log(error);
 
     }
-}
+};
+
+const getRatingText = (rating) => {
+    switch (rating) {
+        case 1: return "Rất tệ";
+        case 2: return "Tệ";
+        case 3: return "Bình thường";
+        case 4: return "Tốt";
+        case 5: return "Tuyệt vời";
+        default: return "";
+    }
+};
+
+const handleImageUpload = (detail, event) => {
+    detail.review_temp.images = Array.from(event.target.files);
+};
+
+const submitAllReviews = async () => {
+    const reviewsToSubmit = orderToReview.value.order_items
+        .filter(detail => detail.review_temp && detail.review_temp.rating > 0);
+
+    if (reviewsToSubmit.length === 0) {
+        alert("Vui lòng đánh giá ít nhất một sản phẩm.");
+        return;
+    }
+
+    let allSuccess = true;
+    for (const detail of reviewsToSubmit) {
+        const formData = new FormData();
+        formData.append("order_detail_id", detail.id);
+        formData.append("rating", detail.review_temp.rating);
+        formData.append("comment", detail.review_temp.comment);
+        detail.review_temp.images.forEach((image, index) => {
+            formData.append(`images[${index}]`, image);
+        });
+
+        try {
+            await axios.post("http://127.0.0.1:8000/api/review", formData, {
+                headers: {
+                    Authorization: `Bearer ${store.token}`
+                },
+            });
+        } catch (error) {
+            console.log(error);
+            allSuccess = false;
+            break;
+        }
+    }
+
+    if (allSuccess) {
+        const reviewModal = Modal.getInstance(document.getElementById("reviewModal"));
+        reviewModal.hide();
+        await getOrder();
+        alert("Tất cả đánh giá của bạn đã được gửi thành công!");
+    }
+};
+
 onMounted(async () => {
     await getOrder();
 });
 </script>
-
 <template>
     <section class="account-page py-5 fade-in">
         <div class="container">
@@ -84,40 +173,33 @@ onMounted(async () => {
                 <SidebarAccount></SidebarAccount>
                 <div class="col-12 col-md-8 col-lg-9 bg-white p-3" style="border-radius: 10px">
                     <h4 class="fw-bold mb-4">Đơn hàng đã mua</h4>
-                    <!-- Tabs -->
                     <div class="order-tabs d-flex flex-nowrap overflow-auto gap-3 mb-1">
                         <button class="tab-item" :class="{ active: currentStatus === 'pendingConfirmation' }"
                             @click="filterOrderByStatus('pendingConfirmation')">
                             Chờ xác nhận
                         </button>
-
                         <button class="tab-item" :class="{ active: currentStatus === 'confirmation' }"
                             @click="filterOrderByStatus('confirmation')">
                             Đã xác nhận
                         </button>
-
                         <button class="tab-item" :class="{ active: currentStatus === 'pending' }"
                             @click="filterOrderByStatus('pending')">
                             Đang xử lý
                         </button>
-
                         <button class="tab-item" :class="{ active: currentStatus === 'shipping' }"
                             @click="filterOrderByStatus('shipping')">
                             Đang giao hàng
                         </button>
-
                         <button class="tab-item" :class="{ active: currentStatus === 'done' }"
                             @click="filterOrderByStatus('done')">
                             Hoàn thành
                         </button>
-
                         <button class="tab-item" :class="{ active: currentStatus === 'cancel' }"
                             @click="filterOrderByStatus('cancel')">
                             Đã hủy
                         </button>
                     </div>
 
-                    <!-- Table for desktop -->
                     <div class="card border-0 p-0 d-none d-md-block">
                         <table class="table" v-if="isLoading">
                             <tbody>
@@ -165,11 +247,16 @@ onMounted(async () => {
                                         </td>
                                         <td class="d-flex gap-2">
                                             <router-link :to="`/order-history-detail/${value.id}`"
-                                                href="/history-order-detail/123456"
                                                 class="btn btn-sm btn-outline-primary">Xem</router-link>
                                             <button class="btn btn-sm btn-outline-dark" @click="repayOrder(value.id)"
-                                                v-if="value.payment_method == 'VNPAY' && value.status_payments == 'Chưa thanh toán'">Thanh
-                                                toán</button>
+                                                v-if="value.payment_method == 'VNPAY' && value.status_payments == 'Chưa thanh toán'">
+                                                Thanh toán
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-warning"
+                                                v-if="value.status == 'Hoàn thành'" data-bs-toggle="modal"
+                                                data-bs-target="#reviewModal" @click="openReviewModal(value.id)">
+                                                Đánh giá
+                                            </button>
                                         </td>
                                     </tr>
                                 </tbody>
@@ -177,7 +264,6 @@ onMounted(async () => {
                         </div>
                     </div>
 
-                    <!-- Cards for mobile -->
                     <div class="d-md-none">
                         <div class="order-card card border-0 shadow-sm mb-3" v-if="isLoading" v-for="n in 3" :key="n">
                             <div class="card-body">
@@ -197,26 +283,27 @@ onMounted(async () => {
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <h6 class="fw-bold mb-0">Mã đơn: #{{ value.id }}</h6>
-                                    <span class="badge bg-warning text-dark">{{
-                                        value.status
-                                        }}</span>
+                                    <span class="badge bg-warning text-dark">{{ value.status }}</span>
                                 </div>
                                 <p class="mb-1 text-muted">
                                     <i class="bi bi-calendar me-2"></i>{{ FormatData.formatDateTime(value.order_date) }}
                                 </p>
                                 <p class="mb-2 text-muted">
                                     <i class="bi bi-cash me-2"></i>Tổng tiền:
-                                    <strong>{{
-                                        FormatData.formatNumber(value.total_amount)
-                                        }}
-                                        VND</strong>
+                                    <strong>{{ FormatData.formatNumber(value.total_amount) }} VND</strong>
                                 </p>
                                 <div class="text-end">
                                     <router-link :to="`/order-history-detail/${value.id}`"
                                         class="btn btn-sm btn-outline-primary">Xem chi tiết</router-link>
                                     <button class="btn btn-sm btn-outline-dark"
-                                        v-if="value.payment_method == 'VNPAY' && value.status_payments == 'Chưa thanh toán'">Thanh
-                                        toán</button>
+                                        v-if="value.payment_method == 'VNPAY' && value.status_payments == 'Chưa thanh toán'">
+                                        Thanh toán
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-warning" v-if="value.status === 'Hoàn thành'"
+                                        data-bs-toggle="modal" data-bs-target="#reviewModal"
+                                        @click="openReviewModal(value.id)">
+                                        Đánh giá
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -225,9 +312,166 @@ onMounted(async () => {
             </div>
         </div>
     </section>
+
+    <div class="modal fade" id="reviewModal" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+            <div class="modal-content rounded-4 shadow" v-if="orderToReview">
+                <div class="modal-header border-bottom-0">
+                    <h5 class="modal-title fw-bold" id="reviewModalLabel">
+                        Đánh giá sản phẩm đã mua
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4 pt-0">
+                    <div class="review-item mb-4 pb-4 border-bottom" v-for="detail in orderToReview.order_items"
+                        :key="detail.id">
+                        <div class="d-flex align-items-start mb-3">
+                            <img :src="detail.variant.main_image_url" alt="Product Image"
+                                class="product-thumb me-3 rounded-2"
+                                style="width: 80px; height: 80px; object-fit: cover" />
+                            <div>
+                                <h6 class="mb-1 fw-bold">{{ detail.variant.product.name }}</h6>
+                                <small class="text-muted" v-for="(attribute, index) in detail.variant.attributes"
+                                    :key="index">
+                                    <span v-if="attribute.attribute_id == 1">
+                                        Kích thước: {{ attribute.value_name }}
+                                    </span>
+                                </small>
+                            </div>
+                        </div>
+
+                        <div class="review-form" v-if="detail.review_temp">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Chọn số sao của bạn</label>
+                                <div class="d-flex align-items-center">
+                                    <i v-for="star in 5" :key="star" class="bi me-1" :class="{
+                                        'bi-star-fill text-warning': star <= detail.review_temp.rating,
+                                        'bi-star': star > detail.review_temp.rating,
+                                    }" @click="detail.review_temp.rating = star"
+                                        style="cursor: pointer; font-size: 1.5rem">
+                                    </i>
+                                    <span class="ms-2 fw-bold text-warning">{{ getRatingText(detail.review_temp.rating)
+                                        }}</span>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label :for="'review-comment-' + detail.id" class="form-label fw-bold small">Nội dung
+                                    đánh giá</label>
+                                <textarea class="form-control rounded-3" :id="'review-comment-' + detail.id" rows="3"
+                                    placeholder="Chia sẻ cảm nhận của bạn về sản phẩm này"
+                                    v-model="detail.review_temp.comment"></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label :for="'review-images-' + detail.id" class="form-label fw-bold small">Thêm ảnh
+                                    (Tùy
+                                    chọn)</label>
+                                <input class="form-control form-control-sm" type="file"
+                                    :id="'review-images-' + detail.id" multiple
+                                    @change="handleImageUpload(detail, $event)" />
+                                <small class="form-text text-muted">Tối đa 5 ảnh.</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer d-flex justify-content-end gap-2 p-3">
+                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">
+                        Đóng
+                    </button>
+                    <button type="button" class="btn btn-primary rounded-pill px-4" @click="submitAllReviews">
+                        Gửi tất cả đánh giá
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </template>
 
 <style scoped>
+.modal-dialog-scrollable .modal-content {
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.modal-content {
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+    border-bottom: 1px solid #e9ecef;
+    padding: 1.5rem;
+}
+
+.modal-title {
+    font-weight: 600;
+    font-size: 1.5rem;
+    color: #333;
+}
+
+/* Review Item Section */
+.review-item {
+    border-bottom: 1px solid #e9ecef;
+    padding-bottom: 1.5rem;
+}
+
+.review-item:last-child {
+    border-bottom: none;
+}
+
+.product-thumb {
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+
+/* Star Rating Section */
+.rating-stars i {
+    color: #e0e0e0;
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: color 0.2s ease-in-out;
+}
+
+.rating-stars i:hover,
+.rating-stars i.rated {
+    color: #ffc107;
+    /* Màu vàng */
+}
+
+.rating-text {
+    font-size: 0.9rem;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+/* Form inputs and buttons */
+.review-form .form-label {
+    font-weight: 500;
+    color: #495057;
+    font-size: 0.9rem;
+}
+
+.review-form .form-control {
+    border-radius: 8px;
+}
+
+.modal-footer {
+    border-top: 1px solid #e9ecef;
+}
+
+.btn-primary {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+    font-weight: 500;
+    transition: all 0.2s ease-in-out;
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    border-color: #6c757d;
+    font-weight: 500;
+}
+
 .skeleton-line {
     background-color: #e2e5e7;
     height: 1em;

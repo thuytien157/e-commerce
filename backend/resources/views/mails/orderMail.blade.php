@@ -21,9 +21,9 @@
         <div style="border-top: 1px solid #e8e8e8; padding-top: 25px;">
             <h3
                 style="font-size: 16px; color: #333333; margin-top: 0; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 0.5px;">
-                MÓN ĐÃ ĐẶT
+                SẢN PHẨM ĐÃ ĐẶT
             </h3>
-            @foreach ($mailData['order_details'] as $item)
+            @foreach ($mailData['orderItemsData'] as $item)
                 <table cellspacing="0" cellpadding="0" border="0" width="100%"
                     style="margin-bottom: 20px; border-bottom: 1px dashed #eeeeee; padding-bottom: 15px;">
                     <tr>
@@ -35,31 +35,17 @@
                             <p style="margin: 0; font-size: 15px; color: #333333; font-weight: bold;">
                                 {{ $item['name'] }}
                             </p>
-                            {{-- @if (!empty($item['toppings']))
-                                <ul
-                                    style="margin: 5px 0 0 15px; padding: 0; list-style-type: disc; font-size: 13px; color: #777777;">
-                                    @foreach ($item['toppings'] as $index => $toping)
-                                        @if ($index < 3)
-                                            @if ($toping['price'] > 0)
-                                                <li>{{ $toping['name'] }} - {{ number_format($toping['price']) }} VNĐ
-                                                </li>
-                                            @else
-                                                <li>{{ $toping['name'] }}</li>
-                                            @endif
-                                        @endif
-                                    @endforeach
-                                    @if (count($item['toppings']) > 3)
-                                        <li>... và {{ count($item['toppings']) - 3 }} topping khác</li>
-                                    @endif
-                                </ul>
-                            @endif --}}
+                            <ul style="margin: 5px 0 0 15px; padding: 0; list-style-type: disc; font-size: 13px; color: #777777;">
+                                <li>{{ $item['sizeName'] }}
+                                </li>
+                            </ul>
                         </td>
 
                         <td style="vertical-align: top; text-align: right; width: 30%;">
-                            <p style="margin: 0; font-size: 15px; color: #333333;">x{{ $item['quantity'] }}</p>
                             <p style="margin: 5px 0 0 0; font-size: 15px; color: #333333; font-weight: bold;">
-                                {{ number_format($item['price']) }} VND
+                                Giá gốc: {{ number_format($item['unit_price']) }} VND
                             </p>
+                            <p style="margin: 0; font-size: 15px; color: #333333;">x{{ $item['quantity'] }}</p>
                         </td>
                     </tr>
                 </table>
@@ -77,14 +63,15 @@
                 <tr>
                     <td style="padding-bottom: 5px;">Phí ship:</td>
                     <td style="text-align: right; padding-bottom: 5px;">
-                        {{ number_format($mailData['shippingFee']) }} VND
+                        {{ number_format($mailData['shipping_money']) }} VND
                     </td>
                 </tr>
+
 
                 <tr style="font-size: 16px; color: blue; font-weight: bold; border-top: 1px solid #e8e8e8;">
                     <td style="padding-top: 10px;">Tổng tiền:</td>
                     <td style="text-align: right; padding-top: 10px;">
-                        {{ number_format($mailData['total_price']) }} VND
+                        {{ number_format($mailData['total_amount']) }} VND
                     </td>
                 </tr>
             </table>
@@ -105,7 +92,7 @@
                         <p style="margin: 5px 0 0 0;"><strong>Địa chỉ:</strong> {{ $mailData['guest_address'] }}
                         </p>
                         <p style="margin: 5px 0 0 0; color: #333333"><strong>Trạng thái đơn:</strong>
-                            {{ $mailData['order_status'] }}</p>
+                            {{ $mailData['status'] }}</p>
                         </p>
                         <p style="margin: 5px 0 0 0;"><strong>Ghi chú:</strong> {{ $mailData['note'] ?? 'Không có' }}
                         </p>
@@ -120,7 +107,7 @@
                 Bạn có thể theo xem chi tiết đơn hàng của bạn bằng cách nhấp vào nút bên dưới.
             </div>
             <br>
-            <a href="http://localhost:5173/history-order-detail/{{ $mailData['order_id'] }}"
+            <a href="http://localhost:5173/order-history-detail/{{ $mailData['order_id'] }}"
                 style="display: inline-block; background-color: blue; color: white; padding: 12px 25px; text-decoration: none; font-size: 14px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">
                 XEM CHI TIẾT ĐƠN HÀNG
             </a>

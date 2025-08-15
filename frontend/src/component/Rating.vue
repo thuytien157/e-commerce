@@ -1,14 +1,24 @@
 <template>
     <ul class="review p-0">
-        <li v-for="star in fullStars" :key="'fill-' + star">
+        <!-- Sao đầy -->
+        <li v-for="n in fullStars" :key="'full-' + n">
             <i class="bi bi-star-fill text-warning"></i>
         </li>
 
-        <li v-for="star in emptyStars" :key="'empty-' + star">
+        <!-- Sao nửa -->
+        <li v-if="hasHalfStar">
             <i class="bi bi-star-half text-warning"></i>
         </li>
 
-        <li><span>{{ ratings }} Review(s)</span></li>
+        <!-- Sao rỗng -->
+        <li v-for="n in emptyStars" :key="'empty-' + n">
+            <i class="bi bi-star text-warning"></i>
+        </li>
+
+        <!-- Số review (nếu truyền vào) -->
+        <li v-if="reviewCount !== null">
+            <span>{{ rating }} Review(s)</span>
+        </li>
     </ul>
 </template>
 
@@ -16,31 +26,34 @@
 import { computed } from 'vue';
 
 const props = defineProps({
-    ratings: {
-        type: Array,
+    rating: { // trung bình số sao
+        type: Number,
         required: true,
-        default: () => []
+        default: 0
+    },
+    reviewCount: { // số review (có thể null)
+        type: Number,
+        default: null
     }
 });
 
-const fullStars = computed(() => Math.min(5, Math.max(0, Math.round(props.ratings))));
-const emptyStars = computed(() => 5 - fullStars.value);
+const fullStars = computed(() => Math.floor(props.rating));
+const hasHalfStar = computed(() => props.rating - fullStars.value >= 0.5);
+const emptyStars = computed(() => 5 - fullStars.value - (hasHalfStar.value ? 1 : 0));
 </script>
-<style>
-.single-product .product-info .review {
+
+<style scoped>
+.review {
     margin-top: 5px;
 }
-
-.single-product .product-info .review li {
+.review li {
     display: inline-block;
 }
-
-.single-product .product-info .review li i {
+.review li i {
     color: #fecb00;
     font-size: 13px;
 }
-
-.single-product .product-info .review li span {
+.review li span {
     display: inline-block;
     margin-left: 4px;
     color: #888;

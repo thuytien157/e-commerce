@@ -29,10 +29,6 @@ const getAllProducts = async () => {
     }
 };
 
-const getRatingsArray = (reviews) => {
-    if (!Array.isArray(reviews)) return [];
-    return reviews.map((r) => Number(r) || 0);
-};
 const selectedCategories = ref([]);
 const selectedSort = ref("");
 const selectedSize = ref([]);
@@ -64,15 +60,12 @@ const queryParams = computed(() => {
 });
 
 const fetchProducts = async () => {
-    isLoading.value = true;
     try {
         const url = `http://127.0.0.1:8000/api/product?${queryParams.value}`;
         const res = await axios.get(url);
         products.value = res.data.products;
     } catch (error) {
         console.error("Lỗi khi tải sản phẩm:", error);
-    } finally {
-        isLoading.value = false;
     }
 };
 const sortProducts = (value) => {
@@ -114,7 +107,11 @@ const handleAddToCart = (itemToAdd) => {
 };
 
 onMounted(async () => {
+    isLoading.value = true;
+
     await getAllProducts();
+    isLoading.value = false;
+
 });
 </script>
 
@@ -351,7 +348,7 @@ onMounted(async () => {
                                                         :to="`/product-detail/${product.variants[0].slug}/${product.id}`">{{
                                                             product.name }}</router-link>
                                                 </h4>
-                                                <Rating :ratings="getRatingsArray(product.rating)" />
+                                                <Rating :rating="product.rating" :reviewCount="product.rating" />
                                                 <div class="price">
                                                     <span>{{ FormatData.formatNumber(product.price) }}VNĐ</span>
 
@@ -441,12 +438,12 @@ onMounted(async () => {
                                                                 :to="`/product-detail/${product.variants[0].slug}/${product.id}`">{{
                                                                     product.name }}</router-link>
                                                         </h4>
-                                                        <Rating :ratings="getRatingsArray(product.rating)" />
+                                                <Rating :rating="product.rating" :reviewCount="product.rating" />
 
                                                         <div class="price">
                                                             <span>{{
                                                                 FormatData.formatNumber(product.price)
-                                                            }}VNĐ</span>
+                                                                }}VNĐ</span>
                                                         </div>
                                                         <div class="d-flex gap-1 mt-2">
                                                             <span v-for="value in FormatData.uniqueColors(

@@ -3,7 +3,7 @@ import Rating from "@/component/Rating.vue";
 import axios from "axios";
 import { onMounted, ref } from "vue";
 import FormatData from "@/component/store/FormatData";
-import ProductModal from '@/component/ProductModal.vue';
+import ProductModal from "@/component/ProductModal.vue";
 import { useCartStore } from "@/component/store/cart";
 
 const new_arrivals = ref([]);
@@ -21,7 +21,7 @@ const getAllProducts = async () => {
     const res = await axios.get("http://127.0.0.1:8000/api/product");
     const response = await axios.get("http://127.0.0.1:8000/api/category");
     top_rated.value = res.data.top_rated;
-    console.log('sss' + top_rated.value);
+    console.log("sss" + top_rated.value);
 
     best_sellers.value = res.data.best_sellers;
     new_arrivals.value = res.data.new_arrivals;
@@ -47,33 +47,31 @@ const sortProducts = async (value, section) => {
     const res = await axios.get(apiUrl);
 
     if (section === "new_arrivals") {
-      new_arrivals.value = res.data.new_arrivals.variants[0];
+      new_arrivals.value = res.data.new_arrivals;
       // console.log('sss' + new_arrivals.value);
     } else if (section === "best_sellers") {
-      best_sellers.value = res.data.best_sellers.variants[0];
+      best_sellers.value = res.data.best_sellers;
     } else if (section === "top_rated") {
-      top_rated.value = res.data.top_rated.variants[0];
+      top_rated.value = res.data.top_rated;
     }
   } catch (error) {
     console.log(error);
   }
 };
 
-const getRatingsArray = (reviews) => {
-  if (!Array.isArray(reviews)) return [];
-  return reviews.map((r) => Number(r) || 0);
-};
 
-const showModal = ref(false)
-const productData = ref(null)
+const showModal = ref(false);
+const productData = ref(null);
 const openModal = async (productId) => {
   showModal.value = true;
-  const res = await axios.get(`http://127.0.0.1:8000/api/products/${productId}`)
-  productData.value = res.data.product
-}
+  const res = await axios.get(
+    `http://127.0.0.1:8000/api/products/${productId}`
+  );
+  productData.value = res.data.product;
+};
 function closeModal() {
   showModal.value = false;
-  productData.value = null
+  productData.value = null;
 }
 const cartStore = useCartStore();
 
@@ -82,7 +80,6 @@ const handleAddToCart = (itemToAdd) => {
 };
 onMounted(async () => {
   await getAllProducts();
-
 });
 </script>
 <template>
@@ -122,7 +119,9 @@ onMounted(async () => {
   <div class="container-xl">
     <div class="row align-items-center">
       <div class="d-flex justify-content-between w-100 flex-wrap">
-        <h3 class="fw-bolder text-start ms-2" style="color: blue;">Hàng mới về</h3>
+        <h3 class="fw-bolder text-start ms-2" style="color: blue">
+          Hàng mới về
+        </h3>
         <div class="d-flex mb-1">
           <div class="me-2">
             <button type="button" class="btn btn-outline-primary btn-sm p-2 mt-2 fw-semibold"
@@ -190,7 +189,7 @@ onMounted(async () => {
                   <router-link :to="`/product-detail/${product.variants[0].slug}/${product.id}`">{{ product.name
                   }}</router-link>
                 </h4>
-                <Rating :ratings="getRatingsArray(product.rating)" />
+                <Rating :rating="product.rating" :reviewCount="product.rating" />
                 <div class="price">
                   <span>{{ FormatData.formatNumber(product.price) }}VNĐ</span>
                 </div>
@@ -212,7 +211,9 @@ onMounted(async () => {
 
     <div class="row align-items-center mt-5">
       <div class="d-flex justify-content-between w-100 flex-wrap">
-        <h3 class="fw-bolder text-start ms-2" style="color: blue;">Hàng bán chạy</h3>
+        <h3 class="fw-bolder text-start ms-2" style="color: blue">
+          Hàng bán chạy
+        </h3>
         <div class="d-flex mb-1">
           <div class="me-2">
             <button type="button" class="btn btn-outline-primary btn-sm p-2 mt-2 fw-semibold"
@@ -267,17 +268,14 @@ onMounted(async () => {
               <router-link :to="`/product-detail/${product.variants[0].slug}/${product.id}`">{{ product.name
               }}</router-link>
             </h4>
-            <Rating :ratings="getRatingsArray(product.rating)" />
+            <Rating :rating="product.rating" :reviewCount="product.rating" />
             <div class="price">
               <span>{{ FormatData.formatNumber(product.price) }}VNĐ</span>
             </div>
             <div class="d-flex gap-1 mt-2">
               <span v-for="value in FormatData.uniqueColors(product.variants)" :key="value.attribute_value_id"
-                class="d-inline-block rounded-circle" style="
-                      width: 0.75rem;
-                      height: 0.75rem;
-                      border: 1px solid #ccc;
-                    " :style="{ 'background-color': value.attribute_name }">
+                class="d-inline-block rounded-circle" style="width: 0.75rem; height: 0.75rem; border: 1px solid #ccc"
+                :style="{ 'background-color': value.attribute_name }">
               </span>
             </div>
           </div>
@@ -287,7 +285,9 @@ onMounted(async () => {
 
     <div class="row align-items-center">
       <div class="d-flex justify-content-between w-100 flex-wrap">
-        <h3 class="fw-bolder text-start ms-2" style="color: blue;">Sản phẩm đánh giá cao nhất</h3>
+        <h3 class="fw-bolder text-start ms-2" style="color: blue">
+          Sản phẩm đánh giá cao nhất
+        </h3>
         <div class="d-flex mb-1">
           <div class="me-2">
             <button type="button" class="btn btn-outline-primary btn-sm p-2 mt-2 fw-semibold"
@@ -345,7 +345,7 @@ onMounted(async () => {
                   <router-link :to="`/product-detail/${product.variants[0].slug}/${product.id}`">{{ product.name
                   }}</router-link>
                 </h4>
-                <Rating :ratings="getRatingsArray(product.rating)" />
+                <Rating :rating="product.rating" :reviewCount="product.rating" />
                 <div class="price">
                   <span>{{ FormatData.formatNumber(product.price) }}VNĐ</span>
                 </div>

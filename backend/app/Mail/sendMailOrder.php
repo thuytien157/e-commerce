@@ -16,15 +16,15 @@ class sendMailOrder extends Mailable
 
     public $mailData;
 
-        public function __construct($mailData)
-        {
-            $this->mailData = $mailData;
-        }
+    public function __construct($mailData)
+    {
+        $this->mailData = $mailData;
+    }
 
-        public function build()
-        {
-            return $this->subject('Xác nhận đặt đơn thành công')
-                        ->view('emails.orderMail')
-                        ->with('mailData', $this->mailData);
-        }
+    public function build()
+    {
+        return $this->subject('Xác nhận đặt đơn thành công')
+            ->view('mails.orderMail')
+            ->with('mailData', $this->mailData);
+    }
 }

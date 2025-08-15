@@ -23,7 +23,7 @@
                     <div class="detail-row">
                         <span class="detail-label">Ngày đặt:</span>
                         <span class="detail-value">{{ formatDateTime(orderInfo.order_date)
-                        }}</span>
+                            }}</span>
                     </div>
                     <div class="detail-row">
                         <span class="detail-label">Tổng cộng:</span>

@@ -4,6 +4,7 @@ use App\Http\Controllers\Attribute;
 use App\Http\Controllers\Category;
 use App\Http\Controllers\Order;
 use App\Http\Controllers\Product;
+use App\Http\Controllers\Review;
 use App\Http\Controllers\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -55,3 +56,6 @@ Route::put('/update-order-address', [Order::class, 'updateAddresslOrder']);
 Route::match(['GET', 'POST'], '/vnpay-ipn', [Order::class, 'handleVnpayIpn']);
 Route::get('/payment-return', [Order::class, 'paymentOrderReturn']);
 Route::post('/order/{orderId}/repay', [Order::class, 'repayOrder']);
+
+
+Route::post('/review', [Review::class, 'createReview'])->middleware('auth:sanctum');

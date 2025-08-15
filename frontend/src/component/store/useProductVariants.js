@@ -57,19 +57,7 @@ export default function useProductVariants(product) {
     );
   });
 
-  const mainImage = computed(() => {
-    if (currentVariant.value) {
-      return (
-        currentVariant.value.image || currentVariant.value.images[0]?.image_url
-      );
-    } else if (product.value?.variants.length > 0) {
-      return (
-        product.value.variants[0].image ||
-        product.value.variants[0].images[0]?.image_url
-      );
-    }
-    return null;
-  });
+  const mainImage = ref(null);
 
   const setupDefaultOptions = () => {
     if (product.value?.variants.length > 0) {
@@ -107,6 +95,21 @@ export default function useProductVariants(product) {
     (newProduct) => {
       if (newProduct) {
         setupDefaultOptions();
+      }
+    },
+    { immediate: true }
+  );
+
+  watch(
+    currentVariant,
+    (newVariant) => {
+      if (newVariant && newVariant.images.length > 0) {
+        mainImage.value = newVariant.image;
+      } else if (
+        product.value?.variants.length > 0 &&
+        product.value.variants[0].images.length > 0
+      ) {
+        mainImage.value = product.value.variants[0].images[0].image_url;
       }
     },
     { immediate: true }
