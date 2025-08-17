@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from "vue";
-import SidebarAccount from "@/component/SidebarAccount.vue";
+import SidebarAccount from "@/component/client/SidebarAccount.vue";
 import axios from "axios";
 
 const address = ref([]);

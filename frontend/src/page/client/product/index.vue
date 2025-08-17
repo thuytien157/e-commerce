@@ -1,10 +1,10 @@
 <script setup>
-import Rating from "@/component/Rating.vue";
+import Rating from "@/component/client/Rating.vue";
 import axios from "axios";
 import { computed, onMounted, ref } from "vue";
 import FormatData from "@/component/store/FormatData";
 import { useCartStore } from "@/component/store/cart";
-import ProductModal from "@/component/ProductModal.vue";
+import ProductModal from "@/component/client/ProductModal.vue";
 const products = ref([]);
 const categories = ref([]);
 const colors = ref([]);
@@ -438,12 +438,13 @@ onMounted(async () => {
                                                                 :to="`/product-detail/${product.variants[0].slug}/${product.id}`">{{
                                                                     product.name }}</router-link>
                                                         </h4>
-                                                <Rating :rating="product.rating" :reviewCount="product.rating" />
+                                                        <Rating :rating="product.rating"
+                                                            :reviewCount="product.rating" />
 
                                                         <div class="price">
                                                             <span>{{
                                                                 FormatData.formatNumber(product.price)
-                                                                }}VNĐ</span>
+                                                            }}VNĐ</span>
                                                         </div>
                                                         <div class="d-flex gap-1 mt-2">
                                                             <span v-for="value in FormatData.uniqueColors(

@@ -75,9 +75,9 @@
 
 <script setup>
 import { ref, toRefs, watch } from "vue";
-import useProductVariants from "./store/useProductVariants";
-import FormatData from "./store/FormatData";
-import { useCartStore } from "./store/cart";
+import useProductVariants from "../store/useProductVariants";
+import FormatData from "../store/FormatData";
+import { useCartStore } from "../store/cart";
 
 const props = defineProps({
     product: {

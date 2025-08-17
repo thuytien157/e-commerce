@@ -4,7 +4,7 @@ import { computed, onMounted, ref, watch } from "vue";
 import FormatData from "@/component/store/FormatData";
 import useProductVariants from "@/component/store/useProductVariants";
 import { useCartStore } from "@/component/store/cart";
-import Rating from "@/component/Rating.vue";
+import Rating from "@/component/client/Rating.vue";
 const props = defineProps({
     productId: {
         type: [String, Number],

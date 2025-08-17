@@ -11,6 +11,8 @@ import "bootstrap";
 import "sweetalert2/dist/sweetalert2.min.css";
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
+import Antd from 'ant-design-vue';
+import 'ant-design-vue/dist/reset.css'; 
 
 window.Pusher = Pusher;
 
@@ -26,5 +28,6 @@ const app = createApp(App);
 const pinia = createPinia();
 app.use(pinia);
 app.use(router);
+app.use(Antd);
 
 app.mount("#app");

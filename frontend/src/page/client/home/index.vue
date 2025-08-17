@@ -1,9 +1,9 @@
 <script setup>
-import Rating from "@/component/Rating.vue";
+import Rating from "@/component/client/Rating.vue";
 import axios from "axios";
 import { onMounted, ref } from "vue";
 import FormatData from "@/component/store/FormatData";
-import ProductModal from "@/component/ProductModal.vue";
+import ProductModal from "@/component/client/ProductModal.vue";
 import { useCartStore } from "@/component/store/cart";
 
 const new_arrivals = ref([]);

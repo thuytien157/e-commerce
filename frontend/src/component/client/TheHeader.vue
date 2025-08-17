@@ -248,9 +248,9 @@
 </template>
 <script setup>
 import axios from "axios";
-import { useTokenUser } from "./store/useTokenUser";
+import { useTokenUser } from "../store/useTokenUser";
 import Swal from "sweetalert2";
-import { useCartStore } from "./store/cart";
+import { useCartStore } from "../store/cart";
 
 const store = useTokenUser();
 const cartStore = useCartStore();

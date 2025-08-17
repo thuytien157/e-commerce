@@ -298,27 +298,27 @@ watch([selectedDistrict, selectedWard], async () => {
                             <div class="mb-3">
                                 <small class="text-danger" v-if="errors.guest_name">{{
                                     errors.guest_name[0]
-                                }}</small>
+                                    }}</small>
                                 <input type="text" class="form-control" placeholder="Tên của bạn"
                                     v-model="address.customer_name" />
                             </div>
                             <div class="mb-3">
                                 <small class="text-danger" v-if="errors.guest_phone">{{
                                     errors.guest_phone[0]
-                                }}</small>
+                                    }}</small>
                                 <input type="text" class="form-control" placeholder="Số điện thoại"
                                     v-model="address.phone" />
                             </div>
                             <div class="mb-3" v-if="!store.token">
                                 <small class="text-danger" v-if="errors.email">{{
                                     errors.email
-                                }}</small>
+                                    }}</small>
                                 <input type="text" class="form-control" placeholder="Email" v-model="address.email" />
                             </div>
                             <div class="mb-3">
                                 <small class="text-danger" v-if="errors.provinces">{{
                                     errors.provinces[0]
-                                }}</small>
+                                    }}</small>
                                 <select v-model="selectedProvince" @change="fetchDistricts" class="form-control">
                                     <option :value="null">Chọn tỉnh / thành</option>
                                     <option v-for="province in provinces" :key="province.ProvinceID"
@@ -330,7 +330,7 @@ watch([selectedDistrict, selectedWard], async () => {
                             <div class="mb-3">
                                 <small class="text-danger" v-if="errors.districts">{{
                                     errors.districts[0]
-                                }}</small>
+                                    }}</small>
                                 <select v-model="selectedDistrict" @change="fetchWards" :disabled="!selectedProvince"
                                     class="form-control">
                                     <option :value="null">Chọn quận / huyện</option>
@@ -343,7 +343,7 @@ watch([selectedDistrict, selectedWard], async () => {
                             <div class="mb-3">
                                 <small class="text-danger" v-if="errors.wards">{{
                                     errors.wards[0]
-                                }}</small>
+                                    }}</small>
                                 <select class="form-control" v-model="selectedWard" :disabled="!selectedDistrict">
                                     <option :value="null">Chọn phường / xã</option>
                                     <option v-for="ward in wards" :key="ward.WardCode" :value="ward.WardCode">
@@ -354,7 +354,7 @@ watch([selectedDistrict, selectedWard], async () => {
                             <div class="mb-3">
                                 <small class="text-danger" v-if="errors.address">{{
                                     errors.address[0]
-                                }}</small>
+                                    }}</small>
                                 <input type="text" class="form-control" placeholder="Địa chỉ"
                                     v-model="address.address" />
                             </div>
@@ -385,7 +385,7 @@ watch([selectedDistrict, selectedWard], async () => {
                                 <div class="flex-grow-1">
                                     <strong class="product-name-short">{{
                                         item.productName
-                                    }}</strong>
+                                        }}</strong>
 
                                     <div class="text-muted small ps-2 mb-1" style="font-size: 11px">
                                         <div>+ Size: {{ item.selectedSize }}</div>

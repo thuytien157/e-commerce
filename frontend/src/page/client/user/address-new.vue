@@ -154,7 +154,7 @@ import { ref, onMounted, watch, computed } from "vue";
 import { useRouter } from "vue-router";
 import axios from "axios";
 import Swal from "sweetalert2";
-import SidebarAccount from "@/component/SidebarAccount.vue";
+import SidebarAccount from "@/component/client/SidebarAccount.vue";
 import { useTokenUser } from "@/component/store/useTokenUser";
 
 const router = useRouter();

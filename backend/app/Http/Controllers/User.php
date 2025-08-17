@@ -493,7 +493,7 @@ class User extends Controller
         }
 
         $status = $request->query('status');
-        $orders = Order::where('customer_id', $id);
+        $orders = Order::with('orderItems')->where('customer_id', $id);
 
         switch ($status) {
             case 'pendingConfirmation':

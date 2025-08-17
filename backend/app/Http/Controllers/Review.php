@@ -11,6 +11,7 @@ use Illuminate\Support\Carbon as SupportCarbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+
 SupportCarbon::setLocale('vi');
 date_default_timezone_set('Asia/Ho_Chi_Minh');
 class Review extends Controller
@@ -20,17 +21,14 @@ class Review extends Controller
         $validator = Validator::make($request->all(), [
             'order_detail_id' => 'required|exists:order_items,id',
             'rating' => 'required|numeric|min:1|max:5',
-            'comment' => 'required|string|max:1000',
+            'comment' => 'required|max:1000',
             'images.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ], [
-            'order_detail_id.required' => 'Mã chi tiết đơn hàng là bắt buộc.',
-            'order_detail_id.exists' => 'Chi tiết đơn hàng không tồn tại.',
             'rating.required' => 'Điểm đánh giá là bắt buộc.',
             'rating.numeric' => 'Điểm đánh giá phải là số.',
             'rating.min' => 'Điểm đánh giá phải từ :min sao trở lên.',
             'rating.max' => 'Điểm đánh giá không được quá :max sao.',
-            'comment.required' => 'Nội dung đánh giá là bắt buộc.',
-            'comment.string' => 'Nội dung đánh giá phải là chuỗi.',
+            'comment.required' => 'Vui lòng ghi nội dung đánh giá.',
             'comment.max' => 'Nội dung đánh giá không được quá :max ký tự.',
             'images.*.image' => 'File phải là hình ảnh.',
             'images.*.mimes' => 'Hình ảnh phải có định dạng jpeg, png, jpg hoặc gif.',

@@ -60,7 +60,7 @@
 </template>
 <script setup>
 import axios from "axios";
-import { useTokenUser } from "./store/useTokenUser";
+import { useTokenUser } from "../store/useTokenUser";
 import { onMounted, ref } from "vue";
 import Swal from "sweetalert2";
 
