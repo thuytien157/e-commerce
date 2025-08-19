@@ -13,7 +13,7 @@
 
 
 <script setup>
-import TheSidebar from "@/component/client/TheSidebar.vue";
+import TheSidebar from "@/component/admin/TheSidebar.vue";
 </script>
 
 <style scoped>

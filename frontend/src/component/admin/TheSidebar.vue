@@ -87,6 +87,12 @@ const menuItems = [
         label: 'Sản phẩm',
         icon: ShoppingOutlined,
     },
+    {
+        key: 'attributes-management',
+        to: '/admin/attribute',
+        label: 'Thuộc tính',
+        icon: ShoppingOutlined,
+    },
 
 ];
 

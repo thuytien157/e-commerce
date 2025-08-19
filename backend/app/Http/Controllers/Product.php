@@ -18,7 +18,7 @@ class Product extends Controller
     /**
      * Display a listing of the resource.
      */
-     public function index(Request $request)
+    public function index(Request $request)
     {
         $sortBy = $request->query('sort');
         $categoryIds = $request->query('categories');
@@ -48,7 +48,7 @@ class Product extends Controller
 
                 $baseQuery->whereHas('variants.attributes', function ($attQuery) use ($attributeId, $selectedValues) {
                     $attQuery->where('attribute_id', $attributeId)
-                             ->whereIn('value_name', $selectedValues);
+                        ->whereIn('value_name', $selectedValues);
                 });
             }
         }
@@ -355,22 +355,21 @@ class Product extends Controller
         }
     }
 
-    function hiddenProduct($id, Request $request){
+    function hiddenProduct($id, Request $request)
+    {
         $product = ModelsProduct::find($id);
-        if(!$product){
+        if (!$product) {
             return response()->json([
                 'mess' => 'Sản phẩm không tồn tại'
             ]);
         }
 
         $product->status = $request->status;
-        if($product->save()){
+        if ($product->save()) {
             return response()->json([
                 'mess' => 'Cập nhật thành công'
             ]);
         };
-
-
     }
 
     /**
@@ -396,25 +395,51 @@ class Product extends Controller
             return response()->json(['mess' => 'Sản phẩm không tồn tại'], 404);
         }
 
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'price' => 'required|numeric|min:1',
-            'description' => 'required|string',
-            'category_id' => 'required|exists:categories,id',
-            'status' => 'required',
-            'variants' => 'required|array',
-            'variants.*.sku' => 'required|string|max:255',
-            'variants.*.stock_quantity' => 'required|numeric|min:0',
-            'variants.*.slug' => 'required|string|max:255',
-            'variants.*.image' => 'required|image|max:2048',
-            'variants.*.image_url' => 'nullable|string',
-            'variants.*.attributes' => 'required|array',
-            'variants.*.attributes.*' => 'required|numeric|exists:attribute_values,id',
-            'variants.*.images' => 'nullable|array',
-            'variants.*.images.*' => 'nullable|image|max:2048',
-            'variants.*.image_urls' => 'nullable|array',
-            'variants.*.image_urls.*' => 'nullable|string',
-        ]);
+        $validator = Validator::make(
+            $request->all(),
+            [
+                'name' => 'required|string|max:255',
+                'price' => 'required|numeric|min:1',
+                'description' => 'required|string',
+                'category_id' => 'required|exists:categories,id',
+                'status' => 'required',
+                'variants' => 'required|array',
+                'variants.*.sku' => 'required|string|max:255|unique:variants,sku,' . $id . ',product_id',
+                'variants.*.stock_quantity' => 'required|numeric|min:0',
+                'variants.*.slug' => 'required|string|max:255|unique:variants,slug,' . $id . ',product_id',
+                'variants.*.image' => 'required_without:variants.*.image_url|nullable|image|max:2048',
+                'variants.*.image_url' => 'nullable|string',
+                'variants.*.attributes' => 'required|array',
+                'variants.*.attributes.*' => 'required|numeric|exists:attribute_values,id',
+                'variants.*.images' => 'nullable|array',
+                'variants.*.images.*' => 'nullable|image|max:2048',
+                'variants.*.image_urls' => 'nullable|array',
+                'variants.*.image_urls.*' => 'nullable|string',
+            ],
+            [
+                'name.required' => 'Vui lòng nhập tên sản phẩm.',
+                'description.required' => 'Vui lòng nhập mô tả sản phẩm.',
+                'price.required' => 'Vui lòng nhập giá sản phẩm.',
+                'price.min' => 'Giá không hợp lệ.',
+                'price.numeric' => 'Giá phải là một số.',
+                'category_id.required' => 'Vui lòng chọn danh mục.',
+                'category_id.exists' => 'Danh mục không tồn tại.',
+                'status.required' => 'Vui lòng chọn trạng thái.',
+                'variants.required' => 'Vui lòng thêm ít nhất một biến thể.',
+                'variants.array' => 'Dữ liệu biến thể không hợp lệ.',
+                'variants.*.sku.required' => 'Vui lòng nhập SKU.',
+                'variants.*.sku.unique' => 'SKU đã tồn tại.',
+                'variants.*.slug.required' => 'Vui lòng nhập slug.',
+                'variants.*.slug.unique' => 'Slug đã tồn tại.',
+                'variants.*.image.required_without' => 'Vui lòng chọn ảnh chính cho biến thể.',
+                'variants.*.image.image' => 'File ảnh chính không hợp lệ.',
+                'variants.*.image.max' => 'Ảnh chính quá lớn (tối đa 2MB).',
+                'variants.*.images.*.image' => 'File ảnh chi tiết không hợp lệ.',
+                'variants.*.images.*.max' => 'Một trong các ảnh bổ sung quá lớn (tối đa 2MB).',
+                'variants.*.attributes.required' => 'Vui lòng chọn ít nhất một thuộc tính cho biến thể.',
+                'variants.*.attributes.*.exists' => 'Một trong các giá trị thuộc tính không tồn tại.',
+            ]
+        );
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);

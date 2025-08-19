@@ -46,6 +46,7 @@ Route::resource('product', Product::class);
 
 Route::resource('category', Category::class);
 
+Route::delete('/attribute-value/{id}', [Attribute::class, 'deleteAttributeValue']);
 Route::resource('attribute', Attribute::class);
 
 

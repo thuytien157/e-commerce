@@ -10,8 +10,11 @@ class Attribute extends Model
     use HasFactory;
     protected $table = 'attributes';
     protected $fillable = [
-        'name'
+        'name',
+        'type'
     ];
+
+    public $timestamps = false;
 
     public function attributeValues()
     {

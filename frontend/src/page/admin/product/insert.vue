@@ -514,8 +514,6 @@ const saveProduct = async () => {
           errorMessage += ` - Danh mục: ${errorMessages}<br>`;
         } else if (key === "status") {
           errorMessage += ` - Trạng thái: ${errorMessages}<br>`;
-        } else if (key === "description") {
-          errorMessage += ` - Mô tả: ${errorMessages}<br>`;
         } else if (key.startsWith("variants.")) {
           const parts = key.split(".");
           const variantIndex = parts[1];
@@ -550,6 +548,7 @@ const saveProduct = async () => {
         title: "Đã có lỗi xảy ra",
         text: "Vui lòng thử lại sau.",
       });
+
     }
   } finally {
     isLoading.value = false;

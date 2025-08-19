@@ -50,6 +50,26 @@ const admin = [
         meta: { title: "Sửa sản phẩm" },
         props: true,
       },
+      {
+        path: "attribute",
+        name: "admin-attributes",
+        component: () => import("../page/admin/attribute/index.vue"),
+        meta: { title: "Thuộc tính" },
+        props: true,
+      },
+      {
+        path: "attribute/insert",
+        name: "admin-attributes-insert",
+        component: () => import("../page/admin/attribute/insert.vue"),
+        meta: { title: "Thêm sản phẩm" },
+      },
+      {
+        path: "attribute/edit/:attributeId",
+        name: "admin-attributes-edit",
+        component: () => import("../page/admin/attribute/insert.vue"),
+        meta: { title: "Sửa sản phẩm" },
+        props: true,
+      },
       
     ],
   },
