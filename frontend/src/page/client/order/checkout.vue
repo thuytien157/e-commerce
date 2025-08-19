@@ -388,8 +388,8 @@ watch([selectedDistrict, selectedWard], async () => {
                                         }}</strong>
 
                                     <div class="text-muted small ps-2 mb-1" style="font-size: 11px">
-                                        <div>+ Size: {{ item.selectedSize }}</div>
-                                    </div>
+  <div>+ {{ item.selectedAttributes.join(', ') }}</div>
+</div>
                                     <div style="font-size: 12px">
                                         Số lượng: {{ item.quantity }}
                                     </div>

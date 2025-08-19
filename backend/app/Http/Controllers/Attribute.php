@@ -13,12 +13,9 @@ class Attribute extends Controller
     public function index()
     {
         $attributes = ModelsAttribute::with('attributeValues')->get();
-        $color = $attributes->firstWhere('id', 2);
-        $size = $attributes->firstWhere('id', 1);
+
         return response()->json([
-            // 'attributes' => $attributes,
-            'colors' => $color,
-            'sizes' => $size,
+            'attributes' => $attributes, // Trả về tất cả thuộc tính
         ]);
     }
 

@@ -1,0 +1,221 @@
+<template>
+    <div class="d-flex justify-content-between">
+        <h3 class="text-primary fw-bold">Danh sách danh mục</h3>
+
+        <router-link to="/admin/category/insert" type="button" class="btn btn-primary h-25">Thêm danh mục</router-link>
+    </div>
+    <div class="d-flex gap-3 flex-wrap mb-2">
+        <div>
+            <label for="search-input" class="form-label">Tìm kiếm danh mục</label>
+            <input type="text" id="search-input" class="form-control" placeholder="Nhập từ khoá..."
+                v-model="searchQuery" />
+        </div>
+
+        <div>
+            <label for="pagination-select" class="form-label">Phân trang</label><br />
+            <select id="pagination-select" class="form-select" v-model="pageSize">
+                <option :value="5">5</option>
+                <option :value="10">10</option>
+                <option :value="15">15</option>
+                <option :value="20">20</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover">
+            <thead>
+                <tr>
+                    <th style="width: 50px"></th>
+                    <th>ID</th>
+                    <th>Tên danh mục</th>
+                    <th>Danh mục cha</th>
+                    <th>Tổng sản phẩm</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                <template v-for="category in paginatedAndFilteredCategories" :key="category.id">
+                    <tr>
+                        <td>
+                            <button v-if="category.children && category.children.length > 0"
+                                @click="toggleChildren(category.id)" class="btn btn-sm">
+                                <i class="bi bi-caret-right-fill"
+                                    :class="{ 'rotate-icon': expandedRows[category.id] }"></i>
+                            </button>
+                        </td>
+                        <td>{{ category.id }}</td>
+                        <td>{{ category.name }}</td>
+                        <td>{{ category.parent_name || "Không có" }}</td>
+                        <td>{{ category.all_products_count }}</td>
+                        <td>
+                            <div class="d-flex gap-2">
+                                <router-link :to="`/admin/category/edit/${category.id}`"
+                                    class="btn btn-primary btn-sm">Sửa</router-link>
+                                <button @click="deleteCategory(category.id)" v-if="
+                                    category.all_products_count === 0 &&
+                                    (!category.children || category.children.length === 0)
+                                " class="btn btn-danger btn-sm">
+                                    Xoá
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    <template v-if="expandedRows[category.id]">
+                        <tr v-for="child in category.children" :key="child.id" class="table-secondary">
+                            <td></td>
+                            <td>{{ child.id }}</td>
+                            <td>— {{ child.name }}</td>
+                            <td>{{ category.name }}</td>
+                            <td>{{ child.all_products_count }}</td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <router-link :to="`/admin/category/edit/${child.id}`"
+                                        class="btn btn-primary btn-sm">Sửa</router-link>
+                                    <button @click="deleteCategory(child.id)" v-if="
+                                        child.all_products_count === 0 &&
+                                        (!child.children || child.children.length === 0)
+                                    " class="btn btn-danger btn-sm">
+                                        Xoá
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </template>
+                </template>
+            </tbody>
+        </table>
+    </div>
+
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+            <li class="page-item" :class="{ disabled: currentPage === 1 }">
+                <a class="page-link" @click.prevent="currentPage--" href="#">Trước</a>
+            </li>
+            <li class="page-item" v-for="page in totalPages" :key="page" :class="{ active: page === currentPage }">
+                <a class="page-link" @click.prevent="currentPage = page" href="#">{{
+                    page
+                    }}</a>
+            </li>
+            <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+                <a class="page-link" @click.prevent="currentPage++" href="#">Tiếp</a>
+            </li>
+        </ul>
+    </nav>
+</template>
+
+<script setup>
+import axios from "axios";
+import Swal from "sweetalert2";
+import { onMounted, ref, computed, watch } from "vue";
+
+const allCategories = ref([]);
+const searchQuery = ref("");
+const pageSize = ref(5);
+const currentPage = ref(1);
+const expandedRows = ref({});
+
+const getAllCategories = async () => {
+    try {
+        const res = await axios.get("http://127.0.0.1:8000/api/category");
+        allCategories.value = res.data.categories;
+    } catch (error) {
+        console.log(error);
+    }
+};
+
+const flattenCategories = (categories, result = []) => {
+    categories.forEach((category) => {
+        result.push(category);
+        if (category.children && category.children.length > 0) {
+            flattenCategories(category.children, result);
+        }
+    });
+    return result;
+};
+
+const filteredCategories = computed(() => {
+    if (!searchQuery.value) {
+        return allCategories.value;
+    }
+    const lowerCaseSearch = searchQuery.value.toLowerCase();
+    const flattenedList = flattenCategories(allCategories.value);
+    const filtered = flattenedList.filter(
+        (category) =>
+            category.name.toLowerCase().includes(lowerCaseSearch) ||
+            (category.parent_name &&
+                category.parent_name.toLowerCase().includes(lowerCaseSearch))
+    );
+
+    return allCategories.value.filter((category) =>
+        filtered.some((f) => f.id === category.id)
+    );
+});
+
+const paginatedAndFilteredCategories = computed(() => {
+    const startIndex = (currentPage.value - 1) * pageSize.value;
+    const endIndex = startIndex + pageSize.value;
+    return filteredCategories.value.slice(startIndex, endIndex);
+});
+
+const totalPages = computed(() => {
+    return Math.ceil(filteredCategories.value.length / pageSize.value);
+});
+
+const toggleChildren = (categoryId) => {
+    expandedRows.value[categoryId] = !expandedRows.value[categoryId];
+};
+
+const deleteCategory = async (id) => {
+    try {
+        const result = await Swal.fire({
+            title: "Bạn có chắc muốn xoá danh mục này?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Xác nhận",
+            cancelButtonText: "Hủy",
+        });
+
+        if (result.isConfirmed) {
+            await axios.delete(`http://127.0.0.1:8000/api/category/${id}`);
+            await getAllCategories();
+            Swal.fire({
+                toast: true,
+                position: "top-end",
+                icon: "success",
+                title: "Danh mục đã được xóa thành công!",
+                showConfirmButton: false,
+                timer: 2000,
+                timerProgressBar: true,
+            });
+        }
+    } catch (error) {
+        console.log(error);
+        Swal.fire({
+            toast: true,
+            position: "top-end",
+            icon: "error",
+            title: "Xóa danh mục không thành công!",
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+        });
+    }
+};
+
+watch([searchQuery, pageSize], () => {
+    currentPage.value = 1;
+});
+
+onMounted(async () => {
+    await getAllCategories();
+});
+</script>
+
+<style scoped>
+.rotate-icon {
+    transform: rotate(90deg);
+}
+</style>

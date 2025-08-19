@@ -17,7 +17,7 @@ const getProductById = async (productId) => {
     isLoading.value = true
     try {
         const res = await axios.get(
-            `http://127.0.0.1:8000/api/products/${productId}?${queryParams.value}`
+            `http://127.0.0.1:8000/api/products_detail/${productId}?${queryParams.value}`
         );
         product.value = res.data.product;
         // console.log("sss" + product.value);
@@ -250,7 +250,7 @@ onMounted(async () => {
                         <div class="col-12">
                             <div class="info-body custom-responsive-margin">
                                 <h4>Chi tiết sản phẩm</h4>
-                                {{ product.description }}
+                                <div v-html="product.description"></div>
                             </div>
                         </div>
                     </div>

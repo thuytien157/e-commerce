@@ -13,7 +13,10 @@ import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
 import Antd from 'ant-design-vue';
 import 'ant-design-vue/dist/reset.css'; 
-
+import vSelect from "vue-select";
+import "vue-select/dist/vue-select.css";
+import { QuillEditor } from "@vueup/vue-quill";
+import '@vueup/vue-quill/dist/vue-quill.snow.css';
 window.Pusher = Pusher;
 
 window.Echo = new Echo({
@@ -29,5 +32,6 @@ const pinia = createPinia();
 app.use(pinia);
 app.use(router);
 app.use(Antd);
-
+app.component("v-select", vSelect);
+app.component("QuillEditor", QuillEditor);
 app.mount("#app");

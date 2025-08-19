@@ -10,6 +10,7 @@ class VariantAttribute extends Model
     use HasFactory;
 
     protected $table = 'variant_attributes';
+    public $timestamps = false;
     protected $fillable = [
         'variant_id',
         'attribute_value_id',

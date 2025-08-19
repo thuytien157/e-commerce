@@ -65,7 +65,7 @@ const productData = ref(null);
 const openModal = async (productId) => {
   showModal.value = true;
   const res = await axios.get(
-    `http://127.0.0.1:8000/api/products/${productId}`
+    `http://127.0.0.1:8000/api/products_detail/${productId}`
   );
   productData.value = res.data.product;
 };

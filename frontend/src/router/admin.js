@@ -43,13 +43,14 @@ const admin = [
         component: () => import("../page/admin/product/insert.vue"),
         meta: { title: "Thêm sản phẩm" },
       },
-      // {
-      //   path: "category/edit/:categoryId",
-      //   name: "admin-categories-edit",
-      //   component: () => import("../page/admin/category/insert.vue"),
-      //   meta: { title: "Sửa danh mục" },
-      //   props: true,
-      // },
+      {
+        path: "product/edit/:productId",
+        name: "admin-products-edit",
+        component: () => import("../page/admin/product/insert.vue"),
+        meta: { title: "Sửa sản phẩm" },
+        props: true,
+      },
+      
     ],
   },
 ];

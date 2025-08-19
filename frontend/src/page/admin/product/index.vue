@@ -13,7 +13,7 @@
 
         <div>
             <label for="category-select" class="form-label">Danh mục </label>
-            <select class="form-select rounded-2">
+            <select class="form-select rounded-2" v-model="selectedCategoryId">
                 <option :value="null">Chọn danh mục</option>
                 <template v-for="category in allCategories" :key="category.id">
                     <option :value="category.id">
@@ -67,9 +67,9 @@
                         <td>
                             <span :class="[
                                 'badge',
-                                product.status === 'active' ? 'bg-success' : 'bg-danger',
+                                product.status === 'published' ? 'bg-success' : 'bg-danger',
                             ]">
-                                {{ product.status === "active" ? "Hiển thị" : "Đã ẩn" }}
+                                {{ product.status === "published" ? "Hiển thị" : "Đã ẩn" }}
                             </span>
                         </td>
                         <td>
@@ -77,12 +77,15 @@
                                 <router-link :to="`/admin/product/edit/${product.id}`" class="btn btn-primary btn-sm">
                                     Sửa
                                 </router-link>
-                                <button @click="hiddenProduct(product.id)" class="btn btn-danger btn-sm">
+                                <button v-if="product.status === 'published'"
+                                    @click="hiddenProduct(product.id, 'discontinued')" class="btn btn-danger btn-sm">
                                     Ẩn
                                 </button>
-                                <button class="btn btn-info btn-sm">
-                                    Thêm biến thể
+                                <button v-else @click="hiddenProduct(product.id, 'published')"
+                                    class="btn btn-danger btn-sm">
+                                    Hiện
                                 </button>
+
                             </div>
                         </td>
                     </tr>
@@ -93,7 +96,7 @@
                                     <thead>
                                         <tr>
                                             <th>ID Variant</th>
-                                            <th>Slug</th>
+                                            <th>SKU</th>
                                             <th>Ảnh chính</th>
                                             <th>Ảnh chi tiết</th>
                                             <th>Thuộc tính</th>
@@ -102,7 +105,7 @@
                                     <tbody class="variant">
                                         <tr v-for="variant in product.variants" :key="variant.id">
                                             <td>{{ variant.id }}</td>
-                                            <td>{{ variant.slug }}</td>
+                                            <td>{{ variant.sku }}</td>
                                             <td>
                                                 <img :src="variant.image" @click="openImage(variant.image)"
                                                     alt="Variant Image" class="variant-image" />
@@ -220,7 +223,7 @@ const toggleVariants = (productId) => {
     expandedRows.value[productId] = !expandedRows.value[productId];
 };
 
-const hiddenProduct = async (id) => {
+const hiddenProduct = async (id, status) => {
     try {
         const result = await Swal.fire({
             title: "Bạn có chắc muốn ẩn sản phẩm này?",
@@ -233,7 +236,9 @@ const hiddenProduct = async (id) => {
         });
 
         if (result.isConfirmed) {
-            await axios.put(`http://127.0.0.1:8000/api/product/hidden/${id}`);
+            await axios.put(`http://127.0.0.1:8000/api/product/hidden/${id}`, {
+                status: status
+            });
             await getAllProduct();
             Swal.fire({
                 toast: true,

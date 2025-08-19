@@ -17,48 +17,52 @@
                     <h3 class="price" style="color: blue">
                         {{ FormatData.formatNumber(product.price) }}VND
                     </h3>
-                    <div v-if="product.variants" class="option-group">
-                        <p class="option-label">Màu sắc:</p>
-                        <div class="options">
-                            <button v-for="color in uniqueColors" :key="color.attribute_value_id" :class="[
-                                'color-option',
-                                {
-                                    'color-selected':
-                                        selectedColor === color.attribute_value_id,
-                                },
-                            ]" @click="selectOption('color', color.attribute_value_id)"
-                                class="d-inline-block rounded-circle" :style="{
-                                    width: '1.75rem',
-                                    height: '1.75rem',
-                                    'background-color': color.attribute_name,
-                                    cursor: 'pointer',
-                                    border: '1px solid #ccc',
-                                }"></button>
-                        </div>
-                    </div>
 
-                    <div v-if="product.variants" class="option-group">
-                        <p class="option-label">Kích cỡ:</p>
-                        <div class="options">
-                            <button v-for="size in uniqueSizes" :key="size.attribute_value_id"
-                                class="option-button size-option" :class="{
-                                    active: selectedSize === size.attribute_value_id,
-                                    disabled: !isSizeAvailable(size.attribute_value_id),
-                                }" @click="selectOption('size', size.attribute_value_id)"
-                                :disabled="!isSizeAvailable(size.attribute_value_id)">
-                                {{ size.attribute_name }}
-                            </button>
+                    <div v-if="product.variants">
+                        <div v-for="attribute in uniqueAttributes" :key="attribute.id" class="option-group">
+                            <p class="option-label">{{ attribute.name }}:</p>
+                            <div class="options">
+                                <button v-for="value in attribute.values" :key="value.attribute_value_id" :class="[
+                                    'option-button',
+                                    {
+                                        active:
+                                            selectedAttributes[attribute.id] ===
+                                            value.attribute_value_id,
+                                        disabled: !isAttributeAvailable(
+                                            attribute.id,
+                                            value.attribute_value_id
+                                        ),
+                                        // Thêm class đặc biệt cho màu sắc
+                                        'color-selected':
+                                            attribute.name === 'Màu sắc' &&
+                                            selectedAttributes[attribute.id] ===
+                                            value.attribute_value_id,
+                                    },
+                                ]" @click="selectAttribute(attribute.id, value.attribute_value_id)" :disabled="!isAttributeAvailable(attribute.id, value.attribute_value_id)
+                                    " :style="attribute.name === 'Màu sắc'
+                                        ? {
+                                            width: '1.75rem',
+                                            height: '1.75rem',
+                                            'background-color': value.attribute_name,
+                                            cursor: 'pointer',
+                                            border: '1px solid #ccc',
+                                            'border-radius': '50%',
+                                            padding: '0',
+                                        }
+                                        : {}
+                                        ">
+                                    <span v-if="attribute.name !== 'Màu sắc'">{{
+                                        value.attribute_name
+                                    }}</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
 
                     <div class="quantity-control">
-                        <button class="btn btn-outline-primary" @click="decrement">
-                            -
-                        </button>
+                        <button class="btn btn-outline-primary" @click="decrement">-</button>
                         <div min="1" class="w-100 text-center">{{ cartStore.quantity }}</div>
-                        <button class="btn btn-outline-primary" @click="increment">
-                            +
-                        </button>
+                        <button class="btn btn-outline-primary" @click="increment">+</button>
                     </div>
 
                     <div class="action-buttons">
@@ -72,7 +76,6 @@
         </div>
     </div>
 </template>
-
 <script setup>
 import { ref, toRefs, watch } from "vue";
 import useProductVariants from "../store/useProductVariants";
@@ -91,29 +94,22 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["close", "add-to-cart"]);
-const cartStore = useCartStore()
+const cartStore = useCartStore();
 const { product } = toRefs(props);
+
+// Thêm 'selectAttribute' vào danh sách các hàm/biến được lấy ra
 const {
     mainImage,
-    selectedColor,
-    selectedSize,
-    uniqueColors,
-    uniqueSizes,
+    selectedAttributes,
+    uniqueAttributes,
     currentVariant,
     currentVariantImages,
-    isSizeAvailable,
+    isAttributeAvailable,
+    selectAttribute,
 } = useProductVariants(product);
 
 const closeModal = () => {
     emit("close");
-};
-
-const selectOption = (type, value) => {
-    if (type === "color") {
-        selectedColor.value = value;
-    } else if (type === "size") {
-        selectedSize.value = value;
-    }
 };
 
 const decrement = () => {
@@ -128,15 +124,22 @@ const increment = () => {
 
 const addToCart = () => {
     if (!currentVariant.value) {
-        alert("Vui lòng chọn đầy đủ màu sắc và kích cỡ.");
+        alert("Vui lòng chọn đầy đủ các thuộc tính của sản phẩm.");
         return;
     }
-    const color = uniqueColors.value.find(
-        (c) => c.attribute_value_id === selectedColor.value
-    );
-    const size = uniqueSizes.value.find(
-        (s) => s.attribute_value_id === selectedSize.value
-    );
+
+    const selectedAttributesData = {};
+    for (const attributeId in selectedAttributes.value) {
+        const attribute = uniqueAttributes.value.find(
+            (attr) => attr.id.toString() === attributeId
+        );
+        const value = attribute.values.find(
+            (val) => val.attribute_value_id === selectedAttributes.value[attributeId]
+        );
+        selectedAttributesData[attribute.name] = value.attribute_name;
+    }
+
+    const selectedAttributesValues = Object.values(selectedAttributesData);
 
     const item = {
         id: props.product.id,
@@ -144,13 +147,11 @@ const addToCart = () => {
         quantity: cartStore.quantity,
         price: props.product.price,
         productName: props.product.name,
-        selectedColor: color.attribute_name,
-        selectedSize: size.attribute_name,
+        selectedAttributes: selectedAttributesValues,
         image: mainImage.value,
     };
 
     emit("add-to-cart", item);
-    // quantity.value = 1;
     closeModal();
 };
 </script>

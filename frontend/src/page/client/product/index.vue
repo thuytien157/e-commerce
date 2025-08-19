@@ -7,496 +7,460 @@ import { useCartStore } from "@/component/store/cart";
 import ProductModal from "@/component/client/ProductModal.vue";
 const products = ref([]);
 const categories = ref([]);
-const colors = ref([]);
-const sizes = ref([]);
+const attributes = ref([]); // Giữ nguyên, sẽ chứa tất cả thuộc tính
 const isLoading = ref(true);
 
 const getAllProducts = async () => {
-    try {
-        const res = await axios.get("http://127.0.0.1:8000/api/product");
-        const response = await axios.get("http://127.0.0.1:8000/api/category");
-        const response1 = await axios.get("http://127.0.0.1:8000/api/attribute");
-        products.value = res.data.products;
-        categories.value = response.data.categories;
-        colors.value = response1.data.colors;
-
-        sizes.value = response1.data.sizes;
-        console.log(sizes.value.attribute_values);
-    } catch (error) {
-        console.log(error);
-    } finally {
-        isLoading.value = false;
-    }
+  try {
+    const res = await axios.get("http://127.0.0.1:8000/api/product");
+    const response = await axios.get("http://127.0.0.1:8000/api/category");
+    const response1 = await axios.get("http://127.0.0.1:8000/api/attribute");
+    products.value = res.data.products;
+    categories.value = response.data.categories;
+    // Sửa ở đây: Gán toàn bộ mảng attributes vào biến ref
+    attributes.value = response1.data.attributes;
+  } catch (error) {
+    console.log(error);
+  } finally {
+    isLoading.value = false;
+  }
 };
 
 const selectedCategories = ref([]);
 const selectedSort = ref("");
-const selectedSize = ref([]);
-const selectedColor = ref([]);
+const selectedAttributeValues = ref({});
 const selectedRating = ref([]);
 const selectedPrice = ref([]);
 
+// Hàm chung để cập nhật giá trị thuộc tính
+const toggleAttributeFilter = (attributeId, valueName) => {
+  // Khởi tạo mảng nếu chưa có
+  if (!selectedAttributeValues.value[attributeId]) {
+    selectedAttributeValues.value[attributeId] = [];
+  }
+  const index = selectedAttributeValues.value[attributeId].indexOf(valueName);
+  if (index > -1) {
+    selectedAttributeValues.value[attributeId].splice(index, 1);
+  } else {
+    selectedAttributeValues.value[attributeId].push(valueName);
+  }
+  fetchProducts();
+};
+
+const isAttributeSelected = computed(() => (attributeId, valueName) => {
+  return (
+    selectedAttributeValues.value[attributeId] &&
+    selectedAttributeValues.value[attributeId].includes(valueName)
+  );
+});
+
 const queryParams = computed(() => {
-    const params = new URLSearchParams();
-    if (selectedSort.value) {
-        params.append("sort", selectedSort.value);
+  const params = new URLSearchParams();
+  if (selectedSort.value) {
+    params.append("sort", selectedSort.value);
+  }
+  if (selectedCategories.value.length) {
+    params.append("categories", selectedCategories.value.join(","));
+  }
+  if (selectedRating.value.length) {
+    params.append("rating", selectedRating.value.join(","));
+  }
+  if (selectedPrice.value.length) {
+    params.append("price", selectedPrice.value.join(","));
+  }
+
+  // Lặp qua object thuộc tính đã chọn để thêm vào query
+  for (const attributeId in selectedAttributeValues.value) {
+    const selectedValues = selectedAttributeValues.value[attributeId];
+    if (selectedValues.length) {
+      params.append(`attribute_${attributeId}`, selectedValues.join(","));
     }
-    if (selectedCategories.value.length) {
-        params.append("categories", selectedCategories.value.join(","));
-    }
-    if (selectedSize.value.length) {
-        params.append("sizes", selectedSize.value.join(","));
-    }
-    if (selectedColor.value.length) {
-        params.append("colors", selectedColor.value.join(","));
-    }
-    if (selectedRating.value.length) {
-        params.append("rating", selectedRating.value.join(","));
-    }
-    if (selectedPrice.value.length) {
-        params.append("price", selectedPrice.value.join(","));
-    }
-    return params.toString();
+  }
+
+  return params.toString();
 });
 
 const fetchProducts = async () => {
-    try {
-        const url = `http://127.0.0.1:8000/api/product?${queryParams.value}`;
-        const res = await axios.get(url);
-        products.value = res.data.products;
-    } catch (error) {
-        console.error("Lỗi khi tải sản phẩm:", error);
-    }
+  try {
+    const url = `http://127.0.0.1:8000/api/product?${queryParams.value}`;
+    const res = await axios.get(url);
+    products.value = res.data.products;
+  } catch (error) {
+    console.error("Lỗi khi tải sản phẩm:", error);
+  }
 };
 const sortProducts = (value) => {
-    selectedSort.value = value;
-    fetchProducts();
+  selectedSort.value = value;
+  fetchProducts();
 };
-
-const toggleColorFilter = (colorName) => {
-    const index = selectedColor.value.indexOf(colorName);
-    if (index > -1) {
-        selectedColor.value.splice(index, 1);
-    } else {
-        selectedColor.value.push(colorName);
-    }
-    fetchProducts();
-};
-
-const isColorSelected = computed(() => (colorName) => {
-    return selectedColor.value.includes(colorName);
-});
 
 const showModal = ref(false);
 const productData = ref(null);
 const openModal = async (productId) => {
-    showModal.value = true;
-    const res = await axios.get(
-        `http://127.0.0.1:8000/api/products/${productId}`
-    );
-    productData.value = res.data.product;
+  showModal.value = true;
+  const res = await axios.get(
+    `http://127.0.0.1:8000/api/products_detail/${productId}`
+  );
+  productData.value = res.data.product;
 };
 function closeModal() {
-    showModal.value = false;
-    productData.value = null;
+  showModal.value = false;
+  productData.value = null;
 }
 const cartStore = useCartStore();
 
 const handleAddToCart = (itemToAdd) => {
-    cartStore.addItem(itemToAdd);
+  cartStore.addItem(itemToAdd);
 };
 
 onMounted(async () => {
-    isLoading.value = true;
-
-    await getAllProducts();
-    isLoading.value = false;
-
+  isLoading.value = true;
+  await getAllProducts();
+  isLoading.value = false;
 });
 </script>
 
 <template>
-    <!-- Start Product Grids -->
-    <section class="product-grids section pt-3">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-3 col-12">
-                    <!-- Start Product Sidebar -->
-                    <div class="product-sidebar">
-                        <!-- Start Single Widget -->
-                        <div class="single-widget condition">
-                            <h3>Danh mục</h3>
-                            <div v-if="isLoading">
-                                <div class="form-check my-2" v-for="n in 5" :key="n">
-                                    <div class="skeleton-checkbox"></div>
-                                    <div class="skeleton-text"></div>
-                                </div>
-                            </div>
-                            <div class="form-check" v-else v-for="value in categories" :key="value.id">
-                                <input class="form-check-input" type="checkbox" :value="value.id"
-                                    :id="'category-' + value.id" v-model="selectedCategories" @change="fetchProducts" />
-                                <label class="form-check-label" :for="'category-' + value.id">
-                                    {{ value.name }} ({{ value.all_products_count }})
-                                </label>
-
-                                <div class="form-check ps-4" v-if="value.children.length > 0">
-                                    <div class="mt-1" v-for="item in value.children" :key="item.id">
-                                        <input class="form-check-input" type="checkbox" :value="item.id"
-                                            :id="'category-' + item.id" v-model="selectedCategories"
-                                            @change="fetchProducts" />
-                                        <label class="form-check-label" :for="'category-' + item.id">
-                                            {{ item.name }} ({{ item.products_count }})
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- End Single Widget -->
-                        <!-- Start Single Widget -->
-                        <div class="single-widget condition">
-                            <h3>Kích thước</h3>
-                            <div v-if="isLoading">
-                                <div class="d-flex gap-4">
-                                    <div class="form-check" v-for="n in 3" :key="n">
-                                        <div class="skeleton-checkbox"></div>
-                                        <div class="skeleton-text short"></div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="d-flex gap-4" v-else>
-                                <div class="form-check" v-for="value in sizes.attribute_values"
-                                    :key="value.attribute_id">
-                                    <input class="form-check-input" type="checkbox" :value="value.value_name"
-                                        :id="'category-' + value.id" v-model="selectedSize" @change="fetchProducts" />
-                                    <label class="form-check-label" :for="'category-' + value.id">
-                                        {{ value.value_name }}
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- End Single Widget -->
-                        <!-- Start Single Widget -->
-                        <div class="single-widget condition">
-                            <h3>Màu sắc</h3>
-                            <div v-if="isLoading" class="d-flex gap-1 mt-2">
-                                <div v-for="n in 5" :key="n" class="skeleton-color"></div>
-                            </div>
-                            <div class="d-flex gap-1 mt-2" v-else>
-                                <div v-for="value in colors.attribute_values" :key="value.id"
-                                    class="d-inline-block rounded-circle" :class="{
-                                        'border-2 border-primary': isColorSelected(
-                                            value.value_name
-                                        ),
-                                        'color-selected': isColorSelected(
-                                            value.value_name
-                                        ) /* Thêm class mới */,
-                                    }" @click="toggleColorFilter(value.value_name)" :style="{
-                                        width: '1.35rem',
-                                        height: '1.35rem',
-                                        'background-color': value.value_name,
-                                        cursor: 'pointer',
-                                        border: isColorSelected(value.value_name)
-                                            ? '2px solid #0d6efd'
-                                            : '1px solid #ccc' /* Giữ lại border */,
-                                    }"></div>
-                            </div>
-                        </div>
-                        <!-- End Single Widget -->
-                        <!-- Start Single Widget -->
-                        <div class="single-widget condition">
-                            <h3>Giá</h3>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" id="flexCheckDefault1" value="1"
-                                    v-model="selectedPrice" @change="fetchProducts" />
-                                <label class="form-check-label" for="flexCheckDefault1" style="font-size: 14px">
-                                    Dưới 1,000,000VNĐ
-                                </label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" value="1_2" id="flexCheckDefault2"
-                                    v-model="selectedPrice" @change="fetchProducts" />
-                                <label class="form-check-label" for="flexCheckDefault2" style="font-size: 14px">
-                                    1,000,000VNĐ - 2,000,000VNĐ
-                                </label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" value="2_3" id="flexCheckDefault3"
-                                    v-model="selectedPrice" @change="fetchProducts" />
-                                <label class="form-check-label" for="flexCheckDefault3" style="font-size: 14px">
-                                    2,000,000VNĐ - 3,000,000VNĐ
-                                </label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" value="3_4" id="flexCheckDefault3"
-                                    v-model="selectedPrice" @change="fetchProducts" />
-                                <label class="form-check-label" for="flexCheckDefault3" style="font-size: 14px">
-                                    3,000,000VNĐ - 4,000,000VNĐ
-                                </label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" value="tren_4" id="flexCheckDefault4"
-                                    v-model="selectedPrice" @change="fetchProducts" />
-                                <label class="form-check-label" for="flexCheckDefault4" style="font-size: 14px">
-                                    Trên 4,000,000VNĐ
-                                </label>
-                            </div>
-                        </div>
-                        <!-- End Single Widget -->
-                        <!-- Start Single Widget -->
-                        <div class="single-widget condition">
-                            <h3>Đánh giá</h3>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" value="5" id="rating-5"
-                                    v-model="selectedRating" @change="fetchProducts" />
-                                <label class="form-check-label" for="rating-5" style="font-size: 14px">
-                                    5 <i class="bi bi-star-fill text-warning"></i>
-                                </label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" value="4_5" id="rating-4_5"
-                                    v-model="selectedRating" @change="fetchProducts" />
-                                <label class="form-check-label" for="rating-4_5" style="font-size: 14px">
-                                    4 - 5 <i class="bi bi-star-fill text-warning"></i>
-                                </label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" value="3_4" id="rating-3_4"
-                                    v-model="selectedRating" @change="fetchProducts" />
-                                <label class="form-check-label" for="rating-3_4" style="font-size: 14px">
-                                    3 - 4 <i class="bi bi-star-fill text-warning"></i>
-                                </label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" value="duoi_3" id="rating-below-3"
-                                    v-model="selectedRating" @change="fetchProducts" />
-                                <label class="form-check-label" for="rating-below-3" style="font-size: 14px">
-                                    Dưới 3 <i class="bi bi-star-fill text-warning"></i>
-                                </label>
-                            </div>
-                        </div>
-                        <!-- End Single Widget -->
-                    </div>
-                    <!-- End Product Sidebar -->
+  <section class="product-grids section pt-3">
+    <div class="container">
+      <div class="row">
+        <div class="col-lg-3 col-12">
+          <div class="product-sidebar">
+            <div class="single-widget condition">
+              <h3>Danh mục</h3>
+              <div v-if="isLoading">
+                <div class="form-check my-2" v-for="n in 5" :key="n">
+                  <div class="skeleton-checkbox"></div>
+                  <div class="skeleton-text"></div>
                 </div>
-                <div class="col-lg-9 col-12">
-                    <div class="product-grids-head">
-                        <div class="product-grid-topbar">
-                            <div class="row align-items-center">
-                                <div class="col-lg-7 col-md-8 col-12">
-                                    <div class="product-sorting">
-                                        <label for="sorting">Lọc theo:</label>
-                                        <select @change="sortProducts($event.target.value)" class="form-control"
-                                            id="sorting">
-                                            <option value="">Sắp xếp mặc định</option>
-                                            <option value="name_asc">Tên: A-Z</option>
-                                            <option value="name_desc">Tên: Z-A</option>
-                                            <option value="price_asc">Giá: Thấp đến cao</option>
-                                            <option value="price_desc">Giá: Cao đến thấp</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-lg-5 col-md-4 col-12">
-                                    <nav>
-                                        <div class="nav nav-tabs" id="nav-tab" role="tablist">
-                                            <button class="nav-link active" id="nav-grid-tab" data-bs-toggle="tab"
-                                                data-bs-target="#nav-grid" type="button" role="tab"
-                                                aria-controls="nav-grid" aria-selected="true">
-                                                <i class="bi bi-list-task"></i>
-                                            </button>
-                                            <button class="nav-link" id="nav-list-tab" data-bs-toggle="tab"
-                                                data-bs-target="#nav-list" type="button" role="tab"
-                                                aria-controls="nav-list" aria-selected="false">
-                                                <i class="bi bi-grid"></i>
-                                            </button>
-                                        </div>
-                                    </nav>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="tab-content mt-1" id="nav-tabContent">
-                            <div class="tab-pane fade show active" id="nav-grid" role="tabpanel"
-                                aria-labelledby="nav-grid-tab">
-                                <div class="row">
+              </div>
+              <div class="form-check" v-else v-for="value in categories" :key="value.id">
+                <input class="form-check-input" type="checkbox" :value="value.id" :id="'category-' + value.id"
+                  v-model="selectedCategories" @change="fetchProducts" />
+                <label class="form-check-label" :for="'category-' + value.id">
+                  {{ value.name }} ({{ value.all_products_count }})
+                </label>
 
-                                    <div class="col-lg-4 col-md-6 col-12" v-if="isLoading" v-for="n in 6"
-                                        :key="'skeleton-grid-' + n">
-                                        <div class="single-product h-100">
-                                            <div class="product-image skeleton-image"></div>
-                                            <div class="product-info">
-                                                <div class="skeleton-title"></div>
-                                                <div class="skeleton-rating"></div>
-                                                <div class="skeleton-price"></div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-4 col-md-6 col-12" v-else v-for="product in products"
-                                        :key="product.id">
-                                        <!-- Start Single Product -->
-                                        <div class="single-product h-100">
-                                            <div class="product-image">
-                                                <img :src="product.variants[0].image" alt="#"
-                                                    style="height: 250px; object-fit: cover" />
-                                                <div class="button">
-                                                    <button @click="openModal(product.id)" class="btn">
-                                                        <i class="lni lni-cart"></i> Thêm vào giỏ
-                                                    </button>
-                                                </div>
-                                            </div>
-                                            <div class="product-info">
-                                                <h4 class="title">
-                                                    <router-link
-                                                        :to="`/product-detail/${product.variants[0].slug}/${product.id}`">{{
-                                                            product.name }}</router-link>
-                                                </h4>
-                                                <Rating :rating="product.rating" :reviewCount="product.rating" />
-                                                <div class="price">
-                                                    <span>{{ FormatData.formatNumber(product.price) }}VNĐ</span>
-
-                                                </div>
-                                                <div class="d-flex gap-1 mt-2">
-                                                    <span v-for="value in FormatData.uniqueColors(
-                                                        product.variants
-                                                    )" :key="value.attribute_value_id"
-                                                        class="d-inline-block rounded-circle" style="
-                              width: 0.75rem;
-                              height: 0.75rem;
-                              border: 1px solid #ccc;
-                            " :style="{
-                                'background-color': value.attribute_name,
-                            }">
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <!-- End Single Product -->
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-12">
-                                        <!-- Pagination -->
-                                        <div class="pagination left">
-                                            <ul class="pagination-list">
-                                                <li><a href="javascript:void(0)">1</a></li>
-                                                <li class="active">
-                                                    <a href="javascript:void(0)">2</a>
-                                                </li>
-                                                <li><a href="javascript:void(0)">3</a></li>
-                                                <li><a href="javascript:void(0)">4</a></li>
-                                                <li>
-                                                    <a href="javascript:void(0)"><i
-                                                            class="lni lni-chevron-right"></i></a>
-                                                </li>
-                                            </ul>
-                                        </div>
-                                        <!--/ End Pagination -->
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="tab-pane fade" id="nav-list" role="tabpanel" aria-labelledby="nav-list-tab">
-                                <div class="row">
-
-                                    <div class="col-lg-12 col-md-12 col-12" v-if="isLoading" v-for="n in 4"
-                                        :key="'skeleton-list-' + n">
-                                        <div class="single-product">
-                                            <div class="row align-items-center">
-                                                <div class="col-lg-4 col-md-4 col-12">
-                                                    <div class="product-image skeleton-image-list"></div>
-                                                </div>
-                                                <div class="col-lg-8 col-md-8 col-12">
-                                                    <div class="product-info">
-                                                        <div class="skeleton-title-list"></div>
-                                                        <div class="skeleton-rating"></div>
-                                                        <div class="skeleton-price"></div>
-                                                        <div class="skeleton-description"></div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-
-                                    <div class="col-lg-12 col-md-12 col-12" v-else v-for="product in products"
-                                        :key="product.id">
-                                        <!-- Start Single Product -->
-                                        <div class="single-product">
-                                            <div class="row align-items-center">
-                                                <div class="col-lg-4 col-md-4 col-12">
-                                                    <div class="product-image">
-                                                        <img :src="product.variants[0].image" alt="#" />
-                                                        <div class="button">
-                                                            <button @click="openModal(product.id)" class="btn">
-                                                                <i class="lni lni-cart"></i> Thêm vào giỏ
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="col-lg-8 col-md-8 col-12">
-                                                    <div class="product-info">
-                                                        <!-- <span class="category">Watches</span> -->
-                                                        <h4 class="title">
-                                                            <router-link
-                                                                :to="`/product-detail/${product.variants[0].slug}/${product.id}`">{{
-                                                                    product.name }}</router-link>
-                                                        </h4>
-                                                        <Rating :rating="product.rating"
-                                                            :reviewCount="product.rating" />
-
-                                                        <div class="price">
-                                                            <span>{{
-                                                                FormatData.formatNumber(product.price)
-                                                            }}VNĐ</span>
-                                                        </div>
-                                                        <div class="d-flex gap-1 mt-2">
-                                                            <span v-for="value in FormatData.uniqueColors(
-                                                                product.variants
-                                                            )" :key="value.attribute_value_id"
-                                                                class="d-inline-block rounded-circle" style="
-                                  width: 1.75rem;
-                                  height: 1.75rem;
-                                  border: 1px solid #ccc;
-                                " :style="{
-                                    'background-color': value.attribute_name,
-                                }">
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <!-- End Single Product -->
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-12">
-                                        <!-- Pagination -->
-                                        <div class="pagination left">
-                                            <ul class="pagination-list">
-                                                <li><a href="javascript:void(0)">1</a></li>
-                                                <li class="active">
-                                                    <a href="javascript:void(0)">2</a>
-                                                </li>
-                                                <li><a href="javascript:void(0)">3</a></li>
-                                                <li><a href="javascript:void(0)">4</a></li>
-                                                <li>
-                                                    <a href="javascript:void(0)"><i
-                                                            class="lni lni-chevron-right"></i></a>
-                                                </li>
-                                            </ul>
-                                        </div>
-                                        <!--/ End Pagination -->
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <div class="form-check ps-4" v-if="value.children.length > 0">
+                  <div class="mt-1" v-for="item in value.children" :key="item.id">
+                    <input class="form-check-input" type="checkbox" :value="item.id" :id="'category-' + item.id"
+                      v-model="selectedCategories" @change="fetchProducts" />
+                    <label class="form-check-label" :for="'category-' + item.id">
+                      {{ item.name }} ({{ item.products_count }})
+                    </label>
+                  </div>
                 </div>
+              </div>
             </div>
+            <div v-for="attribute in attributes" :key="attribute.id">
+              <div class="single-widget condition">
+                <h3>{{ attribute.name }}</h3>
+                <div v-if="isLoading">
+                  <div v-if="attribute.name === 'Màu sắc'" class="d-flex gap-1 mt-2">
+                    <div v-for="n in 5" :key="'skeleton-color-' + n" class="skeleton-color"></div>
+                  </div>
+                  <div v-else class="d-flex gap-4">
+                    <div class="form-check" v-for="n in 3" :key="'skeleton-attribute-' + n">
+                      <div class="skeleton-checkbox"></div>
+                      <div class="skeleton-text short"></div>
+                    </div>
+                  </div>
+                </div>
+                <div v-else :class="{ 'd-flex gap-4': attribute.name !== 'Màu sắc', 'd-flex gap-1 mt-2': attribute.name === 'Màu sắc' }">
+                  <div v-for="value in attribute.attribute_values" :key="value.id">
+                    <template v-if="attribute.name === 'Màu sắc'">
+                      <div class="d-inline-block rounded-circle" :class="{
+                          'border-2 border-primary': isAttributeSelected(
+                            attribute.id,
+                            value.value_name
+                          ),
+                          'color-selected': isAttributeSelected(
+                            attribute.id,
+                            value.value_name
+                          ),
+                        }" @click="toggleAttributeFilter(attribute.id, value.value_name)" :style="{
+                          width: '1.35rem',
+                          height: '1.35rem',
+                          'background-color': value.value_name,
+                          cursor: 'pointer',
+                          border: isAttributeSelected(attribute.id, value.value_name)
+                            ? '2px solid #0d6efd'
+                            : '1px solid #ccc',
+                        }"></div>
+                    </template>
+                    <template v-else>
+                      <div class="form-check">
+                        <input class="form-check-input" type="checkbox" :value="value.value_name" :id="'attribute-' + value.id"
+                          @change="toggleAttributeFilter(attribute.id, value.value_name)"
+                          :checked="isAttributeSelected(attribute.id, value.value_name)" />
+                        <label class="form-check-label" :for="'attribute-' + value.id">
+                          {{ value.value_name }}
+                        </label>
+                      </div>
+                    </template>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="single-widget condition">
+              <h3>Giá</h3>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="flexCheckDefault1" value="1" v-model="selectedPrice"
+                  @change="fetchProducts" />
+                <label class="form-check-label" for="flexCheckDefault1" style="font-size: 14px">
+                  Dưới 1,000,000VNĐ
+                </label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" value="1_2" id="flexCheckDefault2" v-model="selectedPrice"
+                  @change="fetchProducts" />
+                <label class="form-check-label" for="flexCheckDefault2" style="font-size: 14px">
+                  1,000,000VNĐ - 2,000,000VNĐ
+                </label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" value="2_3" id="flexCheckDefault3" v-model="selectedPrice"
+                  @change="fetchProducts" />
+                <label class="form-check-label" for="flexCheckDefault3" style="font-size: 14px">
+                  2,000,000VNĐ - 3,000,000VNĐ
+                </label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" value="3_4" id="flexCheckDefault3" v-model="selectedPrice"
+                  @change="fetchProducts" />
+                <label class="form-check-label" for="flexCheckDefault3" style="font-size: 14px">
+                  3,000,000VNĐ - 4,000,000VNĐ
+                </label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" value="tren_4" id="flexCheckDefault4"
+                  v-model="selectedPrice" @change="fetchProducts" />
+                <label class="form-check-label" for="flexCheckDefault4" style="font-size: 14px">
+                  Trên 4,000,000VNĐ
+                </label>
+              </div>
+            </div>
+            <div class="single-widget condition">
+              <h3>Đánh giá</h3>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" value="5" id="rating-5" v-model="selectedRating"
+                  @change="fetchProducts" />
+                <label class="form-check-label" for="rating-5" style="font-size: 14px">
+                  5 <i class="bi bi-star-fill text-warning"></i>
+                </label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" value="4_5" id="rating-4_5" v-model="selectedRating"
+                  @change="fetchProducts" />
+                <label class="form-check-label" for="rating-4_5" style="font-size: 14px">
+                  4 - 5 <i class="bi bi-star-fill text-warning"></i>
+                </label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" value="3_4" id="rating-3_4" v-model="selectedRating"
+                  @change="fetchProducts" />
+                <label class="form-check-label" for="rating-3_4" style="font-size: 14px">
+                  3 - 4 <i class="bi bi-star-fill text-warning"></i>
+                </label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" value="duoi_3" id="rating-below-3" v-model="selectedRating"
+                  @change="fetchProducts" />
+                <label class="form-check-label" for="rating-below-3" style="font-size: 14px">
+                  Dưới 3 <i class="bi bi-star-fill text-warning"></i>
+                </label>
+              </div>
+            </div>
+            </div>
+          </div>
+        <div class="col-lg-9 col-12">
+          <div class="product-grids-head">
+            <div class="product-grid-topbar">
+              <div class="row align-items-center">
+                <div class="col-lg-7 col-md-8 col-12">
+                  <div class="product-sorting">
+                    <label for="sorting">Lọc theo:</label>
+                    <select @change="sortProducts($event.target.value)" class="form-control" id="sorting">
+                      <option value="">Sắp xếp mặc định</option>
+                      <option value="name_asc">Tên: A-Z</option>
+                      <option value="name_desc">Tên: Z-A</option>
+                      <option value="price_asc">Giá: Thấp đến cao</option>
+                      <option value="price_desc">Giá: Cao đến thấp</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="col-lg-5 col-md-4 col-12">
+                  <nav>
+                    <div class="nav nav-tabs" id="nav-tab" role="tablist">
+                      <button class="nav-link active" id="nav-grid-tab" data-bs-toggle="tab" data-bs-target="#nav-grid"
+                        type="button" role="tab" aria-controls="nav-grid" aria-selected="true">
+                        <i class="bi bi-list-task"></i>
+                      </button>
+                      <button class="nav-link" id="nav-list-tab" data-bs-toggle="tab" data-bs-target="#nav-list"
+                        type="button" role="tab" aria-controls="nav-list" aria-selected="false">
+                        <i class="bi bi-grid"></i>
+                      </button>
+                    </div>
+                  </nav>
+                </div>
+              </div>
+            </div>
+            <div class="tab-content mt-1" id="nav-tabContent">
+              <div class="tab-pane fade show active" id="nav-grid" role="tabpanel" aria-labelledby="nav-grid-tab">
+                <div class="row">
+                  <div class="col-lg-4 col-md-6 col-12" v-if="isLoading" v-for="n in 6" :key="'skeleton-grid-' + n">
+                    <div class="single-product h-100">
+                      <div class="product-image skeleton-image"></div>
+                      <div class="product-info">
+                        <div class="skeleton-title"></div>
+                        <div class="skeleton-rating"></div>
+                        <div class="skeleton-price"></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-lg-4 col-md-6 col-12" v-else v-for="product in products" :key="product.id">
+                    <div class="single-product h-100">
+                      <div class="product-image">
+                        <img :src="product.variants[0].image" alt="#" style="height: 250px; object-fit: cover" />
+                        <div class="button">
+                          <button @click="openModal(product.id)" class="btn">
+                            <i class="lni lni-cart"></i> Thêm vào giỏ
+                          </button>
+                        </div>
+                      </div>
+                      <div class="product-info">
+                        <h4 class="title">
+                          <router-link :to="`/product-detail/${product.variants[0].slug}/${product.id}`">{{
+                            product.name }}</router-link>
+                        </h4>
+                        <Rating :rating="product.rating" :reviewCount="product.rating" />
+                        <div class="price">
+                          <span>{{ FormatData.formatNumber(product.price) }}VNĐ</span>
+                        </div>
+                        <div class="d-flex gap-1 mt-2">
+                          <span v-for="value in FormatData.uniqueColors(product.variants)" :key="value.attribute_value_id"
+                            class="d-inline-block rounded-circle" style="
+                                      width: 0.75rem;
+                                      height: 0.75rem;
+                                      border: 1px solid #ccc;
+                                    " :style="{
+                                      'background-color': value.attribute_name,
+                                    }">
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    </div>
+                </div>
+                <div class="row">
+                  <div class="col-12">
+                    <div class="pagination left">
+                      <ul class="pagination-list">
+                        <li><a href="javascript:void(0)">1</a></li>
+                        <li class="active">
+                          <a href="javascript:void(0)">2</a>
+                        </li>
+                        <li><a href="javascript:void(0)">3</a></li>
+                        <li><a href="javascript:void(0)">4</a></li>
+                        <li>
+                          <a href="javascript:void(0)"><i class="lni lni-chevron-right"></i></a>
+                        </li>
+                      </ul>
+                    </div>
+                    </div>
+                </div>
+              </div>
+              <div class="tab-pane fade" id="nav-list" role="tabpanel" aria-labelledby="nav-list-tab">
+                <div class="row">
+                  <div class="col-lg-12 col-md-12 col-12" v-if="isLoading" v-for="n in 4" :key="'skeleton-list-' + n">
+                    <div class="single-product">
+                      <div class="row align-items-center">
+                        <div class="col-lg-4 col-md-4 col-12">
+                          <div class="product-image skeleton-image-list"></div>
+                        </div>
+                        <div class="col-lg-8 col-md-8 col-12">
+                          <div class="product-info">
+                            <div class="skeleton-title-list"></div>
+                            <div class="skeleton-rating"></div>
+                            <div class="skeleton-price"></div>
+                            <div class="skeleton-description"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+
+                  <div class="col-lg-12 col-md-12 col-12" v-else v-for="product in products" :key="product.id">
+                    <div class="single-product">
+                      <div class="row align-items-center">
+                        <div class="col-lg-4 col-md-4 col-12">
+                          <div class="product-image">
+                            <img :src="product.variants[0].image" alt="#" />
+                            <div class="button">
+                              <button @click="openModal(product.id)" class="btn">
+                                <i class="lni lni-cart"></i> Thêm vào giỏ
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="col-lg-8 col-md-8 col-12">
+                          <div class="product-info">
+                            <h4 class="title">
+                              <router-link :to="`/product-detail/${product.variants[0].slug}/${product.id}`">{{
+                                product.name }}</router-link>
+                            </h4>
+                            <Rating :rating="product.rating" :reviewCount="product.rating" />
+
+                            <div class="price">
+                              <span>{{ FormatData.formatNumber(product.price) }}VNĐ</span>
+                            </div>
+                            <div class="d-flex gap-1 mt-2">
+                              <span v-for="value in FormatData.uniqueColors(
+                                  product.variants
+                                )" :key="value.attribute_value_id" class="d-inline-block rounded-circle" style="
+                                      width: 1.75rem;
+                                      height: 1.75rem;
+                                      border: 1px solid #ccc;
+                                    " :style="{
+                                      'background-color': value.attribute_name,
+                                    }">
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    </div>
+                </div>
+                <div class="row">
+                  <div class="col-12">
+                    <div class="pagination left">
+                      <ul class="pagination-list">
+                        <li><a href="javascript:void(0)">1</a></li>
+                        <li class="active">
+                          <a href="javascript:void(0)">2</a>
+                        </li>
+                        <li><a href="javascript:void(0)">3</a></li>
+                        <li><a href="javascript:void(0)">4</a></li>
+                        <li>
+                          <a href="javascript:void(0)"><i class="lni lni-chevron-right"></i></a>
+                        </li>
+                      </ul>
+                    </div>
+                    </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <ProductModal v-if="productData" :product="productData" :is-visible="showModal" @close="closeModal"
-            @add-to-cart="handleAddToCart" />
-    </section>
-    <!-- End Product Grids -->
-</template>
+      </div>
+    </div>
+    <ProductModal v-if="productData" :product="productData" :is-visible="showModal" @close="closeModal"
+      @add-to-cart="handleAddToCart" />
+  </section>
+  </template>
+
 <style scoped>
 .skeleton-image {
     background-color: #e2e2e2;

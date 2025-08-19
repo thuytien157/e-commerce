@@ -40,7 +40,8 @@ Route::get('/addresses/{address_id}', [User::class, 'getAddressById'])->middlewa
 Route::post('/update-avatar', [User::class, 'updateAvatar'])->middleware('auth:sanctum');
 Route::get('/order-history-user', [User::class, 'getOrderByUser'])->middleware('auth:sanctum');
 
-Route::get('/products/{id}', [Product::class, 'getProductById']);
+Route::get('/products_detail/{id}', [Product::class, 'getProductById']);
+Route::put('/product/hidden/{id}', [Product::class, 'hiddenProduct']);
 Route::resource('product', Product::class);
 
 Route::resource('category', Category::class);

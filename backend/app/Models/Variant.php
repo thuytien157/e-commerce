@@ -10,7 +10,7 @@ class Variant extends Model
     use HasFactory;
 
     protected $table = 'variants';
-
+    public $timestamps = false;
     protected $fillable = [
         'product_id',
         'sku',
@@ -34,7 +34,8 @@ class Variant extends Model
         return $this->hasMany(VariantImage::class);
     }
 
-    public function product(){
+    public function product()
+    {
         return $this->belongsTo(Product::class, 'product_id');
     }
 }

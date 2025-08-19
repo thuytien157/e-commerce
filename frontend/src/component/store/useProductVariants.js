@@ -1,93 +1,85 @@
 import { ref, watch, computed } from "vue";
 
 export default function useProductVariants(product) {
-  const selectedColor = ref(null);
-  const selectedSize = ref(null);
+  const selectedAttributes = ref({});
+  const mainImage = ref(null);
 
-  const uniqueColors = computed(() => {
-    const colorSet = new Set();
-    const colors = [];
+  const uniqueAttributes = computed(() => {
+    const attributeMap = {};
     product.value?.variants.forEach((variant) => {
-      const colorAttribute = variant.attributes.find(
-        (attr) => attr.attribute_id === 2
-      );
-      if (colorAttribute && !colorSet.has(colorAttribute.attribute_value_id)) {
-        colorSet.add(colorAttribute.attribute_value_id);
-        colors.push(colorAttribute);
-      }
+      variant.attributes.forEach((attribute) => {
+        const attributeId = attribute.attribute_id;
+        if (!attributeMap[attributeId]) {
+          attributeMap[attributeId] = {
+            id: attribute.attribute_id,
+            name: attribute.attribute_name_display,
+            values: [],
+          };
+        }
+        const existingValue = attributeMap[attributeId].values.find(
+          (val) => val.attribute_value_id === attribute.attribute_value_id
+        );
+        if (!existingValue) {
+          attributeMap[attributeId].values.push(attribute);
+        }
+      });
     });
-    return colors;
-  });
-
-  const uniqueSizes = computed(() => {
-    const sizeSet = new Set();
-    const sizes = [];
-    product.value?.variants.forEach((variant) => {
-      const sizeAttribute = variant.attributes.find(
-        (attr) => attr.attribute_id === 1
-      );
-      if (sizeAttribute && !sizeSet.has(sizeAttribute.attribute_value_id)) {
-        sizeSet.add(sizeAttribute.attribute_value_id);
-        sizes.push(sizeAttribute);
-      }
-    });
-    return sizes;
+    return Object.values(attributeMap);
   });
 
   const currentVariant = computed(() => {
     if (!product.value) return null;
     return product.value.variants.find((variant) => {
-      const hasSelectedColor = variant.attributes.some(
-        (attr) =>
-          attr.attribute_id === 2 &&
-          attr.attribute_value_id === selectedColor.value
-      );
-      const hasSelectedSize = variant.attributes.some(
-        (attr) =>
-          attr.attribute_id === 1 &&
-          attr.attribute_value_id === selectedSize.value
-      );
-      return hasSelectedColor && hasSelectedSize;
+      return Object.keys(selectedAttributes.value).every((attributeId) => {
+        const selectedValueId = selectedAttributes.value[attributeId];
+        return variant.attributes.some(
+          (attr) =>
+            attr.attribute_id.toString() === attributeId &&
+            attr.attribute_value_id === selectedValueId
+        );
+      });
     });
   });
 
   const currentVariantImages = computed(() => {
-    return (
-      currentVariant.value?.images || product.value?.variants[0]?.images || []
-    );
+    if (currentVariant.value?.images.length > 0) {
+      return currentVariant.value.images;
+    }
+    return product.value?.variants[0]?.images || [];
   });
 
-  const mainImage = ref(null);
+  const isAttributeAvailable = (attributeId, valueId) => {
+    const otherSelectedAttributes = { ...selectedAttributes.value };
+    delete otherSelectedAttributes[attributeId];
+
+    return product.value.variants.some((variant) => {
+      const hasMatchingAttribute = variant.attributes.some(
+        (attr) =>
+          attr.attribute_id === attributeId &&
+          attr.attribute_value_id === valueId
+      );
+      if (!hasMatchingAttribute) return false;
+
+      return Object.keys(otherSelectedAttributes).every((otherAttributeId) => {
+        const otherSelectedValueId = otherSelectedAttributes[otherAttributeId];
+        return variant.attributes.some(
+          (attr) =>
+            attr.attribute_id.toString() === otherAttributeId &&
+            attr.attribute_value_id === otherSelectedValueId
+        );
+      });
+    });
+  };
 
   const setupDefaultOptions = () => {
     if (product.value?.variants.length > 0) {
       const defaultVariant = product.value.variants[0];
-      const defaultColor = defaultVariant.attributes.find(
-        (attr) => attr.attribute_id === 2
-      );
-      const defaultSize = defaultVariant.attributes.find(
-        (attr) => attr.attribute_id === 1
-      );
-
-      selectedColor.value = defaultColor
-        ? defaultColor.attribute_value_id
-        : null;
-      selectedSize.value = defaultSize ? defaultSize.attribute_value_id : null;
+      const newSelectedAttributes = {};
+      defaultVariant.attributes.forEach((attr) => {
+        newSelectedAttributes[attr.attribute_id] = attr.attribute_value_id;
+      });
+      selectedAttributes.value = newSelectedAttributes;
     }
-  };
-
-  const isSizeAvailable = (sizeId) => {
-    return product.value.variants.some((variant) => {
-      const hasSelectedColor = variant.attributes.some(
-        (attr) =>
-          attr.attribute_id === 2 &&
-          attr.attribute_value_id === selectedColor.value
-      );
-      const hasMatchingSize = variant.attributes.some(
-        (attr) => attr.attribute_id === 1 && attr.attribute_value_id === sizeId
-      );
-      return hasSelectedColor && hasMatchingSize;
-    });
   };
 
   watch(
@@ -103,7 +95,7 @@ export default function useProductVariants(product) {
   watch(
     currentVariant,
     (newVariant) => {
-      if (newVariant && newVariant.images.length > 0) {
+      if (newVariant && newVariant.image) {
         mainImage.value = newVariant.image;
       } else if (
         product.value?.variants.length > 0 &&
@@ -115,15 +107,23 @@ export default function useProductVariants(product) {
     { immediate: true }
   );
 
+  const selectAttribute = (attributeId, valueId) => {
+    selectedAttributes.value[attributeId] = valueId;
+    const newVariant = currentVariant.value;
+    if (newVariant && newVariant.images.length > 0) {
+      mainImage.value = newVariant.images[0].image_url;
+    } else if (product.value?.variants[0]?.images.length > 0) {
+      mainImage.value = product.value.variants[0].images[0].image_url;
+    }
+  };
+
   return {
     mainImage,
-    selectedColor,
-    selectedSize,
-    uniqueColors,
-    uniqueSizes,
+    selectedAttributes,
+    uniqueAttributes,
     currentVariant,
     currentVariantImages,
-    setupDefaultOptions,
-    isSizeAvailable,
+    isAttributeAvailable,
+    selectAttribute,
   };
 }
