@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('reply_text')->nullable();
             $table->float('rating');
             $table->string('comment');
+            $table->enum('status', ['discontinued', 'published'])->default('discontinued');
             $table->timestamp('created_at');
         });
     }

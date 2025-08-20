@@ -443,7 +443,7 @@ onMounted(async () => {
                         <p>Vui lòng cho chúng tôi biết lý do bạn hủy đơn hàng:</p>
                         <small class="text-danger" v-if="errors.cancellation_reason">{{
                             errors.cancellation_reason[0]
-                            }}</small>
+                        }}</small>
                         <div class="form-check">
                             <input class="form-check-input" type="radio" name="cancelReason" id="reason1"
                                 value="Tôi không muốn mua nữa" v-model="cancellation_reason">
@@ -513,7 +513,7 @@ onMounted(async () => {
                             <div class="mb-3">
                                 <small class="text-danger" v-if="errors.provinces">{{
                                     errors.provinces[0]
-                                }}</small>
+                                    }}</small>
 
                                 <select v-model="selectedProvince" @change="fetchDistricts" class="form-control"
                                     id="province-select">
@@ -527,7 +527,7 @@ onMounted(async () => {
                             <div class="mb-3">
                                 <small class="text-danger" v-if="errors.districts">{{
                                     errors.districts[0]
-                                }}</small>
+                                    }}</small>
                                 <select v-model="selectedDistrict" @change="fetchWards" :disabled="!selectedProvince"
                                     class="form-control" id="district-select">
                                     <option :value="null">Quận / Huyện</option>
@@ -540,7 +540,7 @@ onMounted(async () => {
                             <div class="mb-3">
                                 <small class="text-danger" v-if="errors.wards">{{
                                     errors.wards[0]
-                                }}</small>
+                                    }}</small>
                                 <select v-model="selectedWard" :disabled="!selectedDistrict" class="form-control"
                                     id="ward-select">
                                     <option :value="null">Phường / Xã</option>

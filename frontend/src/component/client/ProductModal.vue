@@ -32,7 +32,6 @@
                                             attribute.id,
                                             value.attribute_value_id
                                         ),
-                                        // Thêm class đặc biệt cho màu sắc
                                         'color-selected':
                                             attribute.name === 'Màu sắc' &&
                                             selectedAttributes[attribute.id] ===
@@ -97,7 +96,6 @@ const emit = defineEmits(["close", "add-to-cart"]);
 const cartStore = useCartStore();
 const { product } = toRefs(props);
 
-// Thêm 'selectAttribute' vào danh sách các hàm/biến được lấy ra
 const {
     mainImage,
     selectedAttributes,

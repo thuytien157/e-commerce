@@ -61,3 +61,6 @@ Route::post('/order/{orderId}/repay', [Order::class, 'repayOrder']);
 
 
 Route::post('/review', [Review::class, 'createReview'])->middleware('auth:sanctum');
+Route::get('/review', [Review::class, 'getAllReview']);
+Route::put('/review/hide/{id}', [Review::class, 'hiddenReview']);
+Route::put('/review/reply/{id}', [Review::class, 'replyReview'])->middleware('auth:sanctum');

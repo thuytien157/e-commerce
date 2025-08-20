@@ -16,7 +16,7 @@ SupportCarbon::setLocale('vi');
 date_default_timezone_set('Asia/Ho_Chi_Minh');
 class Review extends Controller
 {
-    public function createReview(Request $request)
+    function createReview(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'order_detail_id' => 'required|exists:order_items,id',
@@ -103,5 +103,56 @@ class Review extends Controller
                 'error_detail' => $e->getMessage()
             ], 500);
         }
+    }
+
+    function getAllReview()
+    {
+        $reviews = ModelsReview::with('customer', 'admin', 'images', 'product.variants')->get();
+
+        return response()->json([
+            'reviews' => $reviews
+        ]);
+    }
+
+    function hiddenReview($id, Request $request)
+    {
+        $review = ModelsReview::find($id);
+        if (!$review) {
+            return response()->json([
+                'mess' => 'Đánh giá không tồn tại'
+            ], 404);
+        }
+
+        $review->status = 'published';
+        if ($review->save()) {
+            return response()->json([
+                'mess' => 'Cập nhật thành công'
+            ]);
+        };
+    }
+
+    function replyReview($id, Request $request)
+    {
+        $review = ModelsReview::find($id);
+        if (!$review) {
+            return response()->json([
+                'mess' => 'Đánh giá không tồn tại'
+            ], 404);
+        }
+
+        $user = Auth::id();
+        if (!$user) {
+            return response()->json([
+                'mess' => 'User ch đăng nhập'
+            ], 404);
+        }
+
+        $review->reply_text = $request->reply_text;
+        $review->reply_customer_id = $user;
+        if ($review->save()) {
+            return response()->json([
+                'mess' => 'Cập nhật thành công'
+            ]);
+        };
     }
 }

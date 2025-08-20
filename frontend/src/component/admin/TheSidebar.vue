@@ -93,6 +93,12 @@ const menuItems = [
         label: 'Thuộc tính',
         icon: ShoppingOutlined,
     },
+    {
+        key: 'reviews-management',
+        to: '/admin/review',
+        label: 'Đánh giá',
+        icon: ShoppingOutlined,
+    },
 
 ];
 

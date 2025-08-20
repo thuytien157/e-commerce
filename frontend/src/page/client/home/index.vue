@@ -174,37 +174,40 @@ onMounted(async () => {
             </div>
           </div>
 
-          <div v-else v-for="product in new_arrivals" :key="product.id" class="col-6" style="height: 420px">
-            <div class="single-product h-100">
-              <div class="product-image">
-                <img :src="product.variants[0].image" alt="#" style="height: 250px; object-fit: cover" />
-                <div class="button">
-                  <button @click="openModal(product.id)" class="btn">
-                    <i class="lni lni-cart"></i> Thêm vào giỏ
-                  </button>
+          <template v-else v-for="product in new_arrivals" :key="product.id">
+            <div v-if="product.status == 'published'" class="col-6" style="height: 420px">
+              <div class="single-product h-100">
+                <div class="product-image">
+                  <img :src="product.variants[0].image" alt="#" style="height: 250px; object-fit: cover" />
+                  <div class="button">
+                    <button @click="openModal(product.id)" class="btn">
+                      <i class="lni lni-cart"></i> Thêm vào giỏ
+                    </button>
+                  </div>
                 </div>
-              </div>
-              <div class="product-info">
-                <h4 class="title">
-                  <router-link :to="`/product-detail/${product.variants[0].slug}/${product.id}`">{{ product.name
-                  }}</router-link>
-                </h4>
-                <Rating :rating="product.rating" :reviewCount="product.rating" />
-                <div class="price">
-                  <span>{{ FormatData.formatNumber(product.price) }}VNĐ</span>
-                </div>
-                <div class="d-flex gap-1 mt-2">
-                  <span v-for="value in FormatData.uniqueColors(product.variants)" :key="value.attribute_value_id"
-                    class="d-inline-block rounded-circle" style="
+                <div class="product-info">
+                  <h4 class="title">
+                    <router-link :to="`/product-detail/${product.variants[0].slug}/${product.id}`">{{ product.name
+                      }}</router-link>
+                  </h4>
+                  <Rating :rating="product.rating" :reviewCount="product.rating" />
+                  <div class="price">
+                    <span>{{ FormatData.formatNumber(product.price) }}VNĐ</span>
+                  </div>
+                  <div class="d-flex gap-1 mt-2">
+                    <span v-for="value in FormatData.uniqueColors(product.variants)" :key="value.attribute_value_id"
+                      class="d-inline-block rounded-circle" style="
                       width: 0.75rem;
                       height: 0.75rem;
                       border: 1px solid #ccc;
                     " :style="{ 'background-color': value.attribute_name }">
-                  </span>
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          </template>
+
         </div>
       </div>
     </div>
@@ -253,34 +256,37 @@ onMounted(async () => {
         </div>
       </div>
 
-      <div v-else class="col-lg-3 col-md-6 col-12 mb-3" v-for="product in best_sellers" :key="product.id">
-        <div class="single-product h-100">
-          <div class="product-image">
-            <img :src="product.variants[0].image" alt="#" style="height: 250px; object-fit: cover" />
-            <div class="button">
-              <button @click="openModal(product.id)" class="btn">
-                <i class="lni lni-cart"></i> Thêm vào giỏ
-              </button>
+      <template v-else v-for="product in best_sellers" :key="product.id">
+        <div class="col-lg-3 col-md-6 col-12 mb-3" v-if="product.status == 'published'">
+          <div class="single-product h-100">
+            <div class="product-image">
+              <img :src="product.variants[0].image" alt="#" style="height: 250px; object-fit: cover" />
+              <div class="button">
+                <button @click="openModal(product.id)" class="btn">
+                  <i class="lni lni-cart"></i> Thêm vào giỏ
+                </button>
+              </div>
             </div>
-          </div>
-          <div class="product-info">
-            <h4 class="title">
-              <router-link :to="`/product-detail/${product.variants[0].slug}/${product.id}`">{{ product.name
-              }}</router-link>
-            </h4>
-            <Rating :rating="product.rating" :reviewCount="product.rating" />
-            <div class="price">
-              <span>{{ FormatData.formatNumber(product.price) }}VNĐ</span>
-            </div>
-            <div class="d-flex gap-1 mt-2">
-              <span v-for="value in FormatData.uniqueColors(product.variants)" :key="value.attribute_value_id"
-                class="d-inline-block rounded-circle" style="width: 0.75rem; height: 0.75rem; border: 1px solid #ccc"
-                :style="{ 'background-color': value.attribute_name }">
-              </span>
+            <div class="product-info">
+              <h4 class="title">
+                <router-link :to="`/product-detail/${product.variants[0].slug}/${product.id}`">{{ product.name
+                  }}</router-link>
+              </h4>
+              <Rating :rating="product.rating" :reviewCount="product.rating" />
+              <div class="price">
+                <span>{{ FormatData.formatNumber(product.price) }}VNĐ</span>
+              </div>
+              <div class="d-flex gap-1 mt-2">
+                <span v-for="value in FormatData.uniqueColors(product.variants)" :key="value.attribute_value_id"
+                  class="d-inline-block rounded-circle" style="width: 0.75rem; height: 0.75rem; border: 1px solid #ccc"
+                  :style="{ 'background-color': value.attribute_name }">
+                </span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </template>
+
     </div>
 
     <div class="row align-items-center">
@@ -330,37 +336,40 @@ onMounted(async () => {
             </div>
           </div>
 
-          <div v-else v-for="product in top_rated" :key="product.id" class="col-6" style="height: 420px">
-            <div class="single-product h-100">
-              <div class="product-image">
-                <img :src="product.variants[0].image" alt="#" style="height: 250px; object-fit: cover" />
-                <div class="button">
-                  <button @click="openModal(product.id)" class="btn">
-                    <i class="lni lni-cart"></i> Thêm vào giỏ
-                  </button>
+          <template v-else v-for="product in top_rated" :key="product.id">
+            <div class="col-6" style="height: 420px" v-if="product.status == 'published'">
+              <div class="single-product h-100">
+                <div class="product-image">
+                  <img :src="product.variants[0].image" alt="#" style="height: 250px; object-fit: cover" />
+                  <div class="button">
+                    <button @click="openModal(product.id)" class="btn">
+                      <i class="lni lni-cart"></i> Thêm vào giỏ
+                    </button>
+                  </div>
                 </div>
-              </div>
-              <div class="product-info">
-                <h4 class="title">
-                  <router-link :to="`/product-detail/${product.variants[0].slug}/${product.id}`">{{ product.name
-                  }}</router-link>
-                </h4>
-                <Rating :rating="product.rating" :reviewCount="product.rating" />
-                <div class="price">
-                  <span>{{ FormatData.formatNumber(product.price) }}VNĐ</span>
-                </div>
-                <div class="d-flex gap-1 mt-2">
-                  <span v-for="value in FormatData.uniqueColors(product.variants)" :key="value.attribute_value_id"
-                    class="d-inline-block rounded-circle" style="
+                <div class="product-info">
+                  <h4 class="title">
+                    <router-link :to="`/product-detail/${product.variants[0].slug}/${product.id}`">{{ product.name
+                      }}</router-link>
+                  </h4>
+                  <Rating :rating="product.rating" :reviewCount="product.rating" />
+                  <div class="price">
+                    <span>{{ FormatData.formatNumber(product.price) }}VNĐ</span>
+                  </div>
+                  <div class="d-flex gap-1 mt-2">
+                    <span v-for="value in FormatData.uniqueColors(product.variants)" :key="value.attribute_value_id"
+                      class="d-inline-block rounded-circle" style="
                       width: 0.75rem;
                       height: 0.75rem;
                       border: 1px solid #ccc;
                     " :style="{ 'background-color': value.attribute_name }">
-                  </span>
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          </template>
+
         </div>
       </div>
 

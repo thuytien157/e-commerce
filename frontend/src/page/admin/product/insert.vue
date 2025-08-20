@@ -565,7 +565,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* Giữ nguyên các CSS đã có */
 .modal-backdrop {
   position: fixed;
   top: 0;
@@ -585,7 +584,6 @@ onMounted(() => {
   border-radius: 8px;
 }
 
-/* Thêm CSS cho loading overlay */
 .loading-overlay {
   position: absolute;
   top: 0;
@@ -593,9 +591,7 @@ onMounted(() => {
   width: 100%;
   height: 100%;
   background-color: rgba(255, 255, 255, 0.6);
-  /* Lớp nền trắng mờ */
   backdrop-filter: blur(3px);
-  /* Hiệu ứng làm mờ nội dung phía sau */
   display: flex;
   flex-direction: column;
   justify-content: center;

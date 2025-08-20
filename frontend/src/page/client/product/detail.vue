@@ -42,22 +42,36 @@ watch(queryParams, (newParams, oldParams) => {
 })
 const {
     mainImage,
-    selectedColor,
-    selectedSize,
-    uniqueColors,
-    uniqueSizes,
+    selectedAttributes,
+    uniqueAttributes,
     currentVariant,
     currentVariantImages,
-    isSizeAvailable,
+    isAttributeAvailable,
+    selectAttribute,
 } = useProductVariants(product);
 
-const selectOption = (type, value) => {
-    if (type === "color") {
-        selectedColor.value = value;
-    } else if (type === "size") {
-        selectedSize.value = value;
+const toggleAttributeFilter = (selectedAttributes) => {
+    const selectedAttributesData = {};
+    for (const attributeId in selectedAttributes) {
+        const attribute = uniqueAttributes.value.find(
+            (attr) => attr.id.toString() === attributeId
+        );
+        const value = attribute.values.find(
+            (val) => val.attribute_value_id === selectedAttributes[attributeId]
+        );
+        selectedAttributesData[attribute.name] = value.attribute_name;
     }
+
+    const selectedAttributesValues = Object.values(selectedAttributesData);
+    return selectedAttributesValues
 };
+
+const isAttributeSelected = computed(() => (attributeId, valueName) => {
+    return (
+        selectedAttributeValues.value[attributeId] &&
+        selectedAttributeValues.value[attributeId].includes(valueName)
+    );
+});
 
 const decrement = () => {
     if (cartStore.quantity > 1) {
@@ -158,47 +172,51 @@ onMounted(async () => {
                             <h3 class="price">
                                 {{ FormatData.formatNumber(product.price) }}VND
                             </h3>
-                            <!-- <p class="info-text">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
-                                tempor incididunt
-                                ut labore et dolore magna aliqua.</p> -->
-                            <div class="row">
+
+                            <div class="row" v-for="attribute in uniqueAttributes" :key="attribute.id">
                                 <div class="col-lg-4 col-md-4 col-12">
                                     <div class="form-group color-option">
-                                        <label class="fs-6" for="size">Chọn màu sắc</label>
+                                        <label class="fs-6" for="size">{{ attribute.name }}</label>
                                         <div class="d-flex gap-2">
-                                            <button @click="selectOption('color', value.attribute_value_id)"
-                                                v-for="value in uniqueColors" :key="value.attribute_value_id" :class="[
-                                                    'color-option',
+                                            <button v-for="value in attribute.values" :key="value.attribute_value_id"
+                                                :class="[
+                                                    'option-button',
                                                     {
+                                                        active:
+                                                            selectedAttributes[attribute.id] ===
+                                                            value.attribute_value_id,
+                                                        disabled: !isAttributeAvailable(
+                                                            attribute.id,
+                                                            value.attribute_value_id
+                                                        ),
                                                         'color-selected':
-                                                            selectedColor === value.attribute_value_id,
+                                                            attribute.name === 'Màu sắc' &&
+                                                            selectedAttributes[attribute.id] ===
+                                                            value.attribute_value_id,
                                                     },
-                                                ]" class="d-inline-block rounded-circle" :style="{
-                                                    width: '1.75rem',
-                                                    height: '1.75rem',
-                                                    'background-color': value.attribute_name,
-                                                    cursor: 'pointer',
-                                                    border: '1px solid #ccc',
-                                                }"></button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-lg-4 col-md-4 col-12">
-                                    <div class="form-group color-option">
-                                        <label class="fs-6" for="size">Chọn kích thước</label>
-                                        <div class="d-flex gap-1">
-                                            <button v-for="value in uniqueSizes" :key="value.attribute_value_id"
-                                                class="d-inline-block btn btn-outline-primary" :class="{
-                                                    active: selectedSize === value.attribute_value_id,
-                                                }" @click="selectOption('size', value.attribute_value_id)">
-                                                {{ value.attribute_name }}
+                                                ]" @click="selectAttribute(attribute.id, value.attribute_value_id)"
+                                                :disabled="!isAttributeAvailable(attribute.id, value.attribute_value_id)
+                                                    " :style="attribute.name === 'Màu sắc'
+                                                        ? {
+                                                            width: '1.75rem',
+                                                            height: '1.75rem',
+                                                            'background-color': value.attribute_name,
+                                                            cursor: 'pointer',
+                                                            border: '1px solid #ccc',
+                                                            'border-radius': '50%',
+                                                            padding: '0',
+                                                        }
+                                                        : {}
+                                                        ">
+                                                <span v-if="attribute.name !== 'Màu sắc'">{{
+                                                    value.attribute_name
+                                                    }}</span>
                                             </button>
                                         </div>
                                     </div>
                                 </div>
                             </div>
+
                             <div class="bottom-content">
                                 <div class="row align-items-end">
                                     <div class="col-12 my-3">
@@ -225,12 +243,7 @@ onMounted(async () => {
                                                     variantId: currentVariant.id,
                                                     quantity: cartStore.quantity, price: product.price,
                                                     productName: product.name,
-                                                    selectedColor: uniqueColors.find(
-                                                        (c) => c.attribute_value_id === selectedColor
-                                                    )?.attribute_name,
-                                                    selectedSize: uniqueSizes.find(
-                                                        (s) => s.attribute_value_id === selectedSize
-                                                    )?.attribute_name,
+                                                    selectedAttributes: toggleAttributeFilter(selectedAttributes),
                                                     image: mainImage,
                                                 })
                                                 ">
@@ -296,7 +309,8 @@ onMounted(async () => {
                                 style="max-height: 800px; overflow-y: auto;">
                                 <h4 class="title">Đánh giá</h4>
                                 <!-- Start Single Review -->
-                                <div class="single-review" v-for="value in product.reviews">
+                                 <template v-for="value in product.reviews">
+                                    <div class="single-review" v-if="value.status == 'published'">
                                     <img :src="value.customer_avatar" alt="#" class="border avatar" />
                                     <div class="review-info">
                                         <div class="d-flex justify-content-between">
@@ -329,6 +343,8 @@ onMounted(async () => {
                                     </div>
 
                                 </div>
+                                 </template>
+                                
                                 <!-- End Single Review -->
 
                             </div>
@@ -342,7 +358,6 @@ onMounted(async () => {
             </div>
         </div>
     </section>
-    <!-- End Item Details -->
 </template>
 <style scoped>
 .modal-backdrop {
@@ -464,5 +479,36 @@ onMounted(async () => {
     100% {
         background-position: -200% 0;
     }
+}
+
+.option-group {
+    margin-bottom: 15px;
+}
+
+.options {
+    display: flex;
+    gap: 8px;
+}
+
+.option-button {
+    background-color: #f0f0f0;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 8px 15px;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+
+.option-button.active {
+    background-color: blue;
+    color: #fff;
+    border-color: #fff;
+}
+
+.option-button.disabled {
+    background-color: #eee;
+    color: #999;
+    cursor: not-allowed;
+    text-decoration: line-through;
 }
 </style>

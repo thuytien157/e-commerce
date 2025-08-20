@@ -7,7 +7,7 @@ import { useCartStore } from "@/component/store/cart";
 import ProductModal from "@/component/client/ProductModal.vue";
 const products = ref([]);
 const categories = ref([]);
-const attributes = ref([]); // Giữ nguyên, sẽ chứa tất cả thuộc tính
+const attributes = ref([]);
 const isLoading = ref(true);
 
 const getAllProducts = async () => {
@@ -32,9 +32,7 @@ const selectedAttributeValues = ref({});
 const selectedRating = ref([]);
 const selectedPrice = ref([]);
 
-// Hàm chung để cập nhật giá trị thuộc tính
 const toggleAttributeFilter = (attributeId, valueName) => {
-  // Khởi tạo mảng nếu chưa có
   if (!selectedAttributeValues.value[attributeId]) {
     selectedAttributeValues.value[attributeId] = [];
   }
@@ -69,7 +67,6 @@ const queryParams = computed(() => {
     params.append("price", selectedPrice.value.join(","));
   }
 
-  // Lặp qua object thuộc tính đã chọn để thêm vào query
   for (const attributeId in selectedAttributeValues.value) {
     const selectedValues = selectedAttributeValues.value[attributeId];
     if (selectedValues.length) {
@@ -166,32 +163,33 @@ onMounted(async () => {
                     </div>
                   </div>
                 </div>
-                <div v-else :class="{ 'd-flex gap-4': attribute.name !== 'Màu sắc', 'd-flex gap-1 mt-2': attribute.name === 'Màu sắc' }">
+                <div v-else
+                  :class="{ 'd-flex gap-4': attribute.name !== 'Màu sắc', 'd-flex gap-1 mt-2': attribute.name === 'Màu sắc' }">
                   <div v-for="value in attribute.attribute_values" :key="value.id">
                     <template v-if="attribute.name === 'Màu sắc'">
                       <div class="d-inline-block rounded-circle" :class="{
-                          'border-2 border-primary': isAttributeSelected(
-                            attribute.id,
-                            value.value_name
-                          ),
-                          'color-selected': isAttributeSelected(
-                            attribute.id,
-                            value.value_name
-                          ),
-                        }" @click="toggleAttributeFilter(attribute.id, value.value_name)" :style="{
-                          width: '1.35rem',
-                          height: '1.35rem',
-                          'background-color': value.value_name,
-                          cursor: 'pointer',
-                          border: isAttributeSelected(attribute.id, value.value_name)
-                            ? '2px solid #0d6efd'
-                            : '1px solid #ccc',
-                        }"></div>
+                        'border-2 border-primary': isAttributeSelected(
+                          attribute.id,
+                          value.value_name
+                        ),
+                        'color-selected': isAttributeSelected(
+                          attribute.id,
+                          value.value_name
+                        ),
+                      }" @click="toggleAttributeFilter(attribute.id, value.value_name)" :style="{
+                        width: '1.35rem',
+                        height: '1.35rem',
+                        'background-color': value.value_name,
+                        cursor: 'pointer',
+                        border: isAttributeSelected(attribute.id, value.value_name)
+                          ? '2px solid #0d6efd'
+                          : '1px solid #ccc',
+                      }"></div>
                     </template>
                     <template v-else>
                       <div class="form-check">
-                        <input class="form-check-input" type="checkbox" :value="value.value_name" :id="'attribute-' + value.id"
-                          @change="toggleAttributeFilter(attribute.id, value.value_name)"
+                        <input class="form-check-input" type="checkbox" :value="value.value_name"
+                          :id="'attribute-' + value.id" @change="toggleAttributeFilter(attribute.id, value.value_name)"
                           :checked="isAttributeSelected(attribute.id, value.value_name)" />
                         <label class="form-check-label" :for="'attribute-' + value.id">
                           {{ value.value_name }}
@@ -212,22 +210,22 @@ onMounted(async () => {
                 </label>
               </div>
               <div class="form-check">
-                <input class="form-check-input" type="checkbox" value="1_2" id="flexCheckDefault2" v-model="selectedPrice"
-                  @change="fetchProducts" />
+                <input class="form-check-input" type="checkbox" value="1_2" id="flexCheckDefault2"
+                  v-model="selectedPrice" @change="fetchProducts" />
                 <label class="form-check-label" for="flexCheckDefault2" style="font-size: 14px">
                   1,000,000VNĐ - 2,000,000VNĐ
                 </label>
               </div>
               <div class="form-check">
-                <input class="form-check-input" type="checkbox" value="2_3" id="flexCheckDefault3" v-model="selectedPrice"
-                  @change="fetchProducts" />
+                <input class="form-check-input" type="checkbox" value="2_3" id="flexCheckDefault3"
+                  v-model="selectedPrice" @change="fetchProducts" />
                 <label class="form-check-label" for="flexCheckDefault3" style="font-size: 14px">
                   2,000,000VNĐ - 3,000,000VNĐ
                 </label>
               </div>
               <div class="form-check">
-                <input class="form-check-input" type="checkbox" value="3_4" id="flexCheckDefault3" v-model="selectedPrice"
-                  @change="fetchProducts" />
+                <input class="form-check-input" type="checkbox" value="3_4" id="flexCheckDefault3"
+                  v-model="selectedPrice" @change="fetchProducts" />
                 <label class="form-check-label" for="flexCheckDefault3" style="font-size: 14px">
                   3,000,000VNĐ - 4,000,000VNĐ
                 </label>
@@ -264,15 +262,15 @@ onMounted(async () => {
                 </label>
               </div>
               <div class="form-check">
-                <input class="form-check-input" type="checkbox" value="duoi_3" id="rating-below-3" v-model="selectedRating"
-                  @change="fetchProducts" />
+                <input class="form-check-input" type="checkbox" value="duoi_3" id="rating-below-3"
+                  v-model="selectedRating" @change="fetchProducts" />
                 <label class="form-check-label" for="rating-below-3" style="font-size: 14px">
                   Dưới 3 <i class="bi bi-star-fill text-warning"></i>
                 </label>
               </div>
             </div>
-            </div>
           </div>
+        </div>
         <div class="col-lg-9 col-12">
           <div class="product-grids-head">
             <div class="product-grid-topbar">
@@ -318,39 +316,45 @@ onMounted(async () => {
                       </div>
                     </div>
                   </div>
-                  <div class="col-lg-4 col-md-6 col-12" v-else v-for="product in products" :key="product.id">
-                    <div class="single-product h-100">
-                      <div class="product-image">
-                        <img :src="product.variants[0].image" alt="#" style="height: 250px; object-fit: cover" />
-                        <div class="button">
-                          <button @click="openModal(product.id)" class="btn">
-                            <i class="lni lni-cart"></i> Thêm vào giỏ
-                          </button>
+
+                  <template v-else v-for="product in products" :key="product.id">
+                    <div class="col-lg-4 col-md-6 col-12" v-if="product.status == 'published'">
+                      <div class="single-product h-100">
+                        <div class="product-image">
+                          <img :src="product.variants[0].image" alt="#" style="height: 250px; object-fit: cover" />
+                          <div class="button">
+                            <button @click="openModal(product.id)" class="btn">
+                              <i class="lni lni-cart"></i> Thêm vào giỏ
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                      <div class="product-info">
-                        <h4 class="title">
-                          <router-link :to="`/product-detail/${product.variants[0].slug}/${product.id}`">{{
-                            product.name }}</router-link>
-                        </h4>
-                        <Rating :rating="product.rating" :reviewCount="product.rating" />
-                        <div class="price">
-                          <span>{{ FormatData.formatNumber(product.price) }}VNĐ</span>
-                        </div>
-                        <div class="d-flex gap-1 mt-2">
-                          <span v-for="value in FormatData.uniqueColors(product.variants)" :key="value.attribute_value_id"
-                            class="d-inline-block rounded-circle" style="
+                        <div class="product-info">
+                          <h4 class="title">
+                            <router-link :to="`/product-detail/${product.variants[0].slug}/${product.id}`">{{
+                              product.name }}</router-link>
+                          </h4>
+                          <Rating :rating="product.rating" :reviewCount="product.rating" />
+                          <div class="price">
+                            <span>{{ FormatData.formatNumber(product.price) }}VNĐ</span>
+                          </div>
+                          <div class="d-flex gap-1 mt-2">
+                            <span v-for="value in FormatData.uniqueColors(product.variants)"
+                              :key="value.attribute_value_id" class="d-inline-block rounded-circle" style="
                                       width: 0.75rem;
                                       height: 0.75rem;
                                       border: 1px solid #ccc;
                                     " :style="{
                                       'background-color': value.attribute_name,
                                     }">
-                          </span>
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
-                    </div>
+                  </template>
+
+
+
                 </div>
                 <div class="row">
                   <div class="col-12">
@@ -367,7 +371,7 @@ onMounted(async () => {
                         </li>
                       </ul>
                     </div>
-                    </div>
+                  </div>
                 </div>
               </div>
               <div class="tab-pane fade" id="nav-list" role="tabpanel" aria-labelledby="nav-list-tab">
@@ -390,33 +394,33 @@ onMounted(async () => {
                     </div>
                   </div>
 
-
-                  <div class="col-lg-12 col-md-12 col-12" v-else v-for="product in products" :key="product.id">
-                    <div class="single-product">
-                      <div class="row align-items-center">
-                        <div class="col-lg-4 col-md-4 col-12">
-                          <div class="product-image">
-                            <img :src="product.variants[0].image" alt="#" />
-                            <div class="button">
-                              <button @click="openModal(product.id)" class="btn">
-                                <i class="lni lni-cart"></i> Thêm vào giỏ
-                              </button>
+                  <template v-else v-for="product in products" :key="product.id">
+                    <div class="col-lg-12 col-md-12 col-12" v-if="product.status == 'published'">
+                      <div class="single-product" v-if="product.status == 'published'">
+                        <div class="row align-items-center">
+                          <div class="col-lg-4 col-md-4 col-12">
+                            <div class="product-image">
+                              <img :src="product.variants[0].image" alt="#" />
+                              <div class="button">
+                                <button @click="openModal(product.id)" class="btn">
+                                  <i class="lni lni-cart"></i> Thêm vào giỏ
+                                </button>
+                              </div>
                             </div>
                           </div>
-                        </div>
-                        <div class="col-lg-8 col-md-8 col-12">
-                          <div class="product-info">
-                            <h4 class="title">
-                              <router-link :to="`/product-detail/${product.variants[0].slug}/${product.id}`">{{
-                                product.name }}</router-link>
-                            </h4>
-                            <Rating :rating="product.rating" :reviewCount="product.rating" />
+                          <div class="col-lg-8 col-md-8 col-12">
+                            <div class="product-info">
+                              <h4 class="title">
+                                <router-link :to="`/product-detail/${product.variants[0].slug}/${product.id}`">{{
+                                  product.name }}</router-link>
+                              </h4>
+                              <Rating :rating="product.rating" :reviewCount="product.rating" />
 
-                            <div class="price">
-                              <span>{{ FormatData.formatNumber(product.price) }}VNĐ</span>
-                            </div>
-                            <div class="d-flex gap-1 mt-2">
-                              <span v-for="value in FormatData.uniqueColors(
+                              <div class="price">
+                                <span>{{ FormatData.formatNumber(product.price) }}VNĐ</span>
+                              </div>
+                              <div class="d-flex gap-1 mt-2">
+                                <span v-for="value in FormatData.uniqueColors(
                                   product.variants
                                 )" :key="value.attribute_value_id" class="d-inline-block rounded-circle" style="
                                       width: 1.75rem;
@@ -425,13 +429,17 @@ onMounted(async () => {
                                     " :style="{
                                       'background-color': value.attribute_name,
                                     }">
-                              </span>
+                                </span>
+                              </div>
                             </div>
                           </div>
                         </div>
                       </div>
                     </div>
-                    </div>
+                  </template>
+
+
+
                 </div>
                 <div class="row">
                   <div class="col-12">
@@ -448,7 +456,7 @@ onMounted(async () => {
                         </li>
                       </ul>
                     </div>
-                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -459,354 +467,354 @@ onMounted(async () => {
     <ProductModal v-if="productData" :product="productData" :is-visible="showModal" @close="closeModal"
       @add-to-cart="handleAddToCart" />
   </section>
-  </template>
+</template>
 
 <style scoped>
 .skeleton-image {
-    background-color: #e2e2e2;
-    height: 250px;
-    width: 100%;
-    animation: pulse 1.5s infinite ease-in-out;
+  background-color: #e2e2e2;
+  height: 250px;
+  width: 100%;
+  animation: pulse 1.5s infinite ease-in-out;
 }
 
 .skeleton-image-list {
-    background-color: #e2e2e2;
-    height: 200px;
-    width: 100%;
-    animation: pulse 1.5s infinite ease-in-out;
+  background-color: #e2e2e2;
+  height: 200px;
+  width: 100%;
+  animation: pulse 1.5s infinite ease-in-out;
 }
 
 .skeleton-title,
 .skeleton-price,
 .skeleton-rating,
 .skeleton-description {
-    background-color: #e2e2e2;
-    border-radius: 4px;
-    animation: pulse 1.5s infinite ease-in-out;
-    margin-bottom: 8px;
+  background-color: #e2e2e2;
+  border-radius: 4px;
+  animation: pulse 1.5s infinite ease-in-out;
+  margin-bottom: 8px;
 }
 
 .skeleton-title {
-    height: 20px;
-    width: 80%;
+  height: 20px;
+  width: 80%;
 }
 
 .skeleton-price {
-    height: 18px;
-    width: 60%;
+  height: 18px;
+  width: 60%;
 }
 
 .skeleton-rating {
-    height: 16px;
-    width: 40%;
+  height: 16px;
+  width: 40%;
 }
 
 .skeleton-description {
-    height: 14px;
-    width: 100%;
+  height: 14px;
+  width: 100%;
 }
 
 @keyframes pulse {
-    0% {
-        background-color: #e2e2e2;
-    }
+  0% {
+    background-color: #e2e2e2;
+  }
 
-    50% {
-        background-color: #f0f0f0;
-    }
+  50% {
+    background-color: #f0f0f0;
+  }
 
-    100% {
-        background-color: #e2e2e2;
-    }
+  100% {
+    background-color: #e2e2e2;
+  }
 }
 
 .skeleton-checkbox {
-    width: 1rem;
-    height: 1rem;
-    background-color: #f0f0f0;
-    display: inline-block;
-    border-radius: 4px;
+  width: 1rem;
+  height: 1rem;
+  background-color: #f0f0f0;
+  display: inline-block;
+  border-radius: 4px;
 }
 
 .skeleton-text {
-    width: 70%;
-    height: 1rem;
-    background-color: #f0f0f0;
-    display: inline-block;
-    margin-left: 8px;
-    border-radius: 4px;
+  width: 70%;
+  height: 1rem;
+  background-color: #f0f0f0;
+  display: inline-block;
+  margin-left: 8px;
+  border-radius: 4px;
 }
 
 .skeleton-color {
-    width: 1.35rem;
-    height: 1.35rem;
-    background-color: #f0f0f0;
-    border-radius: 50%;
-    animation: pulse 1.5s infinite ease-in-out;
+  width: 1.35rem;
+  height: 1.35rem;
+  background-color: #f0f0f0;
+  border-radius: 50%;
+  animation: pulse 1.5s infinite ease-in-out;
 }
 
 .skeleton-text.short {
-    width: 30%;
+  width: 30%;
 }
 
 .color-selected {
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-    transform: scale(1.1);
-    transition: box-shadow 0.2s ease-in-out, transform 0.2s ease-in-out;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+  transform: scale(1.1);
+  transition: box-shadow 0.2s ease-in-out, transform 0.2s ease-in-out;
 }
 
 .form-check-label {
-    font-size: 14px;
+  font-size: 14px;
 }
 
 @media (max-width: 767px) {
-    .home-product-list .custom-responsive-margin {
-        margin-bottom: 40px;
-    }
+  .home-product-list .custom-responsive-margin {
+    margin-bottom: 40px;
+  }
 }
 
 .home-product-list .list-title {
-    position: relative;
-    margin-bottom: 24px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid #e5e5e5;
-    color: #232323;
-    font-size: 15px;
-    font-weight: 500;
+  position: relative;
+  margin-bottom: 24px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e5e5e5;
+  color: #232323;
+  font-size: 15px;
+  font-weight: 500;
 }
 
 .home-product-list .list-title::before {
-    display: block;
-    position: absolute;
-    bottom: -1px;
-    left: 0;
-    width: 90px;
-    height: 1px;
-    background-color: #0167f3;
-    content: "";
+  display: block;
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 90px;
+  height: 1px;
+  background-color: #0167f3;
+  content: "";
 }
 
 .home-product-list .single-list {
-    margin-bottom: 20px;
+  margin-bottom: 20px;
 }
 
 .home-product-list .single-list:last-child {
-    margin: 0;
+  margin: 0;
 }
 
 .home-product-list .single-list .list-image {
-    width: 60px;
-    padding-right: 12px;
-    float: left;
-    position: relative;
-    top: 10px;
+  width: 60px;
+  padding-right: 12px;
+  float: left;
+  position: relative;
+  top: 10px;
 }
 
 .home-product-list .single-list .list-image a {
-    display: block;
-    border-radius: 5px;
-    overflow: hidden;
+  display: block;
+  border-radius: 5px;
+  overflow: hidden;
 }
 
 .home-product-list .single-list .list-image a img {
-    width: 100%;
+  width: 100%;
 }
 
 .home-product-list .single-list .list-info {
-    display: table-cell;
-    vertical-align: top;
+  display: table-cell;
+  vertical-align: top;
 }
 
 .home-product-list .single-list .list-info h3 a {
-    font-size: 14px;
-    font-weight: 500;
-    color: #081828;
+  font-size: 14px;
+  font-weight: 500;
+  color: #081828;
 }
 
 .home-product-list .single-list .list-info h3 a:hover {
-    color: #0167f3;
+  color: #0167f3;
 }
 
 .home-product-list .single-list .list-info span {
-    display: block;
-    margin-top: 2px;
-    font-size: 13px;
+  display: block;
+  margin-top: 2px;
+  font-size: 13px;
 }
 
 .single-product {
-    border: 1px solid #eee;
-    border-radius: 4px;
-    -webkit-transition: all 0.4s ease;
-    transition: all 0.4s ease;
-    -webkit-box-shadow: 0px 0px 20px #00000012;
-    box-shadow: 0px 0px 20px #00000012;
-    padding: 8px;
-    background: #fff;
+  border: 1px solid #eee;
+  border-radius: 4px;
+  -webkit-transition: all 0.4s ease;
+  transition: all 0.4s ease;
+  -webkit-box-shadow: 0px 0px 20px #00000012;
+  box-shadow: 0px 0px 20px #00000012;
+  padding: 8px;
+  background: #fff;
 }
 
 .single-product .product-image {
-    overflow: hidden;
-    position: relative;
+  overflow: hidden;
+  position: relative;
 }
 
 .single-product .product-image .sale-tag {
-    background: #f73232;
-    border-radius: 2px;
-    font-size: 12px;
-    color: #fff;
-    font-weight: bold;
-    position: absolute;
-    top: 0;
-    padding: 5px 10px;
-    left: 0;
+  background: #f73232;
+  border-radius: 2px;
+  font-size: 12px;
+  color: #fff;
+  font-weight: bold;
+  position: absolute;
+  top: 0;
+  padding: 5px 10px;
+  left: 0;
 }
 
 .single-product .product-image .new-tag {
-    background: #0167f3;
-    border-radius: 2px;
-    font-size: 12px;
-    color: #fff;
-    font-weight: bold;
-    position: absolute;
-    top: 0;
-    padding: 5px 10px;
-    left: 0;
+  background: #0167f3;
+  border-radius: 2px;
+  font-size: 12px;
+  color: #fff;
+  font-weight: bold;
+  position: absolute;
+  top: 0;
+  padding: 5px 10px;
+  left: 0;
 }
 
 .single-product .product-image .button {
-    position: absolute;
-    left: 50%;
-    -webkit-transform: translateX(-50%);
-    transform: translateX(-50%);
-    bottom: -60px;
-    -webkit-transition: all 0.4s ease;
-    transition: all 0.4s ease;
-    opacity: 0;
-    visibility: hidden;
+  position: absolute;
+  left: 50%;
+  -webkit-transform: translateX(-50%);
+  transform: translateX(-50%);
+  bottom: -60px;
+  -webkit-transition: all 0.4s ease;
+  transition: all 0.4s ease;
+  opacity: 0;
+  visibility: hidden;
 }
 
 .single-product .product-image .button .btn {
-    padding: 12px 20px;
-    font-size: 13px;
-    font-weight: 600;
-    width: 140px;
+  padding: 12px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  width: 140px;
 }
 
 .single-product .product-image .button .btn i {
-    font-size: 18px;
-    position: relative;
-    top: 2px;
+  font-size: 18px;
+  position: relative;
+  top: 2px;
 }
 
 .single-product .product-image img {
-    width: 100%;
-    -webkit-transition: all 0.4s ease;
-    transition: all 0.4s ease;
+  width: 100%;
+  -webkit-transition: all 0.4s ease;
+  transition: all 0.4s ease;
 }
 
 .single-product:hover .product-image .button {
-    bottom: 30px;
-    opacity: 1;
-    visibility: visible;
+  bottom: 30px;
+  opacity: 1;
+  visibility: visible;
 }
 
 .single-product:hover .product-image img {
-    -webkit-transform: scale(1.1);
-    transform: scale(1.1);
+  -webkit-transform: scale(1.1);
+  transform: scale(1.1);
 }
 
 .single-product .product-info {
-    padding: 20px;
-    background-color: #fff;
+  padding: 20px;
+  background-color: #fff;
 }
 
 .single-product .product-info .category {
-    color: #888;
-    font-size: 13px;
-    display: block;
-    margin-bottom: 2px;
+  color: #888;
+  font-size: 13px;
+  display: block;
+  margin-bottom: 2px;
 }
 
 .single-product .product-info .title a {
-    font-size: 16px;
-    font-weight: 700;
-    color: #081828;
+  font-size: 16px;
+  font-weight: 700;
+  color: #081828;
 }
 
 @media only screen and (min-width: 768px) and (max-width: 991px),
 (max-width: 767px) {
-    .single-product .product-info .title a {
-        font-size: 15px;
-    }
+  .single-product .product-info .title a {
+    font-size: 15px;
+  }
 }
 
 .single-product .product-info .title a:hover {
-    color: #0167f3;
+  color: #0167f3;
 }
 
 .single-product .product-info .review {
-    margin-top: 5px;
+  margin-top: 5px;
 }
 
 .single-product .product-info .review li {
-    display: inline-block;
+  display: inline-block;
 }
 
 .single-product .product-info .review li i {
-    color: #fecb00;
-    font-size: 13px;
+  color: #fecb00;
+  font-size: 13px;
 }
 
 .single-product .product-info .review li span {
-    display: inline-block;
-    margin-left: 4px;
-    color: #888;
-    font-size: 13px;
+  display: inline-block;
+  margin-left: 4px;
+  color: #888;
+  font-size: 13px;
 }
 
 .single-product .product-info .price {
-    margin-top: 15px;
+  margin-top: 15px;
 }
 
 .single-product .product-info .price span {
-    font-size: 17px;
-    font-weight: 700;
-    color: #0167f3;
-    display: inline-block;
+  font-size: 17px;
+  font-weight: 700;
+  color: #0167f3;
+  display: inline-block;
 }
 
 .single-product .product-info .price .discount-price {
-    margin: 0;
-    color: #aaaaaa;
-    text-decoration: line-through;
-    font-weight: normal;
-    margin-left: 10px;
-    font-size: 14px;
-    display: inline-block;
+  margin: 0;
+  color: #aaaaaa;
+  text-decoration: line-through;
+  font-weight: normal;
+  margin-left: 10px;
+  font-size: 14px;
+  display: inline-block;
 }
 
 a {
-    text-decoration: none;
+  text-decoration: none;
 }
 
 .banner-hover {
-    position: relative;
-    overflow: hidden;
-    cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
 }
 
 .banner-hover .hover-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    opacity: 0;
-    transition: opacity 0.3s ease;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
 .banner-hover:hover .hover-overlay {
-    opacity: 1;
+  opacity: 1;
 }
 </style>

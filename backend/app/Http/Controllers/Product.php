@@ -152,6 +152,7 @@ class Product extends Controller
                     'reply_text' => $value->reply_text,
                     'image' => $value->images,
                     'rating' => $value->rating,
+                    'status' => $value->status,
                 ];
             });
 

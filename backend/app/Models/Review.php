@@ -13,6 +13,7 @@ class Review extends Model
     protected $fillable = [
         'customer_id',
         'product_id',
+        'order_item_id',
         'reply_customer_id',
         'reply_text',
         'rating',
@@ -20,15 +21,22 @@ class Review extends Model
         'created_at',
     ];
 
-    public function customer(){
+    public function customer()
+    {
         return $this->belongsTo(User::class, 'customer_id');
     }
-    public function admin(){
+    public function admin()
+    {
         return $this->belongsTo(User::class, 'reply_customer_id');
     }
 
-    public function images(){
+    public function images()
+    {
         return $this->hasMany(Review_image::class);
     }
 
+    public function product()
+    {
+        return $this->belongsTo(Product::class, 'product_id');
+    }
 }

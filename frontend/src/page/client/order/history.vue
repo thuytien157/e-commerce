@@ -12,6 +12,8 @@ const orders = ref(null);
 const isLoading = ref(true);
 const currentStatus = ref("pendingConfirmation");
 const orderToReview = ref(null);
+const isLoadingReview = ref(false);
+const errors = ref({});
 
 const getOrder = async () => {
     isLoading.value = true;
@@ -23,8 +25,6 @@ const getOrder = async () => {
             }
         );
         orders.value = res.data.orders;
-        // console.log(orders.value.order_items);
-
     } catch (error) {
         console.log(error);
     } finally {
@@ -82,6 +82,7 @@ const repayOrder = async (orderId) => {
         console.log(error);
     }
 };
+
 const isLoadingModal = ref(false);
 const openReviewModal = async (orderId) => {
     isLoadingModal.value = true;
@@ -93,7 +94,7 @@ const openReviewModal = async (orderId) => {
             }
         );
         const orderData = res.data.order;
-        errors.value = {}
+        errors.value = {};
         if (orderData && orderData.order_items) {
             orderData.order_items.forEach((detail) => {
                 if (!detail.review_temp) {
@@ -108,7 +109,6 @@ const openReviewModal = async (orderId) => {
         orderToReview.value = orderData;
         const reviewModal = new Modal(document.getElementById("reviewModal"));
         reviewModal.show();
-
     } catch (error) {
         console.log(error);
     } finally {
@@ -136,10 +136,10 @@ const getRatingText = (rating) => {
 const handleImageUpload = (detail, event) => {
     detail.review_temp.images = Array.from(event.target.files);
 };
-const errors = ref({});
+
 const submitAllReviews = async () => {
     const reviewsToSubmit = orderToReview.value.order_items.filter(
-        (detail) => detail.review_temp && detail.review_temp.rating > 0
+        (detail) => detail.review_temp && detail.review_temp.rating > 0 && detail.reviewed == false
     );
 
     if (reviewsToSubmit.length === 0) {
@@ -155,8 +155,10 @@ const submitAllReviews = async () => {
         return;
     }
 
-    let allSuccess = true;
-    for (const detail of reviewsToSubmit) {
+    isLoadingReview.value = true;
+    errors.value = {};
+
+    const reviewPromises = reviewsToSubmit.map((detail) => {
         const formData = new FormData();
         formData.append("order_detail_id", detail.id);
         formData.append("rating", detail.review_temp.rating);
@@ -165,36 +167,23 @@ const submitAllReviews = async () => {
             formData.append(`images[${index}]`, image);
         });
 
-        try {
-            await axios.post("http://127.0.0.1:8000/api/review", formData, {
-                headers: {
-                    Authorization: `Bearer ${store.token}`,
-                },
-            });
-            errors.value = {}
-        } catch (error) {
-            if (error.response && error.response.status === 422) {
-                errors.value = {};
-                const errs = error.response.data.errors;
+        return axios.post("http://127.0.0.1:8000/api/review", formData, {
+            headers: {
+                Authorization: `Bearer ${store.token}`,
+            },
+        });
+    });
 
-                if (errs) {
-                    for (const key in errs) {
-                        if (key.startsWith("images")) {
-                            if (!errors.value.images) errors.value.images = [];
-                            errors.value.images.push(...errs[key]);
-                        } else {
-                            errors.value[key] = errs[key];
-                        }
-                    }
-                }
-            }
-            allSuccess = false;
-            break;
+    try {
+        await Promise.all(reviewPromises);
+
+        const reviewModal = Modal.getInstance(document.getElementById("reviewModal"));
+        if (reviewModal) {
+            reviewModal.hide();
         }
-    }
 
-    if (allSuccess) {
         await getOrder();
+
         Swal.fire({
             toast: true,
             position: "top-end",
@@ -204,6 +193,33 @@ const submitAllReviews = async () => {
             timer: 2000,
             timerProgressBar: true,
         });
+    } catch (error) {
+        console.log(error);
+        if (error.response && error.response.status === 422) {
+            const errs = error.response.data.errors;
+            if (errs) {
+                for (const key in errs) {
+                    if (key.startsWith("images")) {
+                        if (!errors.value.images) errors.value.images = [];
+                        errors.value.images.push(...errs[key]);
+                    } else {
+                        errors.value[key] = errs[key];
+                    }
+                }
+            }
+        }
+
+        Swal.fire({
+            toast: true,
+            position: "top-end",
+            icon: "error",
+            title: "Gửi đánh giá thất bại!",
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+        });
+    } finally {
+        isLoadingReview.value = false;
     }
 };
 
@@ -375,6 +391,11 @@ onMounted(async () => {
     <div class="modal fade" id="reviewModal" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
             <div class="modal-content rounded-4 shadow" v-if="orderToReview">
+                <div v-if="isLoadingReview" class="loading-overlay-modal">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
                 <div class="modal-header border-bottom-0">
                     <h5 class="modal-title fw-bold" id="reviewModalLabel">
                         Đánh giá sản phẩm đã mua
@@ -410,8 +431,7 @@ onMounted(async () => {
                                         'bi-star-fill text-warning':
                                             star <= detail.review_temp.rating,
                                         'bi-star': star > detail.review_temp.rating,
-                                    }" @click="detail.review_temp.rating = star"
-                                        style="cursor: pointer; font-size: 1.5rem">
+                                    }" @click="detail.review_temp.rating = star" style="cursor: pointer; font-size: 1.5rem">
                                     </i>
                                     <span class="ms-2 fw-bold text-warning">{{
                                         getRatingText(detail.review_temp.rating)
@@ -429,7 +449,6 @@ onMounted(async () => {
                                     v-model="detail.review_temp.comment"></textarea>
                             </div>
                             <div class="mb-3">
-
                                 <label :for="'review-images-' + detail.id" class="form-label fw-bold small">Thêm ảnh
                                     (Tùy chọn)</label><br>
                                 <small class="text-danger" v-if="errors.images">
@@ -447,9 +466,12 @@ onMounted(async () => {
                     <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">
                         Đóng
                     </button>
-                    <button type="button" class="btn btn-primary rounded-pill px-4" data-bs-dismiss="modal"
-                        aria-label="Close" @click="submitAllReviews">
-                        Gửi tất cả đánh giá
+                    <button type="button" class="btn btn-primary rounded-pill px-4" @click="submitAllReviews"
+                        :disabled="isLoadingReview">
+                        <span v-if="isLoadingReview" class="spinner-border spinner-border-sm" role="status"
+                            aria-hidden="true"></span>
+                        <span v-if="isLoadingReview"> Đang gửi...</span>
+                        <span v-else>Gửi tất cả đánh giá</span>
                     </button>
                 </div>
             </div>
@@ -465,6 +487,7 @@ onMounted(async () => {
 
 .modal-content {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    position: relative;
 }
 
 .modal-header {
@@ -532,6 +555,22 @@ onMounted(async () => {
     justify-content: center;
     align-items: center;
     z-index: 9999;
+}
+
+/* Thêm CSS cho loading overlay chỉ trong modal */
+.loading-overlay-modal {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1050;
+    /* Z-index cao hơn nội dung modal nhưng thấp hơn modal backdrop */
+    border-radius: 0.5rem;
 }
 
 .review-form .form-control {
