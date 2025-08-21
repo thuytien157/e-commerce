@@ -84,8 +84,10 @@ const errors = ref({});
 const router = useRouter();
 const store = useTokenUser();
 const login = async () => {
+    isLoading.value = true;
+    errors.value = {};
+
     try {
-        isLoading.value = true;
         const res = await axios.post(
             "http://127.0.0.1:8000/api/login",
             {
@@ -93,15 +95,15 @@ const login = async () => {
                 password: password.value,
             }
         );
+
         const userStr = {
             username: res.data.username,
             id: res.data.user,
+            role: res.data.role,
         };
         store.setAuth(res.data.token, userStr);
-        errors.value = {};
 
-        router.push("/home");
-        Swal.fire({
+        await Swal.fire({
             toast: true,
             position: "top-end",
             icon: "success",
@@ -110,24 +112,44 @@ const login = async () => {
             timer: 1000,
             timerProgressBar: true,
         });
-
-    } catch (error) {
-        if (error.response && error.response.status === 422) {
-            errors.value = {};
-            errors.value = error.response.data.errors;
-        } else if (error.response && error.response.status === 401) {
-            Swal.fire({
-                toast: true,
-                position: "top-end",
-                icon: "error",
-                title: 'Thông tin đăng nhập không chính xác',
-                showConfirmButton: false,
-                timer: 3000,
-                timerProgressBar: true,
-            });
+        if(store.role == 'customer'){
+            router.push("/home");
+        }else{
+            router.push("/admin");
         }
-
-
+    } catch (error) {
+        if (error.response) {
+            if (error.response.status === 422) {
+                errors.value = error.response.data.errors;
+            } else if (error.response.status === 401) {
+                await Swal.fire({
+                    toast: true,
+                    position: "top-end",
+                    icon: "error",
+                    title: "Thông tin đăng nhập không chính xác",
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true,
+                });
+            } else if (error.response.status === 403) {
+                await Swal.fire({
+                    toast: true,
+                    position: "top-end",
+                    icon: "error",
+                    title: "Tài khoản của bạn đã bị khoá! Không thể đăng nhập",
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true,
+                });
+            } else {
+                console.error('Lỗi không xác định:', error);
+                await Swal.fire({
+                    icon: "error",
+                    title: "Có lỗi xảy ra",
+                    text: "Vui lòng thử lại sau.",
+                });
+            }
+        }
     } finally {
         isLoading.value = false;
     }

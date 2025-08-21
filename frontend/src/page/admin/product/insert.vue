@@ -1,179 +1,3 @@
-<template>
-  <div class="row">
-    <div class="col-md-12">
-      <div class="card card-stats card-raised p-3">
-        <h3 class="text-primary fw-bold">
-          {{ isEdit ? "Sửa sản phẩm" : "Thêm sản phẩm" }}
-        </h3>
-        <form @submit.prevent="saveProduct">
-          <div v-if="isLoading" class="loading-overlay">
-            <div class="spinner-border text-primary" role="status">
-              <span class="visually-hidden">Loading...</span>
-            </div>
-            <div class="loading-text">Đang xử lý...</div>
-          </div>
-
-          <div class="pb-0 border-bottom pb-2">
-            <h5 class="mb-0">Thông tin sản phẩm</h5>
-          </div>
-
-          <div class="card-body">
-            <div class="mb-3 row">
-              <div class="col-6">
-                <label for="name" class="form-label">Tên sản phẩm</label><br />
-                <input type="text" class="form-control" id="name" v-model="productform.name" />
-              </div>
-              <div class="col-6">
-                <label for="price" class="form-label">Giá</label><br />
-                <input type="number" class="form-control" id="price" v-model="productform.price" />
-              </div>
-            </div>
-            <div class="mb-3 row">
-              <div class="col-6">
-                <label for="category" class="form-label">Danh mục</label><br />
-                <select class="form-select rounded-2" v-model="productform.category_id">
-                  <option :value="null">Chọn danh mục</option>
-                  <template v-for="category in categories" :key="category.id">
-                    <option :value="category.id">
-                      {{ category.name }}
-                    </option>
-                    <template v-for="child in category.children" :key="child.id">
-                      <option :value="child.id">-- {{ child.name }}</option>
-                    </template>
-                  </template>
-                </select>
-              </div>
-              <div class="col-6">
-                <label for="price" class="form-label">Trạng thái sản phẩm</label><br />
-                <select class="form-select" id="category" v-model="productform.status">
-                  <option :value="null" disabled>
-                    Chọn trạng thái sản phẩm
-                  </option>
-                  <option value="discontinued">Ẩn</option>
-                  <option value="published">Hiện</option>
-                </select>
-              </div>
-            </div>
-            <div class="mb-3">
-              <label for="long_description" class="form-label">Mô tả ngắn</label><br />
-              <QuillEditor ref="quillRef" v-model:content="productform.description" :toolbar="toolbarOptions"
-                content-type="html" theme="snow" style="height: 300px" />
-            </div>
-          </div>
-          <div class="card p-3 mb-3">
-            <div class="pb-0 d-flex justify-content-between align-items-center">
-              <h5 class="mb-0">Tạo biến thể</h5>
-            </div>
-            <div class="card-body">
-              <div class="row">
-                <div v-for="attribute in allAttributes" :key="attribute.id" class="col-6">
-                  <label class="form-label">{{ attribute.name }}</label>
-                  <v-select :options="attribute.attribute_values" label="value_name" :reduce="(option) => option.id"
-                    v-model="selectedAttributeValues[attribute.id]"
-                    :placeholder="`-- Chọn ${attribute.name.toLowerCase()} --`">
-                    <template #option="option">
-                      <div v-if="attribute.name === 'Màu sắc'" style="display: flex; align-items: center">
-                        <div class="rounded-circle me-2" :style="{
-                          width: '1.25rem',
-                          height: '1.25rem',
-                          backgroundColor: option.value_name,
-                          border: '1px solid #ccc',
-                        }"></div>
-                        {{ option.value_name }}
-                      </div>
-                      <div v-else>
-                        {{ option.value_name }}
-                      </div>
-                    </template>
-                  </v-select>
-                </div>
-              </div>
-              <button type="button" class="btn btn-primary mt-3" @click="addManualVariant">
-                Thêm biến thể
-              </button>
-            </div>
-          </div>
-          <hr />
-
-          <div class="card p-3">
-            <div class="pb-0 d-flex justify-content-between align-items-center">
-              <h5 class="mb-0">
-                Danh sách biến thể đã thêm ({{ variantfrom.length }} biến thể)
-              </h5>
-            </div>
-            <div v-for="(variant, index) in variantfrom" :key="index">
-              <div class="mb-4 p-3 rounded border">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                  <h6 class="mb-0">Biến thể #{{ index + 1 }}</h6>
-                  <button v-if="variant.order_count == 0" type="button" class="btn btn-danger btn-sm"
-                    @click="removeVariant(index)">
-                    <i class="bi bi-x"></i> Xóa biến thể
-                  </button>
-                </div>
-                <div class="row">
-                  <div class="mb-3 row">
-                    <div class="col-2">
-                      <label for="stock_quantity" class="form-label">Số lượng tồn kho</label><br />
-                      <input type="number" class="form-control" id="name" min="1" v-model="variant.stock_quantity" />
-                    </div>
-                    <div class="col-5">
-                      <label for="slug" class="form-label">Slug</label><br />
-                      <input type="text" class="form-control" :value="variant.slug" disabled />
-                    </div>
-                    <div class="col-5">
-                      <label for="sku" class="form-label">SKU</label><br />
-                      <input type="text" class="form-control" :value="variant.sku" disabled />
-                    </div>
-                  </div>
-                  <div class="mb-3">
-                    <label class="form-label">Ảnh chính</label><br />
-                    <input type="file" class="form-control" @change="onMainImageChange($event, index)" />
-                    <div v-if="variant.image_preview" class="mt-2 text-center">
-                      <img :src="variant.image_preview" @click="openImage(variant.image_preview)" alt="Variant Image"
-                        class="img-fluid rounded" style="max-height: 150px" />
-                    </div>
-                  </div>
-                  <div class="mb-3">
-                    <label class="form-label">Ảnh chi tiết</label>
-                    <input type="file" class="form-control" multiple @change="onDetailImagesChange($event, index)" />
-                    <div v-if="variant.images_preview.length" class="mt-2 text-center">
-                      <div v-for="(img, i) in variant.images_preview" :key="i" @click="openImage(img)"
-                        class="d-inline-block me-2">
-                        <img :src="img" alt="Variant Image" class="img-fluid rounded" style="max-height: 100px" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div class="card mt-3">
-                  <div class="card-body p-3">
-                    <h6 class="mb-3">Thuộc tính đã chọn:</h6>
-                    <ul class="list-group">
-                      <li v-for="attribute in variant.attributes" :key="attribute.id"
-                        class="list-group-item d-flex justify-content-between">
-                        <span>{{ attribute.name }}:</span>
-                        <span class="fw-bold">{{ attribute.attribute_value_name }}</span>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-              <hr />
-            </div>
-          </div>
-          <button type="submit" class="btn btn-primary mt-2" :disabled="isLoading">
-            <span v-if="isLoading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-            <span v-if="isLoading">Đang xử lý...</span>
-            <span v-else>Lưu sản phẩm</span>
-          </button>
-        </form>
-      </div>
-    </div>
-  </div>
-  <div v-if="showModal" class="modal-backdrop" @click="closeImage">
-    <img :src="selectedImage" class="modal-image" />
-  </div>
-</template>
-
 <script setup>
 import axios from "axios";
 import Swal from "sweetalert2";
@@ -563,6 +387,181 @@ onMounted(() => {
   }
 });
 </script>
+<template>
+  <div class="row">
+    <div class="col-md-12">
+      <div class="card card-stats card-raised p-3">
+        <h3 class="text-primary fw-bold">
+          {{ isEdit ? "Sửa sản phẩm" : "Thêm sản phẩm" }}
+        </h3>
+        <form @submit.prevent="saveProduct">
+          <div v-if="isLoading" class="loading-overlay">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <div class="loading-text">Đang xử lý...</div>
+          </div>
+
+          <div class="pb-0 border-bottom pb-2">
+            <h5 class="mb-0">Thông tin sản phẩm</h5>
+          </div>
+
+          <div class="card-body">
+            <div class="mb-3 row">
+              <div class="col-6">
+                <label for="name" class="form-label">Tên sản phẩm</label><br />
+                <input type="text" class="form-control" id="name" v-model="productform.name" />
+              </div>
+              <div class="col-6">
+                <label for="price" class="form-label">Giá</label><br />
+                <input type="number" class="form-control" id="price" v-model="productform.price" />
+              </div>
+            </div>
+            <div class="mb-3 row">
+              <div class="col-6">
+                <label for="category" class="form-label">Danh mục</label><br />
+                <select class="form-select rounded-2" v-model="productform.category_id">
+                  <option :value="null">Chọn danh mục</option>
+                  <template v-for="category in categories" :key="category.id">
+                    <option :value="category.id">
+                      {{ category.name }}
+                    </option>
+                    <template v-for="child in category.children" :key="child.id">
+                      <option :value="child.id">-- {{ child.name }}</option>
+                    </template>
+                  </template>
+                </select>
+              </div>
+              <div class="col-6">
+                <label for="price" class="form-label">Trạng thái sản phẩm</label><br />
+                <select class="form-select" id="category" v-model="productform.status">
+                  <option :value="null" disabled>
+                    Chọn trạng thái sản phẩm
+                  </option>
+                  <option value="discontinued">Ẩn</option>
+                  <option value="published">Hiện</option>
+                </select>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label for="long_description" class="form-label">Mô tả ngắn</label><br />
+              <QuillEditor ref="quillRef" v-model:content="productform.description" :toolbar="toolbarOptions"
+                content-type="html" theme="snow" style="height: 300px" />
+            </div>
+          </div>
+          <div class="card p-3 mb-3">
+            <div class="pb-0 d-flex justify-content-between align-items-center">
+              <h5 class="mb-0">Tạo biến thể</h5>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div v-for="attribute in allAttributes" :key="attribute.id" class="col-6">
+                  <label class="form-label">{{ attribute.name }}</label>
+                  <v-select :options="attribute.attribute_values" label="value_name" :reduce="(option) => option.id"
+                    v-model="selectedAttributeValues[attribute.id]"
+                    :placeholder="`-- Chọn ${attribute.name.toLowerCase()} --`">
+                    <template #option="option">
+                      <div v-if="attribute.name === 'Màu sắc'" style="display: flex; align-items: center">
+                        <div class="rounded-circle me-2" :style="{
+                          width: '1.25rem',
+                          height: '1.25rem',
+                          backgroundColor: option.value_name,
+                          border: '1px solid #ccc',
+                        }"></div>
+                        {{ option.value_name }}
+                      </div>
+                      <div v-else>
+                        {{ option.value_name }}
+                      </div>
+                    </template>
+                  </v-select>
+                </div>
+              </div>
+              <button type="button" class="btn btn-primary mt-3" @click="addManualVariant">
+                Thêm biến thể
+              </button>
+            </div>
+          </div>
+          <hr />
+
+          <div class="card p-3">
+            <div class="pb-0 d-flex justify-content-between align-items-center">
+              <h5 class="mb-0">
+                Danh sách biến thể đã thêm ({{ variantfrom.length }} biến thể)
+              </h5>
+            </div>
+            <div v-for="(variant, index) in variantfrom" :key="index">
+              <div class="mb-4 p-3 rounded border">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <h6 class="mb-0">Biến thể #{{ index + 1 }}</h6>
+                  <button v-if="variant.order_count == 0" type="button" class="btn btn-danger btn-sm"
+                    @click="removeVariant(index)">
+                    <i class="bi bi-x"></i> Xóa biến thể
+                  </button>
+                </div>
+                <div class="row">
+                  <div class="mb-3 row">
+                    <div class="col-2">
+                      <label for="stock_quantity" class="form-label">Số lượng tồn kho</label><br />
+                      <input type="number" class="form-control" id="name" min="1" v-model="variant.stock_quantity" />
+                    </div>
+                    <div class="col-5">
+                      <label for="slug" class="form-label">Slug</label><br />
+                      <input type="text" class="form-control" :value="variant.slug" disabled />
+                    </div>
+                    <div class="col-5">
+                      <label for="sku" class="form-label">SKU</label><br />
+                      <input type="text" class="form-control" :value="variant.sku" disabled />
+                    </div>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Ảnh chính</label><br />
+                    <input type="file" class="form-control" @change="onMainImageChange($event, index)" />
+                    <div v-if="variant.image_preview" class="mt-2 text-center">
+                      <img :src="variant.image_preview" @click="openImage(variant.image_preview)" alt="Variant Image"
+                        class="img-fluid rounded" style="max-height: 150px" />
+                    </div>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label">Ảnh chi tiết</label>
+                    <input type="file" class="form-control" multiple @change="onDetailImagesChange($event, index)" />
+                    <div v-if="variant.images_preview.length" class="mt-2 text-center">
+                      <div v-for="(img, i) in variant.images_preview" :key="i" @click="openImage(img)"
+                        class="d-inline-block me-2">
+                        <img :src="img" alt="Variant Image" class="img-fluid rounded" style="max-height: 100px" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="card mt-3">
+                  <div class="card-body p-3">
+                    <h6 class="mb-3">Thuộc tính đã chọn:</h6>
+                    <ul class="list-group">
+                      <li v-for="attribute in variant.attributes" :key="attribute.id"
+                        class="list-group-item d-flex justify-content-between">
+                        <span>{{ attribute.name }}:</span>
+                        <span class="fw-bold">{{ attribute.attribute_value_name }}</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+              <hr />
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary mt-2" :disabled="isLoading">
+            <span v-if="isLoading" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            <span v-if="isLoading">Đang xử lý...</span>
+            <span v-else>Lưu sản phẩm</span>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div v-if="showModal" class="modal-backdrop" @click="closeImage">
+    <img :src="selectedImage" class="modal-image" />
+  </div>
+</template>
 
 <style scoped>
 .modal-backdrop {

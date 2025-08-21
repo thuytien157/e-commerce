@@ -1,127 +1,3 @@
-<template>
-  <div class="row">
-    <div class="col-md-12">
-      <div class="card card-stats card-raised">
-        <div class="card-body">
-          <div class="d-flex justify-content-between">
-            <h3 class="text-primary fw-bold">
-              {{ isEdit ? "Sửa thuộc tính" : "Thêm thuộc tính" }}
-            </h3>
-            <div>
-              <button
-                @click="$router.back()"
-                class="btn btn-outline-secondary rounded-0"
-              >
-                <i class="bi bi-arrow-counterclockwise"></i> Quay lại
-              </button>
-            </div>
-          </div>
-          <form
-            class="row mt-2 justify-content-center"
-            @submit.prevent="insertAttribute"
-          >
-            <div class="col-md-8">
-              <div class="card rounded-0 border-0 shadow mb-4">
-                <div class="card-body">
-                  <div class="row">
-                    <div class="col-12 mb-3">
-                      <label for="name" class="form-label"
-                        >Tên thuộc tính
-                        <span class="text-danger">*</span></label
-                      ><br />
-                      <small class="text-danger" v-if="errors.name">{{
-                        errors.name[0]
-                      }}</small>
-                      <input
-                        type="text"
-                        class="form-control rounded-0"
-                        id="name"
-                        v-model="newAttribute.name"
-                      />
-                    </div>
-                    <div class="col-12 mb-3">
-                      <label for="type" class="form-label"
-                        >Loại thuộc tính
-                        <span class="text-danger">*</span></label
-                      ><br />
-                      <small class="text-danger" v-if="errors.type">{{
-                        errors.type[0]
-                      }}</small>
-                      <select
-                        class="form-select rounded-0"
-                        v-model="newAttribute.type"
-                      >
-                        <option :value="null">
-                          -- Chọn loại thuộc tính --
-                        </option>
-                        <option value="select">Select</option>
-                        <option value="button">Button</option>
-                        <option value="color">Color</option>
-                      </select>
-                    </div>
-                    <div class="col-12 mb-3">
-                      <div
-                        class="d-flex align-items-center justify-content-between"
-                      >
-                        <label for="value_name" class="form-label mb-0"
-                          >Giá trị thuộc tính
-                          <span class="text-danger">*</span></label
-                        >
-                        <button
-                          type="button"
-                          class="btn btn-sm btn-outline-success"
-                          @click="addValueInput"
-                        >
-                          Thêm giá trị
-                        </button>
-                      </div>
-                      <small class="text-danger" v-if="errors.values">{{
-                        errors.values[0]
-                      }}</small>
-                      <div
-                        v-for="(valueObj, index) in newAttribute.values"
-                        :key="index"
-                        class="d-flex gap-2 mt-2"
-                      >
-                        <input
-                          v-if="newAttribute.type === 'color'"
-                          type="color"
-                          class="form-control form-control-color w-100"
-                          v-model="valueObj.value_name"
-                          :disabled="valueObj.variants_count > 0"
-                        />
-                        <input
-                          v-else
-                          type="text"
-                          class="form-control rounded-0"
-                          :placeholder="`Nhập giá trị ${index + 1}`"
-                          v-model="valueObj.value_name"
-                          :disabled="valueObj.variants_count > 0"
-                        />
-                        <button
-                          type="button"
-                          class="btn btn-sm btn-outline-danger"
-                          v-if="valueObj.variants_count === 0"
-                          @click="removeValueInput(index)"
-                        >
-                          Xóa
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <button type="submit" class="btn btn-primary">
-                {{ isEdit ? "Cập nhật" : "Thêm thuộc tính" }}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-  </div>
-</template>
-
 <script setup>
 import axios from "axios";
 import Swal from "sweetalert2";
@@ -250,6 +126,129 @@ onMounted(() => {
   }
 });
 </script>
+<template>
+  <div class="row">
+    <div class="col-md-12">
+      <div class="card card-stats card-raised">
+        <div class="card-body">
+          <div class="d-flex justify-content-between">
+            <h3 class="text-primary fw-bold">
+              {{ isEdit ? "Sửa thuộc tính" : "Thêm thuộc tính" }}
+            </h3>
+            <div>
+              <button
+                @click="$router.back()"
+                class="btn btn-outline-secondary rounded-0"
+              >
+                <i class="bi bi-arrow-counterclockwise"></i> Quay lại
+              </button>
+            </div>
+          </div>
+          <form
+            class="row mt-2 justify-content-center"
+            @submit.prevent="insertAttribute"
+          >
+            <div class="col-md-8">
+              <div class="card rounded-0 border-0 shadow mb-4">
+                <div class="card-body">
+                  <div class="row">
+                    <div class="col-12 mb-3">
+                      <label for="name" class="form-label"
+                        >Tên thuộc tính
+                        <span class="text-danger">*</span></label
+                      ><br />
+                      <small class="text-danger" v-if="errors.name">{{
+                        errors.name[0]
+                      }}</small>
+                      <input
+                        type="text"
+                        class="form-control rounded-0"
+                        id="name"
+                        v-model="newAttribute.name"
+                      />
+                    </div>
+                    <div class="col-12 mb-3">
+                      <label for="type" class="form-label"
+                        >Loại thuộc tính
+                        <span class="text-danger">*</span></label
+                      ><br />
+                      <small class="text-danger" v-if="errors.type">{{
+                        errors.type[0]
+                      }}</small>
+                      <select
+                        class="form-select rounded-0"
+                        v-model="newAttribute.type"
+                      >
+                        <option :value="null">
+                          -- Chọn loại thuộc tính --
+                        </option>
+                        <option value="select">Select</option>
+                        <option value="button">Button</option>
+                        <option value="color">Color</option>
+                      </select>
+                    </div>
+                    <div class="col-12 mb-3">
+                      <div
+                        class="d-flex align-items-center justify-content-between"
+                      >
+                        <label for="value_name" class="form-label mb-0"
+                          >Giá trị thuộc tính
+                          <span class="text-danger">*</span></label
+                        >
+                        <button
+                          type="button"
+                          class="btn btn-sm btn-outline-success"
+                          @click="addValueInput"
+                        >
+                          Thêm giá trị
+                        </button>
+                      </div>
+                      <small class="text-danger" v-if="errors.values">{{
+                        errors.values[0]
+                      }}</small>
+                      <div
+                        v-for="(valueObj, index) in newAttribute.values"
+                        :key="index"
+                        class="d-flex gap-2 mt-2"
+                      >
+                        <input
+                          v-if="newAttribute.type === 'color'"
+                          type="color"
+                          class="form-control form-control-color w-100"
+                          v-model="valueObj.value_name"
+                          :disabled="valueObj.variants_count > 0"
+                        />
+                        <input
+                          v-else
+                          type="text"
+                          class="form-control rounded-0"
+                          :placeholder="`Nhập giá trị ${index + 1}`"
+                          v-model="valueObj.value_name"
+                          :disabled="valueObj.variants_count > 0"
+                        />
+                        <button
+                          type="button"
+                          class="btn btn-sm btn-outline-danger"
+                          v-if="valueObj.variants_count === 0"
+                          @click="removeValueInput(index)"
+                        >
+                          Xóa
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <button type="submit" class="btn btn-primary">
+                {{ isEdit ? "Cập nhật" : "Thêm thuộc tính" }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
 
 <style scoped>
 .category-scroll-list {

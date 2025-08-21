@@ -2,7 +2,6 @@
 import { useCartStore } from '@/component/store/cart';
 import { ref } from 'vue';
 
-const cartItems = ref([]);
 const cartStore = useCartStore()
 const formatNumber = (num) => {
     return new Intl.NumberFormat('vi-VN').format(num);
@@ -22,7 +21,10 @@ const formatNumber = (num) => {
                                 <img :src="item.image" alt="Sản phẩm" class="img-thumbnail">
                                 <div class="ms-3">
                                     <p class="mb-1 fw-bold">{{ item.productName }}</p>
-                                    <div class="text-muted small">Kích cỡ: {{ item.selectedSize }}</div>
+                                    <div class="text-muted small"> {{ item.selectedAttributes.join(", ") }}</div>
+                                    <p><a href="#"
+                                            class="link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">Sửa</a>
+                                    </p>
                                 </div>
                             </div>
                             <div class="cart-action-col d-flex justify-content-between">
@@ -35,9 +37,12 @@ const formatNumber = (num) => {
                                         :value="item.quantity" min="1" readonly>
                                     <button class="btn btn-quantity" type="button"
                                         @click="cartStore.increment(item.variantId)">+</button>
+
                                 </div>
-                                <i class="bi bi-trash3-fill" @click.prevent="cartStore.removeItem(item.variantId)"
-                                    style="color: red;"></i>
+                                <div class="d-flex gap-4">
+                                    <i class="bi bi-trash3-fill" @click.prevent="cartStore.removeItem(item.variantId)"
+                                        style="color: red;"></i>
+                                </div>
 
                             </div>
                         </div>
@@ -51,10 +56,6 @@ const formatNumber = (num) => {
                     <div class="card">
                         <div class="card-body" id="tomtat">
                             <h5 class="card-title fw-bold" style="color: blue;">Tóm tắt đơn hàng</h5>
-                            <!-- <div class="d-flex justify-content-between">
-                                <p>Tổng sản phẩm:</p>
-                                <p style="color: blue;">{{ cartItems.length }}</p>
-                            </div> -->
                             <div class="d-flex justify-content-between">
                                 <p>Tổng tiền:</p>
                                 <p class="fw-bold" style="color: blue;">{{ formatNumber(cartStore.totalPrice) }} VND</p>

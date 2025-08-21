@@ -85,6 +85,7 @@ class User extends Controller
                 'message' => 'Đăng ký thành công',
                 'user' => $user->id,
                 'username' => $user->username,
+                'role' => $user->role,
                 'token' => $token
             ],
             201
@@ -93,7 +94,6 @@ class User extends Controller
 
     function login(Request $request)
     {
-
         $validator = Validator::make(
             $request->all(),
             [
@@ -111,7 +111,7 @@ class User extends Controller
 
         if ($validator->fails()) {
             return response()->json(['errors' => $validator->errors()], 422);
-        };
+        }
 
         $credentials = [
             'email' => $request->email,
@@ -124,13 +124,21 @@ class User extends Controller
             ], 401);
         }
 
-        $user = Auth::user();
+        $user = ModelsUser::where('email', $request->email)->first();
+        if ($user->status == 'banned') {
+            Auth::logout();
+            return response()->json([
+                'message' => 'Tài khoản của bạn đã bị khóa!'
+            ], 403);
+        }
+
         $token = $user->createToken('auth')->plainTextToken;
         return response()->json([
             'message' => 'Đăng nhập thành công!',
             'user' => $user->id,
             'username' => $user->username,
-            'token' => $token
+            'token' => $token,
+            'role' => $user->role,
         ]);
     }
 
@@ -159,13 +167,17 @@ class User extends Controller
             $socialUser = Socialite::driver($provider)->stateless()->user();
             $user = ModelsUser::where('email', $socialUser->getEmail())->first();
 
-            // Email đã tồn tại và là tài khoản đăng ký bằng mật khẩu
+            if ($user) {
+                if ($user->status === 'banned') {
+                    return redirect("http://localhost:5173/login-fail?banned=true");
+                }
+            }
+
             if ($user && $user->provider_name === null) {
                 $token = $user->createToken('token')->plainTextToken;
                 return redirect("http://localhost:5173/login-success?token=$token&login_existing_account=true");
             }
 
-            // Email chưa tồn tại, tạo tài khoản mới
             if (!$user) {
                 $user = ModelsUser::create([
                     'email' => $socialUser->getEmail(),
@@ -177,17 +189,10 @@ class User extends Controller
                 ]);
             }
 
-            // Đăng nhập thành công (tài khoản mới hoặc tài khoản social đã tồn tại)
             $token = $user->createToken('token')->plainTextToken;
-            return redirect("http://localhost:5173/login-success?token=$token&username=" . urlencode($user->username) . '&id=' . $user->id);
-            // return response()->json([
-            //     'mess' => 'thành công'
-            // ]);
+            return redirect("http://localhost:5173/login-success?token=$token&username=" . urlencode($user->username) . '&id=' . $user->id . '&role=' . $user->role);
         } catch (\Exception $e) {
-            return response()->json([
-                'error' => 'Đăng nhập thất bại!',
-                'message' => $e->getMessage()
-            ], 401);
+            return redirect("http://localhost:5173/login-fail?error=Đăng nhập thất bại!");
         }
     }
 
@@ -213,6 +218,10 @@ class User extends Controller
         $user = ModelsUser::where('email', $request->email)->first();
         if (!$user) {
             return response()->json(['message' => 'Email không tồn tại trong hệ thống!'], 404);
+        }
+
+        if ($user->status === 'banned') {
+            return response()->json(['message' => 'Tài khoản của bạn đã bị khóa!'], 403);
         }
 
         $otpcode = random_int(10000, 99999);
@@ -371,6 +380,16 @@ class User extends Controller
             return response()->json(['message' => 'User chưa đăng nhập'], 401);
         }
 
+        $existingAddressesCount = Address::where('customer_id', $id)->count();
+        $isDefault = false;
+        if ($existingAddressesCount === 0) {
+            $isDefault = true;
+        } else if ($request->filled('default') && $request->default) {
+            $isDefault = true;
+            Address::where('customer_id', $id)
+                ->update(['default' => false]);
+        }
+
         $address = new Address();
         $address->customer_id = $id;
         $address->customer_name = $request->customer_name;
@@ -379,12 +398,7 @@ class User extends Controller
         $address->province_id = $request->province_id;
         $address->district_id = $request->district_id;
         $address->ward_code = $request->ward_code;
-        if ($request->default) {
-            Address::where('customer_id', $id)
-                ->update(['default' => false]);
-        }
-        $address->default = $request->default;
-
+        $address->default = $isDefault;
 
         if ($address->save()) {
             return response()->json([
@@ -523,5 +537,93 @@ class User extends Controller
         return response()->json([
             'orders' => $orders
         ]);
+    }
+
+    function getAllUser()
+    {
+        $id = Auth::id();
+        $users = ModelsUser::with('addresses', 'orders')
+            ->where('id', '!=', $id)
+            ->where('role', '!=', 'manager')
+            ->get();
+
+        return response()->json([
+            'users' => $users
+        ]);
+    }
+
+    function assignRole($id)
+    {
+        $manager = Auth::user();
+
+        if (!$manager) {
+            return response()->json([
+                'errors' => 'Unauthenticated.'
+            ], 401);
+        }
+
+        if ($manager->role !== 'manager') {
+            return response()->json([
+                'errors' => 'Bạn không có quyền này'
+            ], 403);
+        }
+
+        $userToAssign = ModelsUser::find($id);
+
+        if (!$userToAssign) {
+            return response()->json([
+                'errors' => 'Không tìm thấy người dùng'
+            ], 404);
+        }
+
+        if ($userToAssign->id === $manager->id) {
+            return response()->json([
+                'errors' => 'Bạn không thể thay đổi vai trò của chính mình'
+            ], 403);
+        }
+
+        $userToAssign->role = 'staff';
+        if ($userToAssign->save()) {
+            return response()->json([
+                'mess' => 'Gán vai trò thành công'
+            ], 200);
+        }
+
+        return response()->json([
+            'errors' => 'Có lỗi xảy ra khi gán vai trò'
+        ], 500);
+    }
+
+    function lockUser($id, Request $request)
+    {
+        $manager = Auth::user();
+        if (!$manager) {
+            return response()->json([
+                'errors' => 'Unauthenticated.'
+            ], 401);
+        }
+        if ($manager->role == 'customer') {
+            return response()->json([
+                'errors' => 'Bạn không có quyền này'
+            ], 403);
+        }
+
+        $userToLock = ModelsUser::find($id);
+        if (!$userToLock) {
+            return response()->json([
+                'errors' => 'Không tìm thấy người dùng'
+            ], 404);
+        }
+
+        $userToLock->status = $request->status;
+        if ($userToLock->save()) {
+            return response()->json([
+                'mess' => 'Cập nhật thành công'
+            ], 200);
+        }
+
+        return response()->json([
+            'errors' => 'Có lỗi xảy ra'
+        ], 500);
     }
 }

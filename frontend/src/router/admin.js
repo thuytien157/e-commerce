@@ -3,6 +3,9 @@ const admin = [
     path: "/admin",
     component: () => import("../layouts/AdminLayout.vue"),
     redirect: "/admin/dashboard",
+    meta: {
+          requiresAdmin: true
+      },
     children: [
       {
         path: "dashboard",
@@ -75,6 +78,20 @@ const admin = [
         name: "admin-reviews",
         component: () => import("../page/admin/review/index.vue"),
         meta: { title: "Đánh giá" },
+        props: true,
+      },
+      {
+        path: "order",
+        name: "admin-orders",
+        component: () => import("../page/admin/order/index.vue"),
+        meta: { title: "Đơn hàng" },
+        props: true,
+      },
+      {
+        path: "user",
+        name: "admin-users",
+        component: () => import("../page/admin/user/index.vue"),
+        meta: { title: "Người dùng" },
         props: true,
       },
       

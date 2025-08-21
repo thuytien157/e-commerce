@@ -39,6 +39,10 @@ Route::put('/edit-address/{address_id}', [User::class, 'editAddress'])->middlewa
 Route::get('/addresses/{address_id}', [User::class, 'getAddressById'])->middleware('auth:sanctum');
 Route::post('/update-avatar', [User::class, 'updateAvatar'])->middleware('auth:sanctum');
 Route::get('/order-history-user', [User::class, 'getOrderByUser'])->middleware('auth:sanctum');
+Route::get('/user-info', [User::class, 'getAllUser'])->middleware('auth:sanctum');
+Route::put('/assign-role/{id}', [User::class, 'assignRole'])->middleware('auth:sanctum');
+Route::put('/lock/{id}', [User::class, 'lockUser'])->middleware('auth:sanctum');
+
 
 Route::get('/products_detail/{id}', [Product::class, 'getProductById']);
 Route::put('/product/hidden/{id}', [Product::class, 'hiddenProduct']);
@@ -52,12 +56,15 @@ Route::resource('attribute', Attribute::class);
 
 Route::post('/ghn/service', [Order::class, 'getGHNServices']);
 Route::post('/order', [Order::class, 'createOrder']);
+Route::get('/order', [Order::class, 'getAllOrders']);
 Route::get('/order-info/{id}', [Order::class, 'getOrderById']);
 Route::put('/cancel-order', [Order::class, 'cancelOrder']);
 Route::put('/update-order-address', [Order::class, 'updateAddresslOrder']);
 Route::match(['GET', 'POST'], '/vnpay-ipn', [Order::class, 'handleVnpayIpn']);
 Route::get('/payment-return', [Order::class, 'paymentOrderReturn']);
 Route::post('/order/{orderId}/repay', [Order::class, 'repayOrder']);
+Route::put('/order-update-status/{id}', [Order::class, 'updateStatus']);
+Route::get('/invoice/{id}', [Order::class, 'generateInvoice']);
 
 
 Route::post('/review', [Review::class, 'createReview'])->middleware('auth:sanctum');

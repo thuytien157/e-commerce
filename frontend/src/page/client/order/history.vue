@@ -321,6 +321,9 @@ onMounted(async () => {
                                                 @click="openReviewModal(value.id)">
                                                 Đánh giá
                                             </button>
+                                            <button class="btn btn-sm btn-outline-info" @click="printInvoice(order.id)">
+                                                Xuất hoá đơn
+                                            </button>
                                         </td>
                                     </tr>
                                 </tbody>
@@ -349,7 +352,7 @@ onMounted(async () => {
                                     <h6 class="fw-bold mb-0">Mã đơn: #{{ value.id }}</h6>
                                     <span class="badge bg-warning text-dark">{{
                                         value.status
-                                        }}</span>
+                                    }}</span>
                                 </div>
                                 <p class="mb-1 text-muted">
                                     <i class="bi bi-calendar me-2"></i>{{ FormatData.formatDateTime(value.order_date) }}
@@ -358,7 +361,7 @@ onMounted(async () => {
                                     <i class="bi bi-cash me-2"></i>Tổng tiền:
                                     <strong>{{
                                         FormatData.formatNumber(value.total_amount)
-                                        }}
+                                    }}
                                         VND</strong>
                                 </p>
                                 <div class="text-end">
@@ -425,17 +428,18 @@ onMounted(async () => {
                                 <label class="form-label fw-bold">Chọn số sao của bạn</label>
                                 <small class="text-danger" v-if="errors.rating">{{
                                     errors.rating[0]
-                                    }}</small>
+                                }}</small>
                                 <div class="d-flex align-items-center">
                                     <i v-for="star in 5" :key="star" class="bi me-1" :class="{
                                         'bi-star-fill text-warning':
                                             star <= detail.review_temp.rating,
                                         'bi-star': star > detail.review_temp.rating,
-                                    }" @click="detail.review_temp.rating = star" style="cursor: pointer; font-size: 1.5rem">
+                                    }" @click="detail.review_temp.rating = star"
+                                        style="cursor: pointer; font-size: 1.5rem">
                                     </i>
                                     <span class="ms-2 fw-bold text-warning">{{
                                         getRatingText(detail.review_temp.rating)
-                                        }}</span>
+                                    }}</span>
                                 </div>
                             </div>
                             <div class="mb-3">
@@ -443,7 +447,7 @@ onMounted(async () => {
                                     đánh giá</label><br>
                                 <small class="text-danger" v-if="errors.comment">{{
                                     errors.comment[0]
-                                    }}</small>
+                                }}</small>
                                 <textarea class="form-control rounded-3" :id="'review-comment-' + detail.id" rows="3"
                                     placeholder="Chia sẻ cảm nhận của bạn về sản phẩm này"
                                     v-model="detail.review_temp.comment"></textarea>

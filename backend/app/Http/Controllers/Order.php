@@ -6,6 +6,7 @@ use App\Events\OrderUpdated;
 use App\Jobs\sendMail;
 use App\Models\Order as ModelsOrder;
 use App\Models\OrderItem;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon as SupportCarbon;
 use Illuminate\Support\Facades\Auth;
@@ -174,7 +175,6 @@ class Order extends Controller
     {
         $inputData = $request->all();
         Log::info('VNPAY IPN:', $request->all());
-        // 1. Kiểm tra chữ ký an toàn (đảm bảo request từ VNPAY)
         $vnp_SecureHash = $inputData['vnp_SecureHash'];
         unset($inputData['vnp_SecureHash']);
         ksort($inputData);
@@ -191,7 +191,6 @@ class Order extends Controller
             return response()->json(['RspCode' => '01', 'Message' => 'Order not found']);
         }
 
-        // 2. Kiểm tra và cập nhật trạng thái đơn hàng
         if ($order->status_payments == 'Đã thanh toán') {
             return response()->json(['RspCode' => '02', 'Message' => 'Order already confirmed']);
         }
@@ -266,6 +265,40 @@ class Order extends Controller
         }
     }
 
+    function updateStatus(Request $request, $id)
+    {
+        $validator = Validator::make($request->all(), [
+            'status' => 'required',
+            'cancellation_reason' => 'nullable',
+        ], [
+            'status.required' => 'Vui lòng nhập trạng thái',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'errors' => $validator->errors()
+            ], 422);
+        }
+        $order = ModelsOrder::find($id);
+        if (!$order) {
+            return response()->json([
+                'mess' => 'Không tìm thấy đơn hàng'
+            ], 404);
+        }
+
+        $order->status = $request->status;
+        if ($request->status == 'Thất bại') {
+            $order->cancellation_reason = $request->cancellation_reason;
+        }
+
+        if ($order->save()) {
+            event(new OrderUpdated($order->id));
+            return response()->json([
+                'mess' => 'Cập nhật trạng thái thành công'
+            ], 200);
+        }
+    }
+
     function updateAddresslOrder(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -299,6 +332,70 @@ class Order extends Controller
             return response()->json([
                 'mess' => 'Cập nhật thành công'
             ], 200);
+        }
+    }
+
+    function getAllOrders()
+    {
+        $orders = ModelsOrder::with('customer', 'orderItems.variant.attributes', 'orderItems.variant.product')->get();
+        return response()->json([
+            'orders' => $orders
+        ]);
+    }
+
+    function generateInvoice($id)
+    {
+        try {
+            $order = ModelsOrder::with([
+                'orderItems.variant.product',
+                'orderItems.variant.attributes'
+            ])->find($id);
+
+            if (!$order) {
+                return response()->json([
+                    'status' => false,
+                    'error' => 'Không tìm thấy đơn hàng.'
+                ], 404);
+            }
+
+            $orderDetailsWithNames = [];
+            foreach ($order->orderItems as $item) {
+                $name = $item->variant->product->name;
+
+                $attributeWithNames = [];
+                foreach ($item->variant->attributes as $attribute) {
+                    $attributeWithNames[] = $attribute->value_name;
+                }
+                $orderDetailsWithNames[] = [
+                    'name' => $name,
+                    'quantity' => $item->quantity,
+                    'price' => $item->unit_price,
+                    'subtotal' => $item->subtotal,
+                    'attributes' => $attributeWithNames,
+                ];
+            }
+
+            $pdfData = [
+                'order_id' => $order->id,
+                'guest_name' => $order->guest_name,
+                'guest_phone' => $order->guest_phone,
+                'guest_email' => $order->guest_email,
+                'total_amount' => $order->total_amount,
+                'note' => $order->note ?? null,
+                'order_details' => $orderDetailsWithNames,
+                'order_time' => $order->order_date,
+                'shipping_money' => $order->shipping_money,
+                'guest_address' => $order->guest_address,
+            ];
+
+            // Tạo PDF
+            $pdf = PDF::loadView('pdf.invoice', $pdfData);
+            return $pdf->stream('hoadon' . $order->id . '.pdf', ['Attachment' => 0]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => false,
+                'error' => 'Lỗi khi tạo hóa đơn: ' . $e->getMessage()
+            ], 500);
         }
     }
 }

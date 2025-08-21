@@ -91,6 +91,10 @@ const client = [
         meta: { title: "Kết quả thanh toán" },
         props: true,
       },
+      {
+        path: "/login-fail",
+        component: () => import("../page/client/user/loginSuccess.vue")
+      },
     ],
   },
 ];

@@ -183,6 +183,20 @@ const updateAddressOrder = async (orderId) => {
 };
 
 
+const printInvoice = (record) => {
+  axios.get(`http://127.0.0.1:8000/api/invoice/${record}`, {
+    responseType: 'blob'
+  })
+    .then(response => {
+      const file = new Blob([response.data], { type: 'application/pdf' });
+      const fileURL = URL.createObjectURL(file);
+      window.open(fileURL); //mở tab mới
+    })
+    .catch(error => {
+      console.error('Lỗi in hóa đơn:', error);
+    });
+};
+
 watch(selectedProvince, (newVal) => {
     if (newVal) fetchDistricts(newVal);
 });
@@ -347,6 +361,9 @@ onMounted(async () => {
                     </div>
                     <div class="col-6">Trạng thái đơn:</div>
                     <div class="col-6 text-end" :class="getStatusClass(order.status)">{{ order.status }}</div>
+                    <div class="d-flex" v-if="order.status == 'Thất bại'">
+                        <span class="fw-semibold pe-1">Lý do hủy: </span>{{ order.cancellation_reason }}
+                    </div>
                 </div>
             </div>
 
@@ -411,6 +428,9 @@ onMounted(async () => {
                 <button class="btn btn-secondary flex-grow-1 flex-sm-grow-0" @click="$router.back()">
                     Quay lại
                 </button>
+                <button @click="printInvoice(order.id)" class="btn btn-primary flex-grow-1 flex-sm-grow-0">
+                    Xuất hoá đơn PDF
+                </button>
                 <button class="btn btn-info flex-grow-1 flex-sm-grow-0" data-bs-toggle="modal"
                     data-bs-target="#addressModal"
                     v-if="order.status == 'Chờ xác nhận' || order.status == 'Đã xác nhận'">
@@ -443,7 +463,7 @@ onMounted(async () => {
                         <p>Vui lòng cho chúng tôi biết lý do bạn hủy đơn hàng:</p>
                         <small class="text-danger" v-if="errors.cancellation_reason">{{
                             errors.cancellation_reason[0]
-                        }}</small>
+                            }}</small>
                         <div class="form-check">
                             <input class="form-check-input" type="radio" name="cancelReason" id="reason1"
                                 value="Tôi không muốn mua nữa" v-model="cancellation_reason">
@@ -513,7 +533,7 @@ onMounted(async () => {
                             <div class="mb-3">
                                 <small class="text-danger" v-if="errors.provinces">{{
                                     errors.provinces[0]
-                                    }}</small>
+                                }}</small>
 
                                 <select v-model="selectedProvince" @change="fetchDistricts" class="form-control"
                                     id="province-select">
@@ -527,7 +547,7 @@ onMounted(async () => {
                             <div class="mb-3">
                                 <small class="text-danger" v-if="errors.districts">{{
                                     errors.districts[0]
-                                    }}</small>
+                                }}</small>
                                 <select v-model="selectedDistrict" @change="fetchWards" :disabled="!selectedProvince"
                                     class="form-control" id="district-select">
                                     <option :value="null">Quận / Huyện</option>
@@ -540,7 +560,7 @@ onMounted(async () => {
                             <div class="mb-3">
                                 <small class="text-danger" v-if="errors.wards">{{
                                     errors.wards[0]
-                                    }}</small>
+                                }}</small>
                                 <select v-model="selectedWard" :disabled="!selectedDistrict" class="form-control"
                                     id="ward-select">
                                     <option :value="null">Phường / Xã</option>

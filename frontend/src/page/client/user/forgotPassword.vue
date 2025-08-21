@@ -121,6 +121,12 @@ const sendMail = async () => {
                 email: [error.response.data.message],
             };
         }
+         else if (error.response && error.response.status === 403) {
+            errors.value = {};
+            errors.value = {
+                email: [error.response.data.message],
+            };
+        }
     } finally {
         isLoading.value = false;
     }

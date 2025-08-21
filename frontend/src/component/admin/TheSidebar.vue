@@ -1,5 +1,4 @@
 <template>
-
     <a-layout-sider breakpoint="lg" :collapsed="collapsed" @collapse="onCollapse" @breakpoint="onBreakpoint"
         class="custom-ant-sider" :width="200">
         <div class="logo-admin">
@@ -32,13 +31,11 @@
             </template>
         </a-menu>
     </a-layout-sider>
-
-
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
-import { useRoute } from 'vue-router';
+import { ref, watch } from "vue";
+import { useRoute } from "vue-router";
 import {
     MenuFoldOutlined,
     MenuUnfoldOutlined,
@@ -60,7 +57,7 @@ import {
     DeploymentUnitOutlined,
     DeliveredProcedureOutlined,
     ProfileOutlined,
-} from '@ant-design/icons-vue';
+} from "@ant-design/icons-vue";
 
 const route = useRoute();
 const selectedKeys = ref([]);
@@ -69,37 +66,48 @@ const collapsed = ref(false);
 
 const menuItems = [
     {
-        key: '/admin/dashboard',
-        to: '/admin/dashboard',
-        label: 'Thống kê',
+        key: "/admin/dashboard",
+        to: "/admin/dashboard",
+        label: "Thống kê",
         icon: DashboardOutlined,
-        permission: 'view_dashboard',
+        permission: "view_dashboard",
     },
     {
-        key: 'categories-management',
-        to: '/admin/category',
-        label: 'Danh mục',
+        key: "categories-management",
+        to: "/admin/category",
+        label: "Danh mục",
         icon: AppstoreOutlined,
     },
     {
-        key: 'products-management',
-        to: '/admin/product',
-        label: 'Sản phẩm',
+        key: "products-management",
+        to: "/admin/product",
+        label: "Sản phẩm",
         icon: ShoppingOutlined,
     },
     {
-        key: 'attributes-management',
-        to: '/admin/attribute',
-        label: 'Thuộc tính',
+        key: "attributes-management",
+        to: "/admin/attribute",
+        label: "Thuộc tính",
         icon: ShoppingOutlined,
     },
     {
-        key: 'reviews-management',
-        to: '/admin/review',
-        label: 'Đánh giá',
+        key: "reviews-management",
+        to: "/admin/review",
+        label: "Đánh giá",
         icon: ShoppingOutlined,
     },
-
+    {
+        key: "orders-management",
+        to: "/admin/order",
+        label: "Đơn hàng",
+        icon: ShoppingOutlined,
+    },
+    {
+        key: "users-management",
+        to: "/admin/user",
+        label: "Người dùng",
+        icon: ShoppingOutlined,
+    },
 ];
 
 const onCollapse = (collapsedValue) => {
@@ -115,7 +123,9 @@ watch(
     (newPath) => {
         selectedKeys.value = [newPath];
 
-        const parentKey = menuItems.find((item) => item.children?.some((child) => child.to === newPath))?.key;
+        const parentKey = menuItems.find((item) =>
+            item.children?.some((child) => child.to === newPath)
+        )?.key;
         if (parentKey) {
             openKeys.value = [parentKey];
         } else {
@@ -124,7 +134,6 @@ watch(
     },
     { immediate: true }
 );
-
 </script>
 
 <style scoped>
@@ -162,7 +171,7 @@ watch(
 
 .ant-menu-white.ant-menu-inline .ant-menu-item-selected::after,
 .ant-menu-white.ant-menu-inline .ant-menu-submenu-selected::after {
-    content: '';
+    content: "";
     display: block;
     position: absolute;
     top: 0;
@@ -171,7 +180,6 @@ watch(
     width: 3px;
     background-color: #d9363e;
 }
-
 
 /* .ant-menu-white .ant-menu-item:hover,
 .ant-menu-white .ant-menu-submenu-title:hover {

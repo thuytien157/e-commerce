@@ -115,7 +115,8 @@ const handleUserData = async (data) => {
                                 <p class="text-muted mb-1">Điện thoại: +84{{ value.phone }}</p>
                                 <p class="text-muted m-0">Địa chỉ: {{ value.fullAddress }}</p>
                             </div>
-                            <router-link to="/account/address-new" class="btn btn-primary w-100 w-md-auto">
+                            <router-link to="/account/address-new" class="btn btn-primary w-100 w-md-auto"
+                                v-if="address.length < 3">
                                 <i class="bi bi-plus-lg me-2"></i>Thêm địa chỉ mới
                             </router-link>
                         </div>

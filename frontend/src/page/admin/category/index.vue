@@ -1,3 +1,103 @@
+<script setup>
+import axios from "axios";
+import Swal from "sweetalert2";
+import { onMounted, ref, computed, watch } from "vue";
+import Pagination from "@/component/admin/Pagination.vue";
+
+const allCategories = ref([]);
+const searchQuery = ref("");
+const pageSize = ref(5);
+const currentPage = ref(1);
+const expandedRows = ref({});
+
+const getAllCategories = async () => {
+    try {
+        const res = await axios.get("http://127.0.0.1:8000/api/category");
+        allCategories.value = res.data.categories;
+    } catch (error) {
+        console.log(error);
+    }
+};
+
+
+const filteredCategories = computed(() => {
+    return allCategories.value.filter(category => {
+        const lowerCaseSearch = searchQuery.value.toLowerCase();
+        const issearchQuery =
+            !searchQuery.value ||
+            category.name.toLowerCase().includes(lowerCaseSearch);
+
+        return issearchQuery;
+    });
+});
+
+const paginatedAndFilteredCategories = computed(() => {
+    const startIndex = (currentPage.value - 1) * pageSize.value;
+    const endIndex = startIndex + pageSize.value;
+    return filteredCategories.value.slice(startIndex, endIndex);
+});
+
+const totalPages = computed(() => {
+    return Math.ceil(filteredCategories.value.length / pageSize.value);
+});
+
+const updateCurrentPage = (page) => {
+    if (page >= 1 && page <= totalPages.value) {
+        currentPage.value = page;
+    }
+};
+
+const toggleChildren = (categoryId) => {
+    expandedRows.value[categoryId] = !expandedRows.value[categoryId];
+};
+
+const deleteCategory = async (id) => {
+    try {
+        const result = await Swal.fire({
+            title: "Bạn có chắc muốn xoá danh mục này?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Xác nhận",
+            cancelButtonText: "Hủy",
+        });
+
+        if (result.isConfirmed) {
+            await axios.delete(`http://127.0.0.1:8000/api/category/${id}`);
+            await getAllCategories();
+            Swal.fire({
+                toast: true,
+                position: "top-end",
+                icon: "success",
+                title: "Danh mục đã được xóa thành công!",
+                showConfirmButton: false,
+                timer: 2000,
+                timerProgressBar: true,
+            });
+        }
+    } catch (error) {
+        console.log(error);
+        Swal.fire({
+            toast: true,
+            position: "top-end",
+            icon: "error",
+            title: "Xóa danh mục không thành công!",
+            showConfirmButton: false,
+            timer: 2000,
+            timerProgressBar: true,
+        });
+    }
+};
+
+watch([searchQuery, pageSize], () => {
+    currentPage.value = 1;
+});
+
+onMounted(async () => {
+    await getAllCategories();
+});
+</script>
 <template>
     <div class="d-flex justify-content-between">
         <h3 class="text-primary fw-bold">Danh sách danh mục</h3>
@@ -85,128 +185,9 @@
         </table>
     </div>
 
-    <nav aria-label="Page navigation">
-        <ul class="pagination justify-content-center">
-            <li class="page-item" :class="{ disabled: currentPage === 1 }">
-                <a class="page-link" @click.prevent="currentPage--" href="#">Trước</a>
-            </li>
-            <li class="page-item" v-for="page in totalPages" :key="page" :class="{ active: page === currentPage }">
-                <a class="page-link" @click.prevent="currentPage = page" href="#">{{ page }}</a>
-            </li>
-            <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-                <a class="page-link" @click.prevent="currentPage++" href="#">Tiếp</a>
-            </li>
-        </ul>
-    </nav>
+    <Pagination :current-page="currentPage" @update:page="updateCurrentPage" :total-pages="totalPages" />
+
 </template>
-
-<script setup>
-import axios from "axios";
-import Swal from "sweetalert2";
-import { onMounted, ref, computed, watch } from "vue";
-
-const allCategories = ref([]);
-const searchQuery = ref("");
-const pageSize = ref(5);
-const currentPage = ref(1);
-const expandedRows = ref({});
-
-const getAllCategories = async () => {
-    try {
-        const res = await axios.get("http://127.0.0.1:8000/api/category");
-        allCategories.value = res.data.categories;
-    } catch (error) {
-        console.log(error);
-    }
-};
-
-const flattenCategories = (categories, result = []) => {
-    categories.forEach(category => {
-        result.push(category);
-        if (category.children && category.children.length > 0) {
-            flattenCategories(category.children, result);
-        }
-    });
-    return result;
-};
-
-const filteredCategories = computed(() => {
-    if (!searchQuery.value) {
-        return allCategories.value;
-    }
-    const lowerCaseSearch = searchQuery.value.toLowerCase();
-    const flattenedList = flattenCategories(allCategories.value);
-    const filtered = flattenedList.filter(category =>
-        category.name.toLowerCase().includes(lowerCaseSearch) ||
-        (category.parent_name && category.parent_name.toLowerCase().includes(lowerCaseSearch))
-    );
-
-    return allCategories.value.filter(category =>
-        filtered.some(f => f.id === category.id)
-    );
-});
-
-const paginatedAndFilteredCategories = computed(() => {
-    const startIndex = (currentPage.value - 1) * pageSize.value;
-    const endIndex = startIndex + pageSize.value;
-    return filteredCategories.value.slice(startIndex, endIndex);
-});
-
-const totalPages = computed(() => {
-    return Math.ceil(filteredCategories.value.length / pageSize.value);
-});
-
-const toggleChildren = (categoryId) => {
-    expandedRows.value[categoryId] = !expandedRows.value[categoryId];
-};
-
-const deleteCategory = async (id) => {
-    try {
-        const result = await Swal.fire({
-            title: "Bạn có chắc muốn xoá danh mục này?",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonColor: "#3085d6",
-            cancelButtonColor: "#d33",
-            confirmButtonText: "Xác nhận",
-            cancelButtonText: "Hủy",
-        });
-
-        if (result.isConfirmed) {
-            await axios.delete(`http://127.0.0.1:8000/api/category/${id}`);
-            await getAllCategories();
-            Swal.fire({
-                toast: true,
-                position: "top-end",
-                icon: "success",
-                title: "Danh mục đã được xóa thành công!",
-                showConfirmButton: false,
-                timer: 2000,
-                timerProgressBar: true,
-            });
-        }
-    } catch (error) {
-        console.log(error);
-        Swal.fire({
-            toast: true,
-            position: "top-end",
-            icon: "error",
-            title: "Xóa danh mục không thành công!",
-            showConfirmButton: false,
-            timer: 2000,
-            timerProgressBar: true,
-        });
-    }
-};
-
-watch([searchQuery, pageSize], () => {
-    currentPage.value = 1;
-});
-
-onMounted(async () => {
-    await getAllCategories();
-});
-</script>
 
 <style scoped>
 .rotate-icon {

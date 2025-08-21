@@ -101,7 +101,8 @@ const register = async () => {
       })
     const userStr = {
       username: res.data.username,
-      id: res.data.user
+      id: res.data.user,
+      role: res.data.role
     };
     store.setAuth(res.data.token, userStr);
     errors.value = {};
