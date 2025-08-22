@@ -9,6 +9,7 @@ const searchQuery = ref("");
 const pageSize = ref(5);
 const currentPage = ref(1);
 const expandedRows = ref({});
+const isLoading = ref(true);
 
 const getAllAttributes = async () => {
     try {
@@ -16,20 +17,20 @@ const getAllAttributes = async () => {
         allAttributes.value = res.data.attributes;
     } catch (error) {
         console.log(error);
+    } finally {
+        isLoading.value = false;
     }
 };
-
 
 const filteredAttributes = computed(() => {
     return allAttributes.value.filter(attribute => {
         const lowerCaseSearch = searchQuery.value.toLowerCase();
         const issearchQuery =
-        !searchQuery.value ||
-        attribute.name.toLowerCase().includes(lowerCaseSearch);
+            !searchQuery.value ||
+            attribute.name.toLowerCase().includes(lowerCaseSearch);
 
         return issearchQuery;
     });
-    
 });
 
 const paginatedAndFilteredAttributes = computed(() => {
@@ -43,9 +44,9 @@ const totalPages = computed(() => {
 });
 
 const updateCurrentPage = (page) => {
-  if (page >= 1 && page <= totalPages.value) {
-    currentPage.value = page;
-  }
+    if (page >= 1 && page <= totalPages.value) {
+        currentPage.value = page;
+    }
 };
 
 const toggleChildren = (attributeId) => {
@@ -65,6 +66,7 @@ const deleteAttribute = async (id) => {
         });
 
         if (result.isConfirmed) {
+            isLoading.value = true;
             await axios.delete(`http://127.0.0.1:8000/api/attribute/${id}`);
             await getAllAttributes();
             Swal.fire({
@@ -88,6 +90,8 @@ const deleteAttribute = async (id) => {
             timer: 2000,
             timerProgressBar: true,
         });
+    } finally {
+        isLoading.value = false;
     }
 };
 
@@ -104,6 +108,7 @@ const deleteAttributeValue = async (id) => {
         });
 
         if (result.isConfirmed) {
+            isLoading.value = true;
             await axios.delete(`http://127.0.0.1:8000/api/attribute-value/${id}`);
             await getAllAttributes();
             Swal.fire({
@@ -127,6 +132,8 @@ const deleteAttributeValue = async (id) => {
             timer: 2000,
             timerProgressBar: true,
         });
+    } finally {
+        isLoading.value = false;
     }
 };
 
@@ -135,6 +142,7 @@ watch([searchQuery, pageSize], () => {
 });
 
 onMounted(async () => {
+    isLoading.value = true;
     await getAllAttributes();
 });
 </script>
@@ -176,7 +184,29 @@ onMounted(async () => {
                 </tr>
             </thead>
             <tbody>
-                <template v-for="attribute in paginatedAndFilteredAttributes" :key="attribute.id">
+                <tr v-if="isLoading" v-for="n in pageSize" :key="n">
+                    <td>
+                        <div class="skeleton-box" style="width: 20px;"></div>
+                    </td>
+                    <td>
+                        <div class="skeleton-box"></div>
+                    </td>
+                    <td>
+                        <div class="skeleton-box"></div>
+                    </td>
+                    <td>
+                        <div class="skeleton-box"></div>
+                    </td>
+                    <td>
+                        <div class="skeleton-box"></div>
+                    </td>
+                    <td>
+                        <div class="skeleton-box"></div>
+                    </td>
+                </tr>
+
+                <template v-else-if="paginatedAndFilteredAttributes.length > 0"
+                    v-for="attribute in paginatedAndFilteredAttributes" :key="attribute.id">
                     <tr>
                         <td>
                             <button v-if="
@@ -222,16 +252,43 @@ onMounted(async () => {
                         </tr>
                     </template>
                 </template>
+
+                <tr v-else>
+                    <td colspan="6" class="text-center text-secondary">
+                        Không có thuộc tính nào
+                    </td>
+                </tr>
             </tbody>
         </table>
     </div>
 
     <Pagination :current-page="currentPage" @update:page="updateCurrentPage" :total-pages="totalPages" />
-
 </template>
 
 <style scoped>
 .rotate-icon {
     transform: rotate(90deg);
+}
+
+.skeleton-box {
+    background-color: #e0e0e0;
+    animation: pulse 1.5s infinite ease-in-out;
+    height: 1.2em;
+    border-radius: 4px;
+    width: 100%;
+}
+
+@keyframes pulse {
+    0% {
+        background-color: #e0e0e0;
+    }
+
+    50% {
+        background-color: #f5f5f5;
+    }
+
+    100% {
+        background-color: #e0e0e0;
+    }
 }
 </style>

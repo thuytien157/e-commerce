@@ -8,7 +8,9 @@ use App\Models\Variant as ModelsVariant;
 use App\Models\VariantAttribute;
 use App\Models\VariantImage;
 use CloudinaryLabs\CloudinaryLaravel\Facades\Cloudinary;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator as PaginationLengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -24,13 +26,12 @@ class Product extends Controller
         $categoryIds = $request->query('categories');
         $rating = $request->query('rating');
         $price = $request->query('price');
-
+        $perPage = $request->query('per_page', 9);
         $baseQuery = ModelsProduct::with('variants.attributes', 'reviews');
 
         if ($categoryIds && $categoryIds !== 'all') {
             $selectedCategoryIds = explode(',', $categoryIds);
             $allCategoryIdsToFilter = collect($selectedCategoryIds);
-
             foreach ($selectedCategoryIds as $id) {
                 $category = ModelsCategory::find($id);
                 if ($category) {
@@ -115,26 +116,32 @@ class Product extends Controller
                 break;
         }
 
-        $products = $baseQuery->groupBy('products.id')->get();
-        $transformedProducts = $this->transformProducts($products);
+        $products = $baseQuery->groupBy('products.id')->paginate($perPage);
 
-        $newArrivals = ModelsProduct::latest('created_at')->take(4)->get();
+        $transformedProducts = $this->transformProducts($products->items());
+
+        $newArrivalsQuery = clone $baseQuery;
+        $newArrivals = $newArrivalsQuery->latest('created_at')->take(4)->get();
         $transformedNewArrivals = $this->transformProducts($newArrivals);
 
-        $bestSellers = ModelsProduct::withSum('orderItems', 'quantity')
-            ->orderByDesc('order_items_sum_quantity')
-            ->take(8)
-            ->get();
+        $bestSellersQuery = clone $baseQuery;
+        $bestSellers = $bestSellersQuery->withSum('orderItems', 'quantity')->orderByDesc('order_items_sum_quantity')->take(8)->get();
         $transformedBestSellers = $this->transformProducts($bestSellers);
 
-        $topRatedProducts = ModelsProduct::withAvg('reviews as average_rating', 'rating')
-            ->orderByDesc('average_rating')
-            ->take(4)
-            ->get();
+        $topRatedProductsQuery = clone $baseQuery;
+        $topRatedProducts = $topRatedProductsQuery->withAvg('reviews as average_rating', 'rating')->orderByDesc('average_rating')->take(4)->get();
         $transformedTopRated = $this->transformProducts($topRatedProducts);
 
         return response()->json([
             'products' => $transformedProducts,
+            'pagination' => [
+                'total' => $products->total(),
+                'per_page' => $products->perPage(),
+                'current_page' => $products->currentPage(),
+                'last_page' => $products->lastPage(),
+                'from' => $products->firstItem(),
+                'to' => $products->lastItem(),
+            ],
             'new_arrivals' => $transformedNewArrivals,
             'best_sellers' => $transformedBestSellers,
             'top_rated' => $transformedTopRated
@@ -143,6 +150,11 @@ class Product extends Controller
 
     private function transformProducts($products)
     {
+        if ($products instanceof PaginationLengthAwarePaginator) {
+            $products = $products->getCollection();
+        } elseif (is_array($products)) {
+            $products = collect($products);
+        }
         return $products->map(function ($item) {
             $reviewData = $item->reviews->map(function ($value) {
                 return [
@@ -165,6 +177,7 @@ class Product extends Controller
                 'description' => $item->description,
                 'status' => $item->status,
                 'category_id' => $item->category_id,
+                'category_name' => optional($item->category)->name,
                 'variants' => $item->variants->map(function ($variant) {
                     return [
                         'id' => $variant->id,
@@ -184,7 +197,7 @@ class Product extends Controller
                         }),
                     ];
                 }),
-                'category_name' => optional($item->category)->name
+
             ];
         })->filter()->values();
     }
@@ -458,19 +471,20 @@ class Product extends Controller
 
             $existingVariantIds = $product->variants()->pluck('id')->toArray();
             $sentVariantIds = collect($request->variants)->pluck('id')->filter()->toArray();
-
             $variantsToDelete = array_diff($existingVariantIds, $sentVariantIds);
-            if (!empty($variantsToDelete)) {
-                $variants = ModelsVariant::whereIn('id', $variantsToDelete)->with('variantImages')->get();
-                foreach ($variants as $variant) {
-                    if ($variant->main_image_url) {
-                        Cloudinary::destroy(pathinfo($variant->main_image_url, PATHINFO_FILENAME));
-                    }
-                    foreach ($variant->variantImages as $image) {
-                        Cloudinary::destroy(pathinfo($image->image_url, PATHINFO_FILENAME));
-                    }
+            $variantsCanDelete = ModelsVariant::whereIn('id', $variantsToDelete)
+                ->whereDoesntHave('orderItems')
+                ->with('variantImages')
+                ->get();
+
+            foreach ($variantsCanDelete as $variant) {
+                if ($variant->main_image_url) {
+                    Cloudinary::destroy(pathinfo($variant->main_image_url, PATHINFO_FILENAME));
                 }
-                ModelsVariant::whereIn('id', $variantsToDelete)->delete();
+                foreach ($variant->variantImages as $image) {
+                    Cloudinary::destroy(pathinfo($image->image_url, PATHINFO_FILENAME));
+                }
+                $variant->delete();
             }
 
             foreach ($request->variants as $index => $variantData) {
@@ -481,9 +495,11 @@ class Product extends Controller
                     $variant->product_id = $product->id;
                 }
 
-                $variant->sku = $variantData['sku'];
-                $variant->slug = $variantData['slug'];
-                $variant->stock_quantity = $variantData['stock_quantity'];
+                if (!$variant->exists || $variant->order_count == 0) {
+                    $variant->sku = $variantData['sku'];
+                    $variant->slug = $variantData['slug'];
+                    $variant->stock_quantity = $variantData['stock_quantity'];
+                }
 
                 if ($request->hasFile("variants.$index.image")) {
                     if ($variant->main_image_url) {

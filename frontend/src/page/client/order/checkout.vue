@@ -234,7 +234,7 @@ const order = async () => {
       guest_address: `${address.value.address || ""}, ${wardName}, ${districtName}, ${provinceName}`,
       total_amount: totalPayment.value,
       shipping_money: shippingFee.value,
-      cartItems: cartStore.items,
+      cartItems: cartStore.items.filter(item => item.isCheck)
     };
     const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
     if (!store.token && address.value.email == "") {
@@ -274,7 +274,7 @@ const order = async () => {
       });
     }
 
-    cartStore.removeCart();
+    cartStore.removeCheckedItems();
   } catch (error) {
     if (error.response && error.response.status === 422) {
       errors.value = {};
@@ -395,28 +395,31 @@ watch([selectedDistrict, selectedWard], async () => {
         <div class="col-md-6 pe-0">
           <div class="p-4 border rounded shadow-sm bg-white">
             <h5 class="mb-3" style="color: blue">
-              Đơn hàng ({{ cartStore.items.length }} sản phẩm)
+              Đơn hàng ({{ cartStore.cartLength }} sản phẩm)
             </h5>
             <hr />
 
             <div class="list-product-scroll mb-2">
               <div v-if="cartStore.items.length > 0" class="d-flex mb-3" v-for="item in cartStore.items"
                 :key="item.variantId">
-                <img :src="item.image" alt="" class="me-3 rounded" width="50" height="50" />
-                <div class="flex-grow-1">
-                  <strong class="product-name-short">{{ item.productName }}</strong>
+                <template v-if="item.isCheck">
+                  <img :src="item.image" alt="" class="me-3 rounded" width="50" height="50" />
+                  <div class="flex-grow-1">
+                    <strong class="product-name-short">{{ item.productName }}</strong>
 
-                  <div class="text-muted small ps-2 mb-1" style="font-size: 11px">
-                    <div>+ {{ item.selectedAttributes.join(", ") }}</div>
+                    <div class="text-muted small ps-2 mb-1" style="font-size: 11px">
+                      <div>+ {{ item.selectedAttributes.join(", ") }}</div>
+                    </div>
+                    <div style="font-size: 12px">Số lượng: {{ item.quantity }}</div>
+                    <div style="font-size: 12px">
+                      Giá: {{ FormatData.formatNumber(item.price) }} VNĐ
+                    </div>
                   </div>
-                  <div style="font-size: 12px">Số lượng: {{ item.quantity }}</div>
-                  <div style="font-size: 12px">
-                    Giá: {{ FormatData.formatNumber(item.price) }} VNĐ
+                  <div class="text-end ms-2 fw-semibold" style="color: blue">
+                    {{ FormatData.formatNumber(item.price * item.quantity) }} VNĐ
                   </div>
-                </div>
-                <div class="text-end ms-2 fw-semibold" style="color: blue">
-                  {{ FormatData.formatNumber(item.price * item.quantity) }} VNĐ
-                </div>
+                </template>
+
               </div>
               <small v-else class="text-danger d-flex justify-content-center">
                 Giỏ hàng trống
@@ -434,7 +437,9 @@ watch([selectedDistrict, selectedWard], async () => {
                 VNĐ</span>
             </div>
             <div style="color: blue" class="d-flex justify-content-between mb-2 fw-bold">
-              <span>Tổng thanh toán:</span><span class="fw-semibold" style="color: blue">{{ FormatData.formatNumber(totalPayment) }} VNĐ</span>
+              <span>Tổng thanh toán:</span><span class="fw-semibold" style="color: blue">{{
+                FormatData.formatNumber(totalPayment) }}
+                VNĐ</span>
             </div>
 
             <div>
@@ -483,9 +488,11 @@ watch([selectedDistrict, selectedWard], async () => {
   0% {
     background-color: #e0e0e0;
   }
+
   50% {
     background-color: #f0f0f0;
   }
+
   100% {
     background-color: #e0e0e0;
   }
@@ -500,6 +507,7 @@ watch([selectedDistrict, selectedWard], async () => {
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);

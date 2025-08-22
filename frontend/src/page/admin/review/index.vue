@@ -13,6 +13,7 @@ const currentPage = ref(1);
 const selectedRating = ref(null);
 const selectedReview = ref(null);
 const selectedStatus = ref(null);
+const isLoading = ref(true);
 
 const getAllReviews = async () => {
   try {
@@ -20,6 +21,8 @@ const getAllReviews = async () => {
     reviews.value = res.data.reviews;
   } catch (error) {
     console.log(error);
+  } finally {
+    isLoading.value = false;
   }
 };
 const showModal = ref(false);
@@ -36,8 +39,10 @@ function closeImage() {
 
 const filteredReviews = computed(() => {
   return reviews.value.filter((review) => {
-    const isselectedRating = !selectedRating.value || review.rating == selectedRating.value;
-    const isselectedStatus = !selectedStatus.value || review.status == selectedStatus.value;
+    const isselectedRating =
+      !selectedRating.value || review.rating == selectedRating.value;
+    const isselectedStatus =
+      !selectedStatus.value || review.status == selectedStatus.value;
 
     return isselectedRating && isselectedStatus;
   });
@@ -148,6 +153,7 @@ watch([selectedRating, pageSize], () => {
 });
 
 onMounted(async () => {
+  isLoading.value = true;
   await getAllReviews();
 });
 </script>
@@ -200,7 +206,28 @@ onMounted(async () => {
         </tr>
       </thead>
       <tbody>
-        <template v-for="review in paginatedAndFilteredReviews" :key="review.id">
+        <tr v-if="isLoading" v-for="n in pageSize" :key="n">
+          <td>
+            <div class="skeleton-box"></div>
+          </td>
+          <td>
+            <div class="skeleton-box"></div>
+          </td>
+          <td>
+            <div class="skeleton-box"></div>
+          </td>
+          <td>
+            <div class="skeleton-box"></div>
+          </td>
+          <td>
+            <div class="skeleton-box"></div>
+          </td>
+          <td>
+            <div class="skeleton-box"></div>
+          </td>
+        </tr>
+        <template v-else-if="paginatedAndFilteredReviews.length > 0" v-for="review in paginatedAndFilteredReviews"
+          :key="review.id">
           <tr>
             <td>{{ review.id }}</td>
             <td>
@@ -223,7 +250,7 @@ onMounted(async () => {
                   Sản phẩm
                   <a
                     :href="`http://localhost:5173/product-detail/${review.product.variants[0].slug}/${review.product.id}`">{{
-                      review.product.id }}</a>
+                    review.product.id }}</a>
                 </li>
               </ul>
             </td>
@@ -245,12 +272,16 @@ onMounted(async () => {
             </td>
           </tr>
         </template>
+        <tr v-else>
+          <td colspan="6" class="text-center text-secondary">
+            Không có đánh giá nào
+          </td>
+        </tr>
       </tbody>
     </table>
   </div>
 
   <Pagination :current-page="currentPage" @update:page="updateCurrentPage" :total-pages="totalPages" />
-
 
   <div class="modal fade" id="reviewDetailModal" tabindex="-1" aria-labelledby="reviewDetailModalLabel"
     aria-hidden="true">
@@ -340,5 +371,27 @@ onMounted(async () => {
   max-width: 90%;
   max-height: 90%;
   border-radius: 8px;
+}
+
+.skeleton-box {
+  background-color: #e0e0e0;
+  animation: pulse 1.5s infinite ease-in-out;
+  height: 1.2em;
+  border-radius: 4px;
+  width: 100%;
+}
+
+@keyframes pulse {
+  0% {
+    background-color: #e0e0e0;
+  }
+
+  50% {
+    background-color: #f5f5f5;
+  }
+
+  100% {
+    background-color: #e0e0e0;
+  }
 }
 </style>

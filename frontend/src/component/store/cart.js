@@ -5,7 +5,7 @@ import { useTokenUser } from "./useTokenUser";
 export const useCartStore = defineStore("cart", () => {
   const store = useTokenUser();
   const items = ref([]);
-  const quantity = ref(1)
+  const quantity = ref(1);
   const cartKey = computed(() => {
     return store.userId ? `cart_huce_${store.userId}` : "cart_huce_guest";
   });
@@ -16,7 +16,18 @@ export const useCartStore = defineStore("cart", () => {
 
   const loadCart = () => {
     const savedCart = localStorage.getItem(cartKey.value);
-    items.value = savedCart ? JSON.parse(savedCart) : [];
+    if (savedCart) {
+      const parsedCart = JSON.parse(savedCart);
+
+      items.value = parsedCart.map((item) => {
+        return {
+          ...item,
+          isCheck: item.isCheck !== undefined ? item.isCheck : true,
+        };
+      });
+    } else {
+      items.value = [];
+    }
   };
 
   watch(
@@ -29,13 +40,14 @@ export const useCartStore = defineStore("cart", () => {
     },
     { immediate: true }
   );
-  
-  const cartLength = computed(() => items.value.length);
+
+  const cartLength = computed(() => {
+    return items.value.filter(item => item.isCheck).length;
+  });
   const totalPrice = computed(() => {
-    return items.value.reduce(
-      (total, item) => total + item.price * item.quantity,
-      0
-    );
+    return items.value
+      .filter((item) => item.isCheck)
+      .reduce((total, item) => total + item.price * item.quantity, 0);
   });
 
   const addItem = (product) => {
@@ -45,7 +57,7 @@ export const useCartStore = defineStore("cart", () => {
     if (existingItem) {
       existingItem.quantity++;
     } else {
-      items.value.push({ ...product, quantity: quantity.value });
+      items.value.push({ ...product, quantity: quantity.value, isCheck: true });
     }
     saveCart();
   };
@@ -75,6 +87,14 @@ export const useCartStore = defineStore("cart", () => {
       saveCart();
     }
   };
+  const checkbox = () => {
+    saveCart();
+  };
+
+  const removeCheckedItems = () => {
+      items.value = items.value.filter(item => !item.isCheck);
+      saveCart();
+  };
 
   return {
     items,
@@ -86,6 +106,8 @@ export const useCartStore = defineStore("cart", () => {
     increment,
     decrement,
     loadCart,
-    quantity
+    quantity,
+    checkbox,
+    removeCheckedItems
   };
 });

@@ -52,6 +52,7 @@ const productform = ref({
   category_id: null,
   status: null,
   description: "",
+  order_count: null,
 });
 
 const toolbarOptions = [
@@ -204,6 +205,9 @@ const fetchProductDetail = async (id) => {
       category_id: product.category_id,
       status: product.status,
       description: product.description,
+      order_count: product.variants.every(
+        (variant) => variant.order_count == 0
+      )
     };
 
     variantfrom.value = product.variants.map((v) => ({
@@ -410,17 +414,20 @@ onMounted(() => {
             <div class="mb-3 row">
               <div class="col-6">
                 <label for="name" class="form-label">Tên sản phẩm</label><br />
-                <input type="text" class="form-control" id="name" v-model="productform.name" />
+                <input type="text" class="form-control" id="name" :disabled="!productform.order_count"
+                  v-model="productform.name" />
               </div>
               <div class="col-6">
                 <label for="price" class="form-label">Giá</label><br />
-                <input type="number" class="form-control" id="price" v-model="productform.price" />
+                <input type="number" class="form-control" id="price" :disabled="!productform.order_count"
+                  v-model="productform.price" />
               </div>
             </div>
             <div class="mb-3 row">
               <div class="col-6">
                 <label for="category" class="form-label">Danh mục</label><br />
-                <select class="form-select rounded-2" v-model="productform.category_id">
+                <select class="form-select rounded-2" :disabled="!productform.order_count"
+                  v-model="productform.category_id">
                   <option :value="null">Chọn danh mục</option>
                   <template v-for="category in categories" :key="category.id">
                     <option :value="category.id">
@@ -434,7 +441,8 @@ onMounted(() => {
               </div>
               <div class="col-6">
                 <label for="price" class="form-label">Trạng thái sản phẩm</label><br />
-                <select class="form-select" id="category" v-model="productform.status">
+                <select class="form-select" id="category" :disabled="!productform.order_count"
+                  v-model="productform.status">
                   <option :value="null" disabled>
                     Chọn trạng thái sản phẩm
                   </option>
@@ -503,7 +511,8 @@ onMounted(() => {
                   <div class="mb-3 row">
                     <div class="col-2">
                       <label for="stock_quantity" class="form-label">Số lượng tồn kho</label><br />
-                      <input type="number" class="form-control" id="name" min="1" v-model="variant.stock_quantity" />
+                      <input :disabled="!variant.order_count == 0" type="number" class="form-control" id="name" min="1"
+                        v-model="variant.stock_quantity" />
                     </div>
                     <div class="col-5">
                       <label for="slug" class="form-label">Slug</label><br />
@@ -516,7 +525,8 @@ onMounted(() => {
                   </div>
                   <div class="mb-3">
                     <label class="form-label">Ảnh chính</label><br />
-                    <input type="file" class="form-control" @change="onMainImageChange($event, index)" />
+                    <input :disabled="!variant.order_count == 0" type="file" class="form-control"
+                      @change="onMainImageChange($event, index)" />
                     <div v-if="variant.image_preview" class="mt-2 text-center">
                       <img :src="variant.image_preview" @click="openImage(variant.image_preview)" alt="Variant Image"
                         class="img-fluid rounded" style="max-height: 150px" />
@@ -524,7 +534,8 @@ onMounted(() => {
                   </div>
                   <div class="mb-3">
                     <label class="form-label">Ảnh chi tiết</label>
-                    <input type="file" class="form-control" multiple @change="onDetailImagesChange($event, index)" />
+                    <input type="file" :disabled="!variant.order_count == 0" class="form-control" multiple
+                      @change="onDetailImagesChange($event, index)" />
                     <div v-if="variant.images_preview.length" class="mt-2 text-center">
                       <div v-for="(img, i) in variant.images_preview" :key="i" @click="openImage(img)"
                         class="d-inline-block me-2">
@@ -564,6 +575,20 @@ onMounted(() => {
 </template>
 
 <style scoped>
+.quill-disabled .ql-toolbar {
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.quill-disabled .ql-container {
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+.quill-disabled .ql-editor {
+  cursor: not-allowed;
+}
+
 .modal-backdrop {
   position: fixed;
   top: 0;
@@ -584,7 +609,7 @@ onMounted(() => {
 }
 
 .loading-overlay {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
@@ -604,6 +629,5 @@ onMounted(() => {
   font-size: 1.2rem;
   font-weight: bold;
   color: #007bff;
-  /* Màu chữ phù hợp với spinner */
 }
 </style>

@@ -11,6 +11,7 @@ const selectedCategoryId = ref(null);
 const pageSize = ref(5);
 const currentPage = ref(1);
 const expandedRows = ref({});
+const isLoading = ref(true);
 
 const getAllProduct = async () => {
   try {
@@ -21,8 +22,11 @@ const getAllProduct = async () => {
     allCategories.value = response.data.categories;
   } catch (error) {
     console.log(error);
+  } finally {
+    isLoading.value = false;
   }
 };
+
 const showModal = ref(false);
 const selectedImage = ref("");
 
@@ -82,6 +86,7 @@ const hiddenProduct = async (id, status) => {
     });
 
     if (result.isConfirmed) {
+      isLoading.value = true;
       await axios.put(`http://127.0.0.1:8000/api/product/hidden/${id}`, {
         status: status,
       });
@@ -107,6 +112,8 @@ const hiddenProduct = async (id, status) => {
       timer: 2000,
       timerProgressBar: true,
     });
+  } finally {
+    isLoading.value = false;
   }
 };
 
@@ -115,6 +122,7 @@ watch([searchQuery, selectedCategoryId, pageSize], () => {
 });
 
 onMounted(async () => {
+  isLoading.value = true;
   await getAllProduct();
 });
 </script>
@@ -123,23 +131,12 @@ onMounted(async () => {
   <div class="d-flex justify-content-between">
     <h3 class="text-primary fw-bold">Danh sách sản phẩm</h3>
 
-    <router-link
-      to="/admin/product/insert"
-      type="button"
-      class="btn btn-primary h-25"
-      >Thêm sản phẩm</router-link
-    >
+    <router-link to="/admin/product/insert" type="button" class="btn btn-primary h-25">Thêm sản phẩm</router-link>
   </div>
   <div class="d-flex gap-3 flex-wrap mb-2">
     <div>
       <label for="search-input" class="form-label">Tìm kiếm sản phẩm</label>
-      <input
-        type="text"
-        id="search-input"
-        class="form-control"
-        placeholder="Nhập từ khoá..."
-        v-model="searchQuery"
-      />
+      <input type="text" id="search-input" class="form-control" placeholder="Nhập từ khoá..." v-model="searchQuery" />
     </div>
 
     <div>
@@ -181,54 +178,63 @@ onMounted(async () => {
         </tr>
       </thead>
       <tbody>
-        <template
-          v-for="product in paginatedAndFilteredProducts"
-          :key="product.id"
-        >
+        <tr v-if="isLoading" v-for="n in pageSize" :key="n">
+          <td>
+            <div class="skeleton-box" style="width: 20px"></div>
+          </td>
+          <td>
+            <div class="skeleton-box"></div>
+          </td>
+          <td>
+            <div class="skeleton-box"></div>
+          </td>
+          <td>
+            <div class="skeleton-box"></div>
+          </td>
+          <td>
+            <div class="skeleton-box"></div>
+          </td>
+          <td>
+            <div class="skeleton-box"></div>
+          </td>
+        </tr>
+
+        <template v-else-if="paginatedAndFilteredProducts.length > 0" v-for="product in paginatedAndFilteredProducts"
+          :key="product.id">
           <tr>
             <td>
-              <button
-                v-if="product.variants && product.variants.length > 0"
-                @click="toggleVariants(product.id)"
-                class="btn btn-sm"
-              >
-                <i class="bi bi-caret-right-fill"></i>
+              <button v-if="product.variants && product.variants.length > 0" @click="toggleVariants(product.id)"
+                class="btn btn-sm">
+                <i class="bi bi-caret-right-fill" :class="{ 'rotate-icon': expandedRows[product.id] }"></i>
               </button>
             </td>
             <td>{{ product.name }}</td>
             <td>{{ product.price }}</td>
             <td>{{ product.category_name }}</td>
-
             <td>
-              <span
-                :class="[
-                  'badge',
-                  product.status === 'published' ? 'bg-success' : 'bg-danger',
-                ]"
-              >
+              <span :class="[
+                'badge',
+                product.status === 'published' ? 'bg-success' : 'bg-danger',
+              ]">
                 {{ product.status === "published" ? "Hiển thị" : "Đã ẩn" }}
               </span>
             </td>
             <td>
               <div class="d-flex gap-2">
-                <router-link
-                  :to="`/admin/product/edit/${product.id}`"
-                  class="btn btn-primary btn-sm"
-                >
+                <router-link :to="`/admin/product/edit/${product.id}`"
+                  v-if="product.variants.every((variant) => variant.order_count === 0)" class="btn btn-primary btn-sm">
                   Sửa
                 </router-link>
-                <button
-                  v-if="product.status === 'published'"
-                  @click="hiddenProduct(product.id, 'discontinued')"
-                  class="btn btn-danger btn-sm"
-                >
+
+                <router-link :to="`/admin/product/edit/${product.id}`" v-else class="btn btn-primary btn-sm">
+                  Chi tiết
+                </router-link>
+
+                <button v-if="product.status === 'published'" @click="hiddenProduct(product.id, 'discontinued')"
+                  class="btn btn-danger btn-sm">
                   Ẩn
                 </button>
-                <button
-                  v-else
-                  @click="hiddenProduct(product.id, 'published')"
-                  class="btn btn-danger btn-sm"
-                >
+                <button v-else @click="hiddenProduct(product.id, 'published')" class="btn btn-danger btn-sm">
                   Hiện
                 </button>
               </div>
@@ -252,30 +258,19 @@ onMounted(async () => {
                       <td>{{ variant.id }}</td>
                       <td>{{ variant.sku }}</td>
                       <td>
-                        <img
-                          :src="variant.image"
-                          @click="openImage(variant.image)"
-                          alt="Variant Image"
-                          class="variant-image"
-                        />
+                        <img :src="variant.image" @click="openImage(variant.image)" alt="Variant Image"
+                          class="variant-image" />
                       </td>
                       <td>
                         <template v-for="item in variant.images">
-                          <img
-                            :src="item.image_url"
-                            alt="Variant Image"
-                            class="variant-image me-1"
-                            @click="openImage(item.image_url)"
-                          />
+                          <img :src="item.image_url" alt="Variant Image" class="variant-image me-1"
+                            @click="openImage(item.image_url)" />
                         </template>
                       </td>
                       <td>
                         <div class="d-flex flex-wrap gap-1">
-                          <span
-                            v-for="attr in variant.attributes"
-                            :key="attr.attribute_value_id"
-                            class="badge bg-primary"
-                          >
+                          <span v-for="attr in variant.attributes" :key="attr.attribute_value_id"
+                            class="badge bg-primary">
                             {{ attr.attribute_name }}
                           </span>
                         </div>
@@ -287,15 +282,17 @@ onMounted(async () => {
             </td>
           </tr>
         </template>
+
+        <tr v-else>
+          <td colspan="6" class="text-center text-secondary">
+            Không có sản phẩm nào
+          </td>
+        </tr>
       </tbody>
     </table>
   </div>
 
-  <Pagination
-    :current-page="currentPage"
-    @update:page="updateCurrentPage"
-    :total-pages="totalPages"
-  />
+  <Pagination :current-page="currentPage" @update:page="updateCurrentPage" :total-pages="totalPages" />
 
   <div v-if="showModal" class="modal-backdrop" @click="closeImage">
     <img :src="selectedImage" class="modal-image" />
@@ -338,5 +335,28 @@ onMounted(async () => {
 
 .variant {
   height: 20px;
+}
+
+/* Thêm CSS cho skeleton loading */
+.skeleton-box {
+  background-color: #e0e0e0;
+  animation: pulse 1.5s infinite ease-in-out;
+  height: 1.2em;
+  border-radius: 4px;
+  width: 100%;
+}
+
+@keyframes pulse {
+  0% {
+    background-color: #e0e0e0;
+  }
+
+  50% {
+    background-color: #f5f5f5;
+  }
+
+  100% {
+    background-color: #e0e0e0;
+  }
 }
 </style>

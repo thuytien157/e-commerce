@@ -4,6 +4,7 @@ use App\Http\Controllers\Attribute;
 use App\Http\Controllers\Category;
 use App\Http\Controllers\Order;
 use App\Http\Controllers\Product;
+use App\Http\Controllers\Report;
 use App\Http\Controllers\Review;
 use App\Http\Controllers\User;
 use Illuminate\Http\Request;
@@ -71,3 +72,12 @@ Route::post('/review', [Review::class, 'createReview'])->middleware('auth:sanctu
 Route::get('/review', [Review::class, 'getAllReview']);
 Route::put('/review/hide/{id}', [Review::class, 'hiddenReview']);
 Route::put('/review/reply/{id}', [Review::class, 'replyReview'])->middleware('auth:sanctum');
+
+
+Route::get('/revenue', [Report::class, 'revenue']);
+Route::get('/status-order', [Report::class, 'statusOrder']);
+Route::get('/product-selling', [Report::class, 'sellingProduct']);
+Route::get('/product-soldout', [Report::class, 'soldOut']);
+Route::get('/top-customer', [Report::class, 'topCustomers']);
+Route::get('/order-review', [Report::class, 'orderReview']);
+

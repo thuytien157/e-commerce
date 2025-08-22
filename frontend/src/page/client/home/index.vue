@@ -32,27 +32,21 @@ const getAllProducts = async () => {
     isLoading.value = false;
   }
 };
-const sortProducts = async (value, section) => {
-  isLoading.value = false;
-  try {
-    if (section === "new_arrivals") {
-      selectedCategoryNewArrivals.value = value;
-    } else if (section === "best_sellers") {
-      selectedCategoryBestSellers.value = value;
-    } else if (section === "top_rated") {
-      selectedCategoryTopRated.value = value;
-    }
 
+const sortProducts = async (value, section) => {
+  try {
     const apiUrl = `http://127.0.0.1:8000/api/product?categories=${value}`;
     const res = await axios.get(apiUrl);
 
     if (section === "new_arrivals") {
       new_arrivals.value = res.data.new_arrivals;
-      // console.log('sss' + new_arrivals.value);
+      selectedCategoryNewArrivals.value = value;
     } else if (section === "best_sellers") {
       best_sellers.value = res.data.best_sellers;
+      selectedCategoryBestSellers.value = value;
     } else if (section === "top_rated") {
       top_rated.value = res.data.top_rated;
+      selectedCategoryTopRated.value = value;
     }
   } catch (error) {
     console.log(error);
@@ -137,9 +131,9 @@ onMounted(async () => {
             <div class="skeleton-button"></div>
           </div>
           <div v-else class="me-2" v-for="value in categories" :key="value.id">
-            <button type="button" class="btn btn-outline-dark btn-sm p-2 mt-2 fw-semibold"
+            <button type="button" class="btn btn-outline-primary btn-sm p-2 mt-2 fw-semibold"
               @click="sortProducts(value.id, 'new_arrivals')" :class="{
-                'btn-dark text-white': selectedCategoryNewArrivals === value.id,
+                'btn-primary text-white': selectedCategoryNewArrivals === value.id,
               }">
               {{ value.name }}
             </button>
@@ -154,7 +148,7 @@ onMounted(async () => {
         <div v-else class="position-relative overflow-hidden w-100 h-100 banner-hover">
           <img src="/images/banner/hangmoive_main.jpg" class="w-100 h-100 object-fit-cover rounded" alt="Hàng mới về" />
           <div class="hover-overlay d-flex align-items-center justify-content-center">
-            <router-link to="/sanpham" class="btn btn-outline-primary btn-sm">Xem tất cả</router-link>
+            <router-link to="/products" class="btn btn-outline-primary btn-sm">Xem tất cả</router-link>
           </div>
         </div>
       </div>
@@ -188,7 +182,7 @@ onMounted(async () => {
                 <div class="product-info">
                   <h4 class="title">
                     <router-link :to="`/product-detail/${product.variants[0].slug}/${product.id}`">{{ product.name
-                      }}</router-link>
+                    }}</router-link>
                   </h4>
                   <Rating :rating="product.rating" :reviewCount="product.rating" />
                   <div class="price">
@@ -232,9 +226,9 @@ onMounted(async () => {
             <div class="skeleton-button"></div>
           </div>
           <div v-else class="me-2" v-for="value in categories" :key="value.id">
-            <button type="button" class="btn btn-outline-dark btn-sm p-2 mt-2 fw-semibold"
+            <button type="button" class="btn btn-outline-primary btn-sm p-2 mt-2 fw-semibold"
               @click="sortProducts(value.id, 'best_sellers')" :class="{
-                'btn-dark text-white': selectedCategoryBestSellers === value.id,
+                'btn-primary text-white': selectedCategoryBestSellers === value.id,
               }">
               {{ value.name }}
             </button>
@@ -270,7 +264,7 @@ onMounted(async () => {
             <div class="product-info">
               <h4 class="title">
                 <router-link :to="`/product-detail/${product.variants[0].slug}/${product.id}`">{{ product.name
-                  }}</router-link>
+                }}</router-link>
               </h4>
               <Rating :rating="product.rating" :reviewCount="product.rating" />
               <div class="price">
@@ -309,9 +303,9 @@ onMounted(async () => {
             <div class="skeleton-button"></div>
           </div>
           <div v-else class="me-2" v-for="value in categories" :key="value.id">
-            <button type="button" class="btn btn-outline-dark btn-sm p-2 mt-2 fw-semibold"
+            <button type="button" class="btn btn-outline-primary btn-sm p-2 mt-2 fw-semibold"
               @click="sortProducts(value.id, 'top_rated')" :class="{
-                'btn-dark text-white': selectedCategoryTopRated === value.id,
+                'btn-primary text-white': selectedCategoryTopRated === value.id,
               }">
               {{ value.name }}
             </button>
@@ -350,7 +344,7 @@ onMounted(async () => {
                 <div class="product-info">
                   <h4 class="title">
                     <router-link :to="`/product-detail/${product.variants[0].slug}/${product.id}`">{{ product.name
-                      }}</router-link>
+                    }}</router-link>
                   </h4>
                   <Rating :rating="product.rating" :reviewCount="product.rating" />
                   <div class="price">
@@ -378,7 +372,7 @@ onMounted(async () => {
         <div v-else class="position-relative overflow-hidden w-100 h-100 banner-hover">
           <img src="/images/banner/hangmoive_main.jpg" class="w-100 h-100 object-fit-cover rounded" alt="Hàng mới về" />
           <div class="hover-overlay d-flex align-items-center justify-content-center">
-            <router-link to="/sanpham" class="btn btn-outline-primary btn-sm">Xem tất cả</router-link>
+            <router-link to="/products" class="btn btn-outline-primary btn-sm">Xem tất cả</router-link>
           </div>
         </div>
       </div>

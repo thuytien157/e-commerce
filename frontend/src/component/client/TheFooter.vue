@@ -5,18 +5,18 @@
         <div class="col-md-4 mb-4 text-start">
           <!-- <img src="../../public/img/logonew.png" alt="logo-footer" width="150px"> -->
           <p class="text-start">
-            ssssssssssssssssssssssssssssssssssssssssssss
+            <img src="/images/logo/logo.svg" alt="Logo" class="logo" width="100px" />
           </p>
           <p>
-            <strong style="color: #c92c3c;">Email:</strong> <a href="mailto:support@titokaqa.com"
+            <strong style="color: blue;">Email:</strong> <a href="mailto:support@titokaqa.com"
               class="text-dark fw-bold">support@.com</a>
           </p>
           <p class="fw-bold">
-            <strong style="color: #c92c3c;">Hotline:</strong> +84 888 888 888
+            <strong style="color: blue;">Hotline:</strong> +84 888 888 888
           </p>
         </div>
         <div class="col-md-2 mb-4">
-          <h5 class="fw-bold" style="color: #c92c3c;">Liên Kết Nhanh</h5>
+          <h5 class="fw-bold" style="color: blue;">Liên Kết Nhanh</h5>
           <ul class="list-unstyled">
             <li><a href="#" class="text-dark">Câu Hỏi Thường Gặp</a></li>
             <li><a href="#" class="text-dark">Điều Khoản & Điều Kiện</a></li>
@@ -25,7 +25,7 @@
           </ul>
         </div>
         <div class="col-md-3 mb-4">
-          <h5 class="fw-bold" style="color: #c92c3c;">Theo Dõi Chúng Tôi</h5>
+          <h5 class="fw-bold" style="color: blue;">Theo Dõi Chúng Tôi</h5>
           <div class="d-flex gap-3 justify-content-center">
             <a href="#" class="text-dark"><i class="bi bi-facebook"></i></a>
             <a href="#" class="text-dark"><i class="bi bi-instagram"></i></a>
@@ -34,18 +34,18 @@
           </div>
         </div>
         <div class="col-md-3 mb-4">
-          <h5 class="fw-bold" style="color: #c92c3c;">Đăng Ký Nhận Tin</h5>
+          <h5 class="fw-bold" style="color: blue;">Đăng Ký Nhận Tin</h5>
           <p>Nhận thông tin khuyến mãi .</p>
           <div class="input-group">
             <input type="email" class="form-control" placeholder="Nhập email của bạn">
-            <button style="background-color: rgb(199, 11, 11)" class="btn btn-danger">Đăng Ký</button>
+            <button style="background-color: blue" class="btn btn-danger">Đăng Ký</button>
           </div>
         </div>
       </div>
       <hr class="text-secondary">
       <div class="row align-items-center">
         <div class="col-md-6 text-center text-md-start">
-          <p class="mb-0">&copy; 2024 All Rights Reserved.</p>
+          <p class="mb-0">&copy; 2025 All Rights.</p>
         </div>
         <div class="col-md-6 text-center text-md-end">
           <!-- <img src="../../public/img/visa.png" alt="Visa" class="me-2" style="height: 30px;">

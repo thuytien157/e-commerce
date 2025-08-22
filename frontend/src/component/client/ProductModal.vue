@@ -5,11 +5,7 @@
             <div class="product-info-container">
                 <div class="product-images">
                     <img :src="mainImage" alt="Sản phẩm chính" class="main-product-image" />
-                    <div class="image-previews">
-                        <img v-for="image in currentVariantImages" :key="image.id" :src="image.image_url"
-                            alt="Ảnh xem trước" class="preview-image" :class="{ active: mainImage === image.image_url }"
-                            @click="mainImage = image.image_url" />
-                    </div>
+                    
                 </div>
 
                 <div class="product-details">
@@ -52,7 +48,7 @@
                                         ">
                                     <span v-if="attribute.name !== 'Màu sắc'">{{
                                         value.attribute_name
-                                    }}</span>
+                                        }}</span>
                                 </button>
                             </div>
                         </div>
@@ -68,7 +64,6 @@
                         <button class="add-to-cart-btn" @click="addToCart">
                             Thêm vào giỏ
                         </button>
-                        <button class="buy-now-btn">Mua ngay</button>
                     </div>
                 </div>
             </div>
@@ -147,6 +142,7 @@ const addToCart = () => {
         productName: props.product.name,
         selectedAttributes: selectedAttributesValues,
         image: mainImage.value,
+        isCheck: true
     };
 
     emit("add-to-cart", item);
@@ -279,6 +275,67 @@ const addToCart = () => {
     margin-top: 20px;
     display: flex;
     gap: 10px;
+}
+
+/* === Responsive styles cho màn hình nhỏ (điện thoại) === */
+@media (max-width: 768px) {
+    .modal-overlay {
+        align-items: flex-end;
+    }
+
+    .modal-content {
+        width: 100%;
+        max-width: none;
+        border-radius: 15px 15px 0 0;
+        animation: slideInUp 0.3s ease-out;
+        padding: 20px 15px;
+    }
+
+    .close-button {
+        top: 10px;
+        right: 15px;
+    }
+
+    .product-info-container {
+        flex-direction: column;
+        overflow-y: auto;
+        max-height: 85vh;
+        padding: 10px;
+    }
+
+    .product-images {
+        flex-direction: row;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+    }
+
+    .product-images .main-product-image {
+        width: 100%;
+        height: 250px;
+    }
+
+    .product-images .image-previews {
+        display: none;
+    }
+
+    .product-details {
+        padding-left: 0;
+        margin-top: 20px;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+    }
+}
+
+@keyframes slideInUp {
+    from {
+        transform: translateY(100%);
+    }
+
+    to {
+        transform: translateY(0);
+    }
 }
 
 .add-to-cart-btn,

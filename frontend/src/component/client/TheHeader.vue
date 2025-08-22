@@ -56,26 +56,35 @@
                 <div class="d-flex justify-content-between align-items-center mb-3 border-bottom pb-2">
                   <router-link to="/cart" class="text-primary text-decoration-none">Xem giỏ hàng</router-link>
                 </div>
-                <ul class="list-unstyled shopping-list m-0 p-0">
+                <ul class="list-unstyled shopping-list m-0 p-0" v-if="cartStore.cartLength">
                   <li class="d-flex align-items-center mb-3" v-for="item in cartStore.items" :key="item.variantId">
-                    <a href="product-details.html" class="flex-shrink-0 me-3">
-                      <img :src="item.image" alt="Apple Watch Series 6" class="cart-item-img rounded-3" />
-                    </a>
-                    <div class="content flex-grow-1">
-                      <h6 class="mb-1">
-                        <a href="product-details.html" class="text-dark text-decoration-none product-name-short">
-                          {{ item.productName }}
-                        </a>
-                      </h6>
-                      <p class="mb-0 text-muted small">
-                        {{ item.quantity }}x - {{ item.selectedAttributes[0] }} -
-                        <span class="fw-bold">{{ formatNumber(item.price) }}VNĐ</span>
-                      </p>
-                    </div>
+                    <template v-if="item.isCheck">
+                      <a href="product-details.html" class="flex-shrink-0 me-3">
+                        <img :src="item.image" alt="Apple Watch Series 6" class="cart-item-img rounded-3" />
+                      </a>
+                      <div class="content flex-grow-1">
+                        <h6 class="mb-1">
+                          <a href="product-details.html" class="text-dark text-decoration-none product-name-short">
+                            {{ item.productName }}
+                          </a>
+                        </h6>
+                        <p class="mb-0 text-muted small">
+                          {{ item.quantity }}x - {{ item.selectedAttributes[0] }} -
+                          <span class="fw-bold">{{ formatNumber(item.price) }}VNĐ</span>
+                        </p>
+                      </div>
 
-                    <i class="bi bi-x-lg" @click.prevent="cartStore.removeItem(item.variantId)"></i>
+                      <i class="bi bi-x-lg" @click.prevent="cartStore.removeItem(item.variantId)"></i>
+                    </template>
+                    
+                    
+
                   </li>
                 </ul>
+                <ul class="list-unstyled shopping-list m-0 p-0" v-else>
+                  <small>Chưa có sản phẩm được chọn</small>
+                </ul>
+                
                 <div class="bottom mt-3 border-top pt-3">
                   <div class="d-flex justify-content-between align-items-center mb-2">
                     <span>Tổng cộng</span>

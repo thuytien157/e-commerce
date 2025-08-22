@@ -12,6 +12,8 @@ const selectedStatus = ref(null);
 const selectedRole = ref(null);
 const selectedUser = ref(null);
 const store = useTokenUser();
+const isLoading = ref(true);
+
 const getAllUsers = async () => {
   try {
     const res = await axios.get("http://127.0.0.1:8000/api/user-info", {
@@ -20,6 +22,8 @@ const getAllUsers = async () => {
     users.value = res.data.users;
   } catch (error) {
     console.log(error);
+  } finally {
+    isLoading.value = false;
   }
 };
 
@@ -162,15 +166,16 @@ const assignRole = async (id) => {
       await axios.put(`http://127.0.0.1:8000/api/assign-role/${id}`, null, {
         headers: { Authorization: `Bearer ${store.token}` },
       });
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "success",
+        title: "Cập nhật thành công",
+        showConfirmButton: false,
+        timer: 2000,
+      });
     }
-    Swal.fire({
-      toast: true,
-      position: "top-end",
-      icon: "success",
-      title: "Cập nhật thành công",
-      showConfirmButton: false,
-      timer: 2000,
-    });
+
     await getAllUsers();
   } catch (error) {
     console.log(error);
@@ -200,15 +205,16 @@ const lockRole = async (id, status) => {
       }, {
         headers: { Authorization: `Bearer ${store.token}` },
       });
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "success",
+        title: "Cập nhật thành công",
+        showConfirmButton: false,
+        timer: 2000,
+      });
     }
-    Swal.fire({
-      toast: true,
-      position: "top-end",
-      icon: "success",
-      title: "Cập nhật thành công",
-      showConfirmButton: false,
-      timer: 2000,
-    });
+
     await getAllUsers();
   } catch (error) {
     console.log(error);
@@ -224,6 +230,7 @@ const lockRole = async (id, status) => {
 };
 
 onMounted(async () => {
+  isLoading.value = true;
   await getAllUsers();
 });
 </script>
@@ -274,7 +281,28 @@ onMounted(async () => {
         </tr>
       </thead>
       <tbody>
-        <template v-for="user in paginatedAndFilteredUsers" :key="user.id">
+        <tr v-if="isLoading" v-for="n in pageSize" :key="n">
+          <td>
+            <div class="skeleton-box"></div>
+          </td>
+          <td>
+            <div class="skeleton-box"></div>
+          </td>
+          <td>
+            <div class="skeleton-box"></div>
+          </td>
+          <td>
+            <div class="skeleton-box"></div>
+          </td>
+          <td>
+            <div class="skeleton-box"></div>
+          </td>
+          <td>
+            <div class="skeleton-box"></div>
+          </td>
+        </tr>
+        <template v-else-if="paginatedAndFilteredUsers.length > 0" v-for="user in paginatedAndFilteredUsers"
+          :key="user.id">
           <tr>
             <td>{{ user.id }}</td>
             <td>
@@ -316,6 +344,11 @@ onMounted(async () => {
             </td>
           </tr>
         </template>
+        <tr v-else>
+          <td colspan="6" class="text-center text-secondary">
+            Không có người dùng nào
+          </td>
+        </tr>
       </tbody>
     </table>
   </div>
@@ -385,5 +418,27 @@ onMounted(async () => {
   max-width: 90%;
   max-height: 90%;
   border-radius: 8px;
+}
+
+.skeleton-box {
+  background-color: #e0e0e0;
+  animation: pulse 1.5s infinite ease-in-out;
+  height: 1.2em;
+  border-radius: 4px;
+  width: 100%;
+}
+
+@keyframes pulse {
+  0% {
+    background-color: #e0e0e0;
+  }
+
+  50% {
+    background-color: #f5f5f5;
+  }
+
+  100% {
+    background-color: #e0e0e0;
+  }
 }
 </style>

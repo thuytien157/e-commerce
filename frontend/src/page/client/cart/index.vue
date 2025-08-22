@@ -18,13 +18,12 @@ const formatNumber = (num) => {
                         <div v-for="item in cartStore.items" :key="item.variantId"
                             class="list-group-item d-flex justify-content-between align-items-center">
                             <div class="d-flex align-items-center flex-grow-1">
-                                <img :src="item.image" alt="Sản phẩm" class="img-thumbnail">
+                                <input class="me-2" type="checkbox" :id="'item-' + item.variantId"
+                                    v-model="item.isCheck" @change="cartStore.checkbox(item.variantId)">
                                 <div class="ms-3">
                                     <p class="mb-1 fw-bold">{{ item.productName }}</p>
                                     <div class="text-muted small"> {{ item.selectedAttributes.join(", ") }}</div>
-                                    <p><a href="#"
-                                            class="link-primary link-offset-2 link-underline-opacity-25 link-underline-opacity-100-hover">Sửa</a>
-                                    </p>
+                                    
                                 </div>
                             </div>
                             <div class="cart-action-col d-flex justify-content-between">

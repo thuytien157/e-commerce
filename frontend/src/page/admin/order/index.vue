@@ -15,6 +15,7 @@ const selectedStatusPayment = ref(null);
 const cancellation_reason = ref("Đơn vị vận chuyển lấy hàng không thành công");
 const orderToCancel = ref(null);
 const check = ref(false);
+const isLoading = ref(true);
 
 const getAllOrders = async () => {
   try {
@@ -22,8 +23,11 @@ const getAllOrders = async () => {
     orders.value = res.data.orders;
   } catch (error) {
     console.log(error);
+  } finally {
+    isLoading.value = false;
   }
 };
+
 const getVariantAttributes = (attributes) => {
   if (!attributes || attributes.length === 0) {
     return "N/A";
@@ -31,6 +35,7 @@ const getVariantAttributes = (attributes) => {
   const sizeAttribute = attributes.find((attr) => attr.attribute_id === 1);
   return sizeAttribute ? sizeAttribute.value_name : "N/A";
 };
+
 const calculateSubtotal = (items) => {
   return items.reduce((sum, item) => sum + item.subtotal, 0);
 };
@@ -77,6 +82,7 @@ const updateStatus = async (id, status, cancellationReason = null) => {
       cancelButtonText: "Hủy",
     });
     if (result.isConfirmed) {
+      isLoading.value = true;
       await axios.put(`http://127.0.0.1:8000/api/order-update-status/${id}`, {
         status: status,
         cancellation_reason: cancellationReason,
@@ -101,6 +107,8 @@ const updateStatus = async (id, status, cancellationReason = null) => {
       timer: 2000,
     });
     console.log(error);
+  } finally {
+    isLoading.value = false;
   }
 };
 
@@ -154,8 +162,11 @@ function closeImage() {
 
 const filteredOrders = computed(() => {
   return orders.value.filter((order) => {
-    const isStatusMatch = !selectedStatus.value || order.status == selectedStatus.value;
-    const isPaymentStatusMatch = !selectedStatusPayment.value || order.status_payments == selectedStatusPayment.value;
+    const isStatusMatch =
+      !selectedStatus.value || order.status == selectedStatus.value;
+    const isPaymentStatusMatch =
+      !selectedStatusPayment.value ||
+      order.status_payments == selectedStatusPayment.value;
 
     return isStatusMatch && isPaymentStatusMatch;
   });
@@ -169,7 +180,7 @@ const paginatedAndFilteredOrders = computed(() => {
 
 const totalPages = computed(() => {
   return Math.ceil(filteredOrders.value.length / pageSize.value);
-})
+});
 
 const updateCurrentPage = (page) => {
   if (page >= 1 && page <= totalPages.value) {
@@ -193,7 +204,7 @@ const printInvoice = (record) => {
     .then((response) => {
       const file = new Blob([response.data], { type: "application/pdf" });
       const fileURL = URL.createObjectURL(file);
-      window.open(fileURL); //mở tab mới
+      window.open(fileURL);
     })
     .catch((error) => {
       console.error("Lỗi in hóa đơn:", error);
@@ -201,6 +212,7 @@ const printInvoice = (record) => {
 };
 
 onMounted(async () => {
+  isLoading.value = true;
   await getAllOrders();
 });
 </script>
@@ -212,7 +224,11 @@ onMounted(async () => {
   <div class="d-flex gap-3 flex-wrap mb-2">
     <div>
       <label for="rating-select" class="form-label">Trạng thái đơn hàng</label>
-      <select id="rating-select" class="form-select rounded-2" v-model="selectedStatus">
+      <select
+        id="rating-select"
+        class="form-select rounded-2"
+        v-model="selectedStatus"
+      >
         <option :value="null">Mặc định</option>
         <option value="Chờ xác nhận">Chờ xác nhận</option>
         <option value="Đã xác nhận">Đã xác nhận</option>
@@ -223,8 +239,14 @@ onMounted(async () => {
       </select>
     </div>
     <div>
-      <label for="rating-select" class="form-label">Trạng thái thanh toán</label>
-      <select id="rating-select" class="form-select rounded-2" v-model="selectedStatusPayment">
+      <label for="rating-select" class="form-label"
+        >Trạng thái thanh toán</label
+      >
+      <select
+        id="rating-select"
+        class="form-select rounded-2"
+        v-model="selectedStatusPayment"
+      >
         <option :value="null">Mặc định</option>
         <option value="Đã thanh toán">Đã thanh toán</option>
         <option value="Chưa thanh toán">Chưa thanh toán</option>
@@ -254,14 +276,45 @@ onMounted(async () => {
         </tr>
       </thead>
       <tbody>
-        <template v-for="order in paginatedAndFilteredOrders" :key="order.id">
+        <tr v-if="isLoading" v-for="n in pageSize" :key="n">
+          <td>
+            <div class="skeleton-box"></div>
+          </td>
+          <td>
+            <div class="skeleton-box"></div>
+          </td>
+          <td>
+            <div class="skeleton-box"></div>
+          </td>
+          <td>
+            <div class="skeleton-box"></div>
+          </td>
+          <td>
+            <div class="skeleton-box"></div>
+          </td>
+          <td>
+            <div class="skeleton-box"></div>
+          </td>
+          <td>
+            <div class="skeleton-box"></div>
+          </td>
+        </tr>
+        <template
+          v-else-if="paginatedAndFilteredOrders.length > 0"
+          v-for="order in paginatedAndFilteredOrders"
+          :key="order.id"
+        >
           <tr>
             <td>{{ order.id }}</td>
             <td>{{ FormatData.formatDateTime(order.order_date) }}</td>
             <td v-if="order.customer">
               <div class="d-flex align-items-center gap-2">
-                <img :src="order.customer.avatar" alt="avatar" class="rounded-circle"
-                  style="width: 30px; height: 30px; object-fit: cover" />
+                <img
+                  :src="order.customer.avatar"
+                  alt="avatar"
+                  class="rounded-circle"
+                  style="width: 30px; height: 30px; object-fit: cover"
+                />
                 <div class="d-flex flex-column">
                   <span>{{ order.customer.username }}</span>
                   <small class="text-muted">{{ order.customer.email }}</small>
@@ -273,62 +326,114 @@ onMounted(async () => {
               {{ FormatData.formatNumber(order.total_amount) }}
             </td>
             <td>
-              <span class="badge rounded-pill fw-bold" :class="getStatusClass(order.status_payments)">
+              <span
+                class="badge rounded-pill fw-bold"
+                :class="getStatusClass(order.status_payments)"
+              >
                 {{ order.status_payments }}
               </span>
             </td>
             <td>
-              <select v-model="order.status" class="form-select rounded-0" @change="handleStatusChange(order)"
-                :disabled="order.status == 'Hoàn thành' || order.status == 'Thất bại'
-                  ">
-                <option value="Chờ xác nhận" :disabled="!canSelectStatus(order.status, 'Chờ xác nhận')">
+              <select
+                v-model="order.status"
+                class="form-select rounded-0"
+                @change="handleStatusChange(order)"
+                :disabled="
+                  order.status == 'Hoàn thành' || order.status == 'Thất bại'
+                "
+              >
+                <option
+                  value="Chờ xác nhận"
+                  :disabled="!canSelectStatus(order.status, 'Chờ xác nhận')"
+                >
                   Chờ xác nhận
                 </option>
-                <option value="Đã xác nhận" :disabled="!canSelectStatus(order.status, 'Đã xác nhận')">
+                <option
+                  value="Đã xác nhận"
+                  :disabled="!canSelectStatus(order.status, 'Đã xác nhận')"
+                >
                   Đã xác nhận
                 </option>
-                <option value="Đang xử lý" :disabled="!canSelectStatus(order.status, 'Đang xử lý')">
+                <option
+                  value="Đang xử lý"
+                  :disabled="!canSelectStatus(order.status, 'Đang xử lý')"
+                >
                   Đang xử lý
                 </option>
-                <option value="Đang giao hàng" :disabled="!canSelectStatus(order.status, 'Đang giao hàng')">
+                <option
+                  value="Đang giao hàng"
+                  :disabled="!canSelectStatus(order.status, 'Đang giao hàng')"
+                >
                   Đang giao hàng
                 </option>
-                <option value="Hoàn thành" :disabled="!canSelectStatus(order.status, 'Hoàn thành')">
+                <option
+                  value="Hoàn thành"
+                  :disabled="!canSelectStatus(order.status, 'Hoàn thành')"
+                >
                   Hoàn thành
                 </option>
-                <option value="Thất bại" :disabled="!canSelectStatus(order.status, 'Thất bại')">
+                <option
+                  value="Thất bại"
+                  :disabled="!canSelectStatus(order.status, 'Thất bại')"
+                >
                   Thất bại
                 </option>
               </select>
             </td>
             <td>
               <div class="d-flex gap-2">
-                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#reviewDetailModal"
-                  @click="selectOrder(order)">
+                <button
+                  class="btn btn-primary btn-sm"
+                  data-bs-toggle="modal"
+                  data-bs-target="#reviewDetailModal"
+                  @click="selectOrder(order)"
+                >
                   Xem chi tiết
                 </button>
-                <button class="btn btn-info btn-sm" @click="printInvoice(order.id)">
+                <button
+                  class="btn btn-info btn-sm"
+                  @click="printInvoice(order.id)"
+                >
                   Xuất hoá đơn
                 </button>
               </div>
             </td>
           </tr>
         </template>
+        <tr v-else>
+          <td colspan="7" class="text-center text-secondary">
+            Không có đơn hàng nào
+          </td>
+        </tr>
       </tbody>
     </table>
   </div>
 
-  <Pagination :current-page="currentPage" @update:page="updateCurrentPage" :total-pages="totalPages" />
+  <Pagination
+    :current-page="currentPage"
+    @update:page="updateCurrentPage"
+    :total-pages="totalPages"
+  />
 
-  <div class="modal fade" id="reviewDetailModal" tabindex="-1" aria-labelledby="reviewDetailModalLabel"
-    aria-hidden="true">
+  <div
+    class="modal fade"
+    id="reviewDetailModal"
+    tabindex="-1"
+    aria-labelledby="reviewDetailModalLabel"
+    aria-hidden="true"
+  >
     <div class="modal-dialog modal-xl modal-dialog-centered">
       <div class="modal-content" v-if="selectedOrder">
         <div class="modal-header">
           <h1 class="modal-title fs-5" id="reviewDetailModalLabel">
             Chi tiết đơn hàng #{{ selectedOrder.id }}
           </h1>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal"
+            aria-label="Close"
+          ></button>
         </div>
         <div class="modal-body">
           <div class="row g-4 mb-4">
@@ -373,13 +478,19 @@ onMounted(async () => {
                   </div>
                   <div class="mb-2">
                     <strong class="pe-1">Trạng thái:</strong>
-                    <span class="badge rounded-pill fw-bold" :class="getStatusClass(selectedOrder.status)">
+                    <span
+                      class="badge rounded-pill fw-bold"
+                      :class="getStatusClass(selectedOrder.status)"
+                    >
                       {{ selectedOrder.status }}
                     </span>
                   </div>
                   <div class="mb-2">
                     <strong class="pe-1">Trạng thái thanh toán:</strong>
-                    <span class="badge rounded-pill fw-bold" :class="getStatusClass(selectedOrder.status_payments)">
+                    <span
+                      class="badge rounded-pill fw-bold"
+                      :class="getStatusClass(selectedOrder.status_payments)"
+                    >
                       {{ selectedOrder.status_payments }}
                     </span>
                   </div>
@@ -410,20 +521,30 @@ onMounted(async () => {
                     </tr>
                   </thead>
                   <tbody>
-                    <tr v-for="(item, index) in selectedOrder.order_items" :key="item.id">
+                    <tr
+                      v-for="(item, index) in selectedOrder.order_items"
+                      :key="item.id"
+                    >
                       <td class="text-center">{{ index + 1 }}</td>
                       <td>
                         <div class="d-flex align-items-center">
-                          <img :src="item.variant.main_image_url" style="width: 30px; height: auto" class="me-2"
-                            :alt="item.variant.slug" @click="openImage(item.variant.main_image_url)" />
+                          <img
+                            :src="item.variant.main_image_url"
+                            style="width: 30px; height: auto"
+                            class="me-2"
+                            :alt="item.variant.slug"
+                            @click="openImage(item.variant.main_image_url)"
+                          />
                           <div>
                             <div class="fw-bold">
                               {{ item.variant.product.name }}
                             </div>
-                            <small class="text-muted">Kích thước:
+                            <small class="text-muted"
+                              >Kích thước:
                               {{
                                 getVariantAttributes(item.variant.attributes)
-                              }}</small>
+                              }}</small
+                            >
                           </div>
                         </div>
                       </td>
@@ -464,7 +585,11 @@ onMounted(async () => {
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            data-bs-dismiss="modal"
+          >
             Đóng
           </button>
         </div>
@@ -478,47 +603,95 @@ onMounted(async () => {
           <h1 class="modal-title fs-5" id="cancelModalLabel">
             Bạn có chắc muốn hủy đơn hàng?
           </h1>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          <button
+            type="button"
+            class="btn-close"
+            data-bs-dismiss="modal"
+            aria-label="Close"
+          ></button>
         </div>
         <div class="modal-body">
           <p>Vui lòng cho chúng tôi biết lý do đơn hàng bị hủy:</p>
           <div class="form-check">
-            <input class="form-check-input" type="radio" name="cancelReason" id="reason1" value="Hết hàng"
-              v-model="cancellation_reason" />
-            <label class="form-check-label" for="reason1" @click="check = false">
+            <input
+              class="form-check-input"
+              type="radio"
+              name="cancelReason"
+              id="reason1"
+              value="Hết hàng"
+              v-model="cancellation_reason"
+            />
+            <label
+              class="form-check-label"
+              for="reason1"
+              @click="check = false"
+            >
               Hết hàng
             </label>
           </div>
           <div class="form-check">
-            <input class="form-check-input" type="radio" name="cancelReason" id="reason2"
-              value="Đơn vị vận chuyển lấy hàng không thành công" v-model="cancellation_reason"
-              @click="check = false" />
+            <input
+              class="form-check-input"
+              type="radio"
+              name="cancelReason"
+              id="reason2"
+              value="Đơn vị vận chuyển lấy hàng không thành công"
+              v-model="cancellation_reason"
+              @click="check = false"
+            />
             <label class="form-check-label" for="reason2">
               Đơn vị vận chuyển lấy hàng không thành công
             </label>
           </div>
           <div class="form-check">
-            <input class="form-check-input" type="radio" name="cancelReason" id="reason3"
-              value="Có lỗi xảy ra trong quá trình giao hàng" v-model="cancellation_reason" @click="check = false" />
+            <input
+              class="form-check-input"
+              type="radio"
+              name="cancelReason"
+              id="reason3"
+              value="Có lỗi xảy ra trong quá trình giao hàng"
+              v-model="cancellation_reason"
+              @click="check = false"
+            />
             <label class="form-check-label" for="reason3">
               Có lỗi xảy ra trong quá trình giao hàng
             </label>
           </div>
           <div class="form-check">
-            <input class="form-check-input" type="radio" name="cancelReason" id="reason4" value="Khác"
-              @click="(check = true), (cancellation_reason = null)" />
+            <input
+              class="form-check-input"
+              type="radio"
+              name="cancelReason"
+              id="reason4"
+              value="Khác"
+              @click="(check = true), (cancellation_reason = null)"
+            />
             <label class="form-check-label" for="reason4">
               Khác (vui lòng nhập bên dưới)
             </label>
           </div>
-          <textarea v-if="check" class="form-control mt-3" rows="3" placeholder="Nhập lý do khác..."
-            v-model="cancellation_reason"></textarea>
+          <textarea
+            v-if="check"
+            class="form-control mt-3"
+            rows="3"
+            placeholder="Nhập lý do khác..."
+            v-model="cancellation_reason"
+          ></textarea>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            data-bs-dismiss="modal"
+          >
             Đóng
           </button>
-          <button type="button" class="btn btn-danger" data-bs-dismiss="modal" @click="confirmCancellation">
+          <button
+            type="button"
+            class="btn btn-danger"
+            data-bs-dismiss="modal"
+            @click="confirmCancellation"
+          >
             Xác nhận hủy
           </button>
         </div>
@@ -529,6 +702,7 @@ onMounted(async () => {
     <img :src="selectedImage" class="modal-image" />
   </div>
 </template>
+
 <style scoped>
 .rotate-icon {
   transform: rotate(90deg);
@@ -551,5 +725,27 @@ onMounted(async () => {
   max-width: 90%;
   max-height: 90%;
   border-radius: 8px;
+}
+
+.skeleton-box {
+  background-color: #e0e0e0;
+  animation: pulse 1.5s infinite ease-in-out;
+  height: 1.2em;
+  border-radius: 4px;
+  width: 100%;
+}
+
+@keyframes pulse {
+  0% {
+    background-color: #e0e0e0;
+  }
+
+  50% {
+    background-color: #f5f5f5;
+  }
+
+  100% {
+    background-color: #e0e0e0;
+  }
 }
 </style>

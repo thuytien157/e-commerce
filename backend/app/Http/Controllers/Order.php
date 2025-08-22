@@ -6,6 +6,7 @@ use App\Events\OrderUpdated;
 use App\Jobs\sendMail;
 use App\Models\Order as ModelsOrder;
 use App\Models\OrderItem;
+use App\Models\Variant;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon as SupportCarbon;
@@ -106,9 +107,16 @@ class Order extends Controller
 
             $orderItemsData = [];
             foreach ($request->input('cartItems') as $item) {
+                $variant = Variant::find($item['variantId']);
+                if (!$variant || $variant->stock_quantity < $item['quantity']) {
+                    DB::rollBack();
+                    return response()->json(['error' => 'Sản phẩm ' . $variant->product->name . ' - ' . $variant->name . ' không đủ hàng tồn kho.'], 400);
+                }
+
                 $unitPrice = $item['price'];
                 $quantity = $item['quantity'];
-
+                $variant->stock_quantity -= $quantity;
+                $variant->save();
                 $orderItemsData[] = [
                     'order_id' => $order->id,
                     'variant_id' => $item['variantId'],
@@ -249,19 +257,39 @@ class Order extends Controller
             ], 422);
         }
         $order = ModelsOrder::find($request->id);
+
         if (!$order) {
             return response()->json([
                 'mess' => 'Không tìm thấy đơn hàng'
             ], 404);
         }
-
-        $order->status = 'Thất bại';
-        $order->cancellation_reason = $request->cancellation_reason;
-        if ($order->save()) {
-            event(new OrderUpdated($order->id));
+        if ($order->status == 'Thất bại') {
             return response()->json([
-                'mess' => 'Huỷ đơn thành công'
+                'mess' => 'Đơn hàng đã bị hủy trước đó'
+            ], 400);
+        }
+        DB::beginTransaction();
+        try {
+            $orderItems = $order->orderItems()->get();
+            foreach ($orderItems as $item) {
+                $variant = Variant::find($item->variant_id);
+                if ($variant) {
+                    $variant->stock_quantity += $item->quantity;
+                    $variant->save();
+                }
+            }
+            $order->status = 'Thất bại';
+            $order->cancellation_reason = $request->cancellation_reason;
+            $order->save();
+
+            event(new OrderUpdated($order->id));
+
+            return response()->json([
+                'mess' => 'Huỷ đơn thành công và đã hoàn lại số lượng vào kho'
             ], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['error' => 'Có lỗi xảy ra khi hủy đơn hàng: ' . $e->getMessage()], 500);
         }
     }
 
@@ -287,15 +315,28 @@ class Order extends Controller
         }
 
         $order->status = $request->status;
-        if ($request->status == 'Thất bại') {
-            $order->cancellation_reason = $request->cancellation_reason;
-        }
-
-        if ($order->save()) {
-            event(new OrderUpdated($order->id));
-            return response()->json([
-                'mess' => 'Cập nhật trạng thái thành công'
-            ], 200);
+        DB::beginTransaction();
+        try {
+            if ($request->status == 'Thất bại') {
+                $orderItems = $order->orderItems()->get();
+                foreach ($orderItems as $item) {
+                    $variant = Variant::find($item->variant_id);
+                    if ($variant) {
+                        $variant->stock_quantity += $item->quantity;
+                        $variant->save();
+                    }
+                }
+                $order->cancellation_reason = $request->cancellation_reason;
+            }
+            if ($order->save()) {
+                event(new OrderUpdated($order->id));
+                return response()->json([
+                    'mess' => 'Cập nhật trạng thái thành công'
+                ], 200);
+            }
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['error' => 'Có lỗi xảy: ' . $e->getMessage()], 500);
         }
     }
 

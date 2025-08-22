@@ -9,6 +9,7 @@ const searchQuery = ref("");
 const pageSize = ref(5);
 const currentPage = ref(1);
 const expandedRows = ref({});
+const isLoading = ref(true);
 
 const getAllCategories = async () => {
     try {
@@ -16,17 +17,17 @@ const getAllCategories = async () => {
         allCategories.value = res.data.categories;
     } catch (error) {
         console.log(error);
+    } finally {
+        isLoading.value = false;
     }
 };
 
-
 const filteredCategories = computed(() => {
-    return allCategories.value.filter(category => {
+    return allCategories.value.filter((category) => {
         const lowerCaseSearch = searchQuery.value.toLowerCase();
         const issearchQuery =
             !searchQuery.value ||
             category.name.toLowerCase().includes(lowerCaseSearch);
-
         return issearchQuery;
     });
 });
@@ -64,6 +65,7 @@ const deleteCategory = async (id) => {
         });
 
         if (result.isConfirmed) {
+            isLoading.value = true;
             await axios.delete(`http://127.0.0.1:8000/api/category/${id}`);
             await getAllCategories();
             Swal.fire({
@@ -87,6 +89,8 @@ const deleteCategory = async (id) => {
             timer: 2000,
             timerProgressBar: true,
         });
+    } finally {
+        isLoading.value = false;
     }
 };
 
@@ -95,6 +99,7 @@ watch([searchQuery, pageSize], () => {
 });
 
 onMounted(async () => {
+    isLoading.value = true;
     await getAllCategories();
 });
 </script>
@@ -135,7 +140,29 @@ onMounted(async () => {
                 </tr>
             </thead>
             <tbody>
-                <template v-for="category in paginatedAndFilteredCategories" :key="category.id">
+                <tr v-if="isLoading" v-for="n in pageSize" :key="n">
+                    <td>
+                        <div class="skeleton-box" style="width: 20px;"></div>
+                    </td>
+                    <td>
+                        <div class="skeleton-box"></div>
+                    </td>
+                    <td>
+                        <div class="skeleton-box"></div>
+                    </td>
+                    <td>
+                        <div class="skeleton-box"></div>
+                    </td>
+                    <td>
+                        <div class="skeleton-box"></div>
+                    </td>
+                    <td>
+                        <div class="skeleton-box"></div>
+                    </td>
+                </tr>
+
+                <template v-else-if="paginatedAndFilteredCategories.length > 0"
+                    v-for="category in paginatedAndFilteredCategories" :key="category.id">
                     <tr>
                         <td>
                             <button v-if="category.children && category.children.length > 0"
@@ -146,15 +173,16 @@ onMounted(async () => {
                         </td>
                         <td>{{ category.id }}</td>
                         <td>{{ category.name }}</td>
-                        <td>{{ category.parent_name || 'Không có' }}</td>
+                        <td>{{ category.parent_name || "Không có" }}</td>
                         <td>{{ category.all_products_count }}</td>
                         <td>
                             <div class="d-flex gap-2">
                                 <router-link :to="`/admin/category/edit/${category.id}`"
                                     class="btn btn-primary btn-sm">Sửa</router-link>
-                                <button @click="deleteCategory(category.id)"
-                                    v-if="category.all_products_count === 0 && (!category.children || category.children.length === 0)"
-                                    class="btn btn-danger btn-sm">
+                                <button @click="deleteCategory(category.id)" v-if="
+                                    category.all_products_count === 0 &&
+                                    (!category.children || category.children.length === 0)
+                                " class="btn btn-danger btn-sm">
                                     Xoá
                                 </button>
                             </div>
@@ -171,9 +199,10 @@ onMounted(async () => {
                                 <div class="d-flex gap-2">
                                     <router-link :to="`/admin/category/edit/${child.id}`"
                                         class="btn btn-primary btn-sm">Sửa</router-link>
-                                    <button @click="deleteCategory(child.id)"
-                                        v-if="child.all_products_count === 0 && (!child.children || child.children.length === 0)"
-                                        class="btn btn-danger btn-sm">
+                                    <button @click="deleteCategory(child.id)" v-if="
+                                        child.all_products_count === 0 &&
+                                        (!child.children || child.children.length === 0)
+                                    " class="btn btn-danger btn-sm">
                                         Xoá
                                     </button>
                                 </div>
@@ -181,16 +210,42 @@ onMounted(async () => {
                         </tr>
                     </template>
                 </template>
+
+                <tr v-else>
+                    <td colspan="6" class="text-center text-secondary">
+                        Không có danh mục nào
+                    </td>
+                </tr>
             </tbody>
         </table>
     </div>
 
     <Pagination :current-page="currentPage" @update:page="updateCurrentPage" :total-pages="totalPages" />
-
 </template>
-
 <style scoped>
 .rotate-icon {
     transform: rotate(90deg);
+}
+
+.skeleton-box {
+    background-color: #e0e0e0;
+    animation: pulse 1.5s infinite ease-in-out;
+    height: 1.2em;
+    border-radius: 4px;
+    width: 100%;
+}
+
+@keyframes pulse {
+    0% {
+        background-color: #e0e0e0;
+    }
+
+    50% {
+        background-color: #f5f5f5;
+    }
+
+    100% {
+        background-color: #e0e0e0;
+    }
 }
 </style>

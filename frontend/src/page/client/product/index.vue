@@ -5,32 +5,54 @@ import { computed, onMounted, ref } from "vue";
 import FormatData from "@/component/store/FormatData";
 import { useCartStore } from "@/component/store/cart";
 import ProductModal from "@/component/client/ProductModal.vue";
+
 const products = ref([]);
 const categories = ref([]);
 const attributes = ref([]);
 const isLoading = ref(true);
-
-const getAllProducts = async () => {
-  try {
-    const res = await axios.get("http://127.0.0.1:8000/api/product");
-    const response = await axios.get("http://127.0.0.1:8000/api/category");
-    const response1 = await axios.get("http://127.0.0.1:8000/api/attribute");
-    products.value = res.data.products;
-    categories.value = response.data.categories;
-    // Sửa ở đây: Gán toàn bộ mảng attributes vào biến ref
-    attributes.value = response1.data.attributes;
-  } catch (error) {
-    console.log(error);
-  } finally {
-    isLoading.value = false;
-  }
-};
+const pagination = ref({});
+const currentPage = ref(1);
 
 const selectedCategories = ref([]);
 const selectedSort = ref("");
 const selectedAttributeValues = ref({});
 const selectedRating = ref([]);
 const selectedPrice = ref([]);
+
+const getStaticData = async () => {
+  try {
+    const [catRes, attrRes] = await Promise.all([
+      axios.get("http://127.0.0.1:8000/api/category"),
+      axios.get("http://127.00.0.1:8000/api/attribute")
+    ]);
+    categories.value = catRes.data.categories;
+    attributes.value = attrRes.data.attributes;
+  } catch (error) {
+    console.error("Lỗi khi tải dữ liệu tĩnh:", error);
+  }
+};
+
+const fetchProducts = async (page = 1) => {
+  currentPage.value = page;
+  try {
+    const url = `http://127.0.0.1:8000/api/product?page=${currentPage.value}&${queryParams.value}`;
+    const res = await axios.get(url);
+
+    if (res.data && res.data.products) {
+      products.value = res.data.products;
+      pagination.value = res.data.pagination;
+
+    } else {
+      console.error("Dữ liệu sản phẩm không hợp lệ:", res.data);
+      products.value = [];
+      pagination.value = {};
+    }
+  } catch (error) {
+    console.error("Lỗi khi tải sản phẩm:", error);
+    products.value = [];
+    pagination.value = {};
+  }
+};
 
 const toggleAttributeFilter = (attributeId, valueName) => {
   if (!selectedAttributeValues.value[attributeId]) {
@@ -42,7 +64,7 @@ const toggleAttributeFilter = (attributeId, valueName) => {
   } else {
     selectedAttributeValues.value[attributeId].push(valueName);
   }
-  fetchProducts();
+  fetchProducts(1);
 };
 
 const isAttributeSelected = computed(() => (attributeId, valueName) => {
@@ -77,18 +99,16 @@ const queryParams = computed(() => {
   return params.toString();
 });
 
-const fetchProducts = async () => {
-  try {
-    const url = `http://127.0.0.1:8000/api/product?${queryParams.value}`;
-    const res = await axios.get(url);
-    products.value = res.data.products;
-  } catch (error) {
-    console.error("Lỗi khi tải sản phẩm:", error);
-  }
-};
 const sortProducts = (value) => {
   selectedSort.value = value;
-  fetchProducts();
+  fetchProducts(1);
+};
+
+const goToPage = (page) => {
+  if (page >= 1 && page <= pagination.value.last_page) {
+    currentPage.value = page;
+    fetchProducts(page);
+  }
 };
 
 const showModal = ref(false);
@@ -112,7 +132,8 @@ const handleAddToCart = (itemToAdd) => {
 
 onMounted(async () => {
   isLoading.value = true;
-  await getAllProducts();
+  await getStaticData();
+  await fetchProducts();
   isLoading.value = false;
 });
 </script>
@@ -122,7 +143,14 @@ onMounted(async () => {
     <div class="container">
       <div class="row">
         <div class="col-lg-3 col-12">
-          <div class="product-sidebar">
+          <div class="d-lg-none d-flex justify-content-center mb-3">
+            <button class="btn btn-primary w-100" type="button" data-bs-toggle="offcanvas"
+              data-bs-target="#sidebarFilter" aria-controls="sidebarFilter">
+              <i class="bi bi-filter-left"></i> Bộ lọc
+            </button>
+          </div>
+
+          <div class="d-none d-lg-block product-sidebar">
             <div class="single-widget condition">
               <h3>Danh mục</h3>
               <div v-if="isLoading">
@@ -133,15 +161,14 @@ onMounted(async () => {
               </div>
               <div class="form-check" v-else v-for="value in categories" :key="value.id">
                 <input class="form-check-input" type="checkbox" :value="value.id" :id="'category-' + value.id"
-                  v-model="selectedCategories" @change="fetchProducts" />
+                  v-model="selectedCategories" @change="fetchProducts()" />
                 <label class="form-check-label" :for="'category-' + value.id">
                   {{ value.name }} ({{ value.all_products_count }})
                 </label>
-
                 <div class="form-check ps-4" v-if="value.children.length > 0">
                   <div class="mt-1" v-for="item in value.children" :key="item.id">
                     <input class="form-check-input" type="checkbox" :value="item.id" :id="'category-' + item.id"
-                      v-model="selectedCategories" @change="fetchProducts" />
+                      v-model="selectedCategories" @change="fetchProducts()" />
                     <label class="form-check-label" :for="'category-' + item.id">
                       {{ item.name }} ({{ item.products_count }})
                     </label>
@@ -204,35 +231,35 @@ onMounted(async () => {
               <h3>Giá</h3>
               <div class="form-check">
                 <input class="form-check-input" type="checkbox" id="flexCheckDefault1" value="1" v-model="selectedPrice"
-                  @change="fetchProducts" />
+                  @change="fetchProducts()" />
                 <label class="form-check-label" for="flexCheckDefault1" style="font-size: 14px">
                   Dưới 1,000,000VNĐ
                 </label>
               </div>
               <div class="form-check">
                 <input class="form-check-input" type="checkbox" value="1_2" id="flexCheckDefault2"
-                  v-model="selectedPrice" @change="fetchProducts" />
+                  v-model="selectedPrice" @change="fetchProducts()" />
                 <label class="form-check-label" for="flexCheckDefault2" style="font-size: 14px">
                   1,000,000VNĐ - 2,000,000VNĐ
                 </label>
               </div>
               <div class="form-check">
                 <input class="form-check-input" type="checkbox" value="2_3" id="flexCheckDefault3"
-                  v-model="selectedPrice" @change="fetchProducts" />
+                  v-model="selectedPrice" @change="fetchProducts()" />
                 <label class="form-check-label" for="flexCheckDefault3" style="font-size: 14px">
                   2,000,000VNĐ - 3,000,000VNĐ
                 </label>
               </div>
               <div class="form-check">
                 <input class="form-check-input" type="checkbox" value="3_4" id="flexCheckDefault3"
-                  v-model="selectedPrice" @change="fetchProducts" />
+                  v-model="selectedPrice" @change="fetchProducts()" />
                 <label class="form-check-label" for="flexCheckDefault3" style="font-size: 14px">
                   3,000,000VNĐ - 4,000,000VNĐ
                 </label>
               </div>
               <div class="form-check">
                 <input class="form-check-input" type="checkbox" value="tren_4" id="flexCheckDefault4"
-                  v-model="selectedPrice" @change="fetchProducts" />
+                  v-model="selectedPrice" @change="fetchProducts()" />
                 <label class="form-check-label" for="flexCheckDefault4" style="font-size: 14px">
                   Trên 4,000,000VNĐ
                 </label>
@@ -242,28 +269,28 @@ onMounted(async () => {
               <h3>Đánh giá</h3>
               <div class="form-check">
                 <input class="form-check-input" type="checkbox" value="5" id="rating-5" v-model="selectedRating"
-                  @change="fetchProducts" />
+                  @change="fetchProducts()" />
                 <label class="form-check-label" for="rating-5" style="font-size: 14px">
                   5 <i class="bi bi-star-fill text-warning"></i>
                 </label>
               </div>
               <div class="form-check">
                 <input class="form-check-input" type="checkbox" value="4_5" id="rating-4_5" v-model="selectedRating"
-                  @change="fetchProducts" />
+                  @change="fetchProducts()" />
                 <label class="form-check-label" for="rating-4_5" style="font-size: 14px">
                   4 - 5 <i class="bi bi-star-fill text-warning"></i>
                 </label>
               </div>
               <div class="form-check">
                 <input class="form-check-input" type="checkbox" value="3_4" id="rating-3_4" v-model="selectedRating"
-                  @change="fetchProducts" />
+                  @change="fetchProducts()" />
                 <label class="form-check-label" for="rating-3_4" style="font-size: 14px">
                   3 - 4 <i class="bi bi-star-fill text-warning"></i>
                 </label>
               </div>
               <div class="form-check">
                 <input class="form-check-input" type="checkbox" value="duoi_3" id="rating-below-3"
-                  v-model="selectedRating" @change="fetchProducts" />
+                  v-model="selectedRating" @change="fetchProducts()" />
                 <label class="form-check-label" for="rating-below-3" style="font-size: 14px">
                   Dưới 3 <i class="bi bi-star-fill text-warning"></i>
                 </label>
@@ -271,6 +298,164 @@ onMounted(async () => {
             </div>
           </div>
         </div>
+
+        <div class="offcanvas offcanvas-start" tabindex="-1" id="sidebarFilter" aria-labelledby="sidebarFilterLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="sidebarFilterLabel">Bộ lọc sản phẩm</h5>
+            <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <div class="product-sidebar">
+              <div class="single-widget condition">
+                <h3>Danh mục</h3>
+                <div v-if="isLoading">
+                  <div class="form-check my-2" v-for="n in 5" :key="n">
+                    <div class="skeleton-checkbox"></div>
+                    <div class="skeleton-text"></div>
+                  </div>
+                </div>
+                <div class="form-check" v-else v-for="value in categories" :key="value.id">
+                  <input class="form-check-input" type="checkbox" :value="value.id" :id="'category-mobile-' + value.id"
+                    v-model="selectedCategories" @change="fetchProducts()" />
+                  <label class="form-check-label" :for="'category-mobile-' + value.id">
+                    {{ value.name }} ({{ value.all_products_count }})
+                  </label>
+                  <div class="form-check ps-4" v-if="value.children.length > 0">
+                    <div class="mt-1" v-for="item in value.children" :key="item.id">
+                      <input class="form-check-input" type="checkbox" :value="item.id"
+                        :id="'category-mobile-' + item.id" v-model="selectedCategories" @change="fetchProducts()" />
+                      <label class="form-check-label" :for="'category-mobile-' + item.id">
+                        {{ item.name }} ({{ item.products_count }})
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div v-for="attribute in attributes" :key="attribute.id">
+                <div class="single-widget condition">
+                  <h3>{{ attribute.name }}</h3>
+                  <div v-if="isLoading">
+                    <div v-if="attribute.name === 'Màu sắc'" class="d-flex gap-1 mt-2">
+                      <div v-for="n in 5" :key="'skeleton-color-' + n" class="skeleton-color"></div>
+                    </div>
+                    <div v-else class="d-flex gap-4">
+                      <div class="form-check" v-for="n in 3" :key="'skeleton-attribute-' + n">
+                        <div class="skeleton-checkbox"></div>
+                        <div class="skeleton-text short"></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div v-else
+                    :class="{ 'd-flex gap-4': attribute.name !== 'Màu sắc', 'd-flex gap-1 mt-2': attribute.name === 'Màu sắc' }">
+                    <div v-for="value in attribute.attribute_values" :key="value.id">
+                      <template v-if="attribute.name === 'Màu sắc'">
+                        <div class="d-inline-block rounded-circle" :class="{
+                          'border-2 border-primary': isAttributeSelected(
+                            attribute.id,
+                            value.value_name
+                          ),
+                          'color-selected': isAttributeSelected(
+                            attribute.id,
+                            value.value_name
+                          ),
+                        }" @click="toggleAttributeFilter(attribute.id, value.value_name)" :style="{
+                          width: '1.35rem',
+                          height: '1.35rem',
+                          'background-color': value.value_name,
+                          cursor: 'pointer',
+                          border: isAttributeSelected(attribute.id, value.value_name)
+                            ? '2px solid #0d6efd'
+                            : '1px solid #ccc',
+                        }"></div>
+                      </template>
+                      <template v-else>
+                        <div class="form-check">
+                          <input class="form-check-input" type="checkbox" :value="value.value_name"
+                            :id="'attribute-mobile-' + value.id"
+                            @change="toggleAttributeFilter(attribute.id, value.value_name)"
+                            :checked="isAttributeSelected(attribute.id, value.value_name)" />
+                          <label class="form-check-label" :for="'attribute-mobile-' + value.id">
+                            {{ value.value_name }}
+                          </label>
+                        </div>
+                      </template>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="single-widget condition">
+                <h3>Giá</h3>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="flexCheckDefault1-mobile" value="1"
+                    v-model="selectedPrice" @change="fetchProducts()" />
+                  <label class="form-check-label" for="flexCheckDefault1-mobile" style="font-size: 14px">
+                    Dưới 1,000,000VNĐ
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" value="1_2" id="flexCheckDefault2-mobile"
+                    v-model="selectedPrice" @change="fetchProducts()" />
+                  <label class="form-check-label" for="flexCheckDefault2-mobile" style="font-size: 14px">
+                    1,000,000VNĐ - 2,000,000VNĐ
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" value="2_3" id="flexCheckDefault3-mobile"
+                    v-model="selectedPrice" @change="fetchProducts()" />
+                  <label class="form-check-label" for="flexCheckDefault3-mobile" style="font-size: 14px">
+                    2,000,000VNĐ - 3,000,000VNĐ
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" value="3_4" id="flexCheckDefault3-mobile"
+                    v-model="selectedPrice" @change="fetchProducts()" />
+                  <label class="form-check-label" for="flexCheckDefault3-mobile" style="font-size: 14px">
+                    3,000,000VNĐ - 4,000,000VNĐ
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" value="tren_4" id="flexCheckDefault4-mobile"
+                    v-model="selectedPrice" @change="fetchProducts()" />
+                  <label class="form-check-label" for="flexCheckDefault4-mobile" style="font-size: 14px">
+                    Trên 4,000,000VNĐ
+                  </label>
+                </div>
+              </div>
+              <div class="single-widget condition">
+                <h3>Đánh giá</h3>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" value="5" id="rating-5-mobile"
+                    v-model="selectedRating" @change="fetchProducts()" />
+                  <label class="form-check-label" for="rating-5-mobile" style="font-size: 14px">
+                    5 <i class="bi bi-star-fill text-warning"></i>
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" value="4_5" id="rating-4_5-mobile"
+                    v-model="selectedRating" @change="fetchProducts()" />
+                  <label class="form-check-label" for="rating-4_5-mobile" style="font-size: 14px">
+                    4 - 5 <i class="bi bi-star-fill text-warning"></i>
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" value="3_4" id="rating-3_4-mobile"
+                    v-model="selectedRating" @change="fetchProducts()" />
+                  <label class="form-check-label" for="rating-3_4-mobile" style="font-size: 14px">
+                    3 - 4 <i class="bi bi-star-fill text-warning"></i>
+                  </label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" value="duoi_3" id="rating-below-3-mobile"
+                    v-model="selectedRating" @change="fetchProducts()" />
+                  <label class="form-check-label" for="rating-below-3-mobile" style="font-size: 14px">
+                    Dưới 3 <i class="bi bi-star-fill text-warning"></i>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="col-lg-9 col-12">
           <div class="product-grids-head">
             <div class="product-grid-topbar">
@@ -333,7 +518,7 @@ onMounted(async () => {
                             <router-link :to="`/product-detail/${product.variants[0].slug}/${product.id}`">{{
                               product.name }}</router-link>
                           </h4>
-                          <Rating :rating="product.rating" :reviewCount="product.rating" />
+                          <Rating :rating="product.rating" :reviewCount="product.reviews_count" />
                           <div class="price">
                             <span>{{ FormatData.formatNumber(product.price) }}VNĐ</span>
                           </div>
@@ -353,27 +538,32 @@ onMounted(async () => {
                     </div>
                   </template>
 
-
-
                 </div>
                 <div class="row">
                   <div class="col-12">
-                    <div class="pagination left">
+                    <div v-if="pagination.last_page > 1" class="pagination-container">
                       <ul class="pagination-list">
-                        <li><a href="javascript:void(0)">1</a></li>
-                        <li class="active">
-                          <a href="javascript:void(0)">2</a>
-                        </li>
-                        <li><a href="javascript:void(0)">3</a></li>
-                        <li><a href="javascript:void(0)">4</a></li>
                         <li>
-                          <a href="javascript:void(0)"><i class="lni lni-chevron-right"></i></a>
+                          <a href="javascript:void(0)" :class="{ disabled: currentPage === 1 }"
+                            @click.prevent="goToPage(currentPage - 1)">
+                            <i class="lni lni-chevron-left"></i>
+                          </a>
+                        </li>
+                        <li v-for="page in pagination.last_page" :key="page" :class="{ active: page === currentPage }">
+                          <a href="javascript:void(0)" @click.prevent="goToPage(page)">{{ page }}</a>
+                        </li>
+                        <li>
+                          <a href="javascript:void(0)" :class="{ disabled: currentPage === pagination.last_page }"
+                            @click.prevent="goToPage(currentPage + 1)">
+                            <i class="lni lni-chevron-right"></i>
+                          </a>
                         </li>
                       </ul>
                     </div>
                   </div>
                 </div>
               </div>
+
               <div class="tab-pane fade" id="nav-list" role="tabpanel" aria-labelledby="nav-list-tab">
                 <div class="row">
                   <div class="col-lg-12 col-md-12 col-12" v-if="isLoading" v-for="n in 4" :key="'skeleton-list-' + n">
@@ -414,8 +604,7 @@ onMounted(async () => {
                                 <router-link :to="`/product-detail/${product.variants[0].slug}/${product.id}`">{{
                                   product.name }}</router-link>
                               </h4>
-                              <Rating :rating="product.rating" :reviewCount="product.rating" />
-
+                              <Rating :rating="product.rating" :reviewCount="product.reviews_count" />
                               <div class="price">
                                 <span>{{ FormatData.formatNumber(product.price) }}VNĐ</span>
                               </div>
@@ -423,12 +612,12 @@ onMounted(async () => {
                                 <span v-for="value in FormatData.uniqueColors(
                                   product.variants
                                 )" :key="value.attribute_value_id" class="d-inline-block rounded-circle" style="
-                                      width: 1.75rem;
-                                      height: 1.75rem;
-                                      border: 1px solid #ccc;
-                                    " :style="{
-                                      'background-color': value.attribute_name,
-                                    }">
+                                        width: 1.75rem;
+                                        height: 1.75rem;
+                                        border: 1px solid #ccc;
+                                      " :style="{
+                                        'background-color': value.attribute_name,
+                                      }">
                                 </span>
                               </div>
                             </div>
@@ -436,28 +625,35 @@ onMounted(async () => {
                         </div>
                       </div>
                     </div>
+
+                    <div class="row">
+                      <div class="col-12">
+                        <div v-if="pagination.last_page > 1" class="pagination-container">
+                          <ul class="pagination-list">
+                            <li>
+                              <a href="javascript:void(0)" :class="{ disabled: currentPage === 1 }"
+                                @click.prevent="goToPage(currentPage - 1)">
+                                <i class="lni lni-chevron-left"></i>
+                              </a>
+                            </li>
+                            <li v-for="page in pagination.last_page" :key="page"
+                              :class="{ active: page === currentPage }">
+                              <a href="javascript:void(0)" @click.prevent="goToPage(page)">{{ page }}</a>
+                            </li>
+                            <li>
+                              <a href="javascript:void(0)" :class="{ disabled: currentPage === pagination.last_page }"
+                                @click.prevent="goToPage(currentPage + 1)">
+                                <i class="lni lni-chevron-right"></i>
+                              </a>
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
                   </template>
 
-
-
                 </div>
-                <div class="row">
-                  <div class="col-12">
-                    <div class="pagination left">
-                      <ul class="pagination-list">
-                        <li><a href="javascript:void(0)">1</a></li>
-                        <li class="active">
-                          <a href="javascript:void(0)">2</a>
-                        </li>
-                        <li><a href="javascript:void(0)">3</a></li>
-                        <li><a href="javascript:void(0)">4</a></li>
-                        <li>
-                          <a href="javascript:void(0)"><i class="lni lni-chevron-right"></i></a>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
+
               </div>
             </div>
           </div>
@@ -468,8 +664,95 @@ onMounted(async () => {
       @add-to-cart="handleAddToCart" />
   </section>
 </template>
-
 <style scoped>
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 30px;
+}
+
+.pagination-list {
+  display: flex;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  gap: 8px;
+}
+
+.pagination-list li a {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 40px;
+  height: 40px;
+  padding: 0 12px;
+  text-decoration: none;
+  color: #555;
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+}
+
+.pagination-list li a:hover:not(.disabled) {
+  background-color: #e9ecef;
+  border-color: #e9ecef;
+  color: #000;
+}
+
+.pagination-list li.active a {
+  background-color: #007bff;
+  border-color: #007bff;
+  color: #fff;
+  font-weight: bold;
+}
+
+.pagination-list li a.disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  background-color: #f1f1f1;
+  color: #999;
+}
+
+.form-check-label {
+  font-size: 14px;
+}
+
+@media (max-width: 767px) {
+  .home-product-list .custom-responsive-margin {
+    margin-bottom: 40px;
+  }
+}
+
+.banner-hover {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.banner-hover .hover-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.banner-hover:hover .hover-overlay {
+  opacity: 1;
+}
+
+a {
+  text-decoration: none;
+}
+
+/* ==========================================================
+  # Skeleton Loading Styles
+========================================================== */
 .skeleton-image {
   background-color: #e2e2e2;
   height: 250px;
@@ -514,26 +797,13 @@ onMounted(async () => {
   width: 100%;
 }
 
-@keyframes pulse {
-  0% {
-    background-color: #e2e2e2;
-  }
-
-  50% {
-    background-color: #f0f0f0;
-  }
-
-  100% {
-    background-color: #e2e2e2;
-  }
-}
-
 .skeleton-checkbox {
   width: 1rem;
   height: 1rem;
   background-color: #f0f0f0;
   display: inline-block;
   border-radius: 4px;
+  animation: pulse 1.5s infinite ease-in-out;
 }
 
 .skeleton-text {
@@ -543,6 +813,7 @@ onMounted(async () => {
   display: inline-block;
   margin-left: 8px;
   border-radius: 4px;
+  animation: pulse 1.5s infinite ease-in-out;
 }
 
 .skeleton-color {
@@ -557,22 +828,23 @@ onMounted(async () => {
   width: 30%;
 }
 
-.color-selected {
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-  transform: scale(1.1);
-  transition: box-shadow 0.2s ease-in-out, transform 0.2s ease-in-out;
-}
+@keyframes pulse {
+  0% {
+    background-color: #e2e2e2;
+  }
 
-.form-check-label {
-  font-size: 14px;
-}
+  50% {
+    background-color: #f0f0f0;
+  }
 
-@media (max-width: 767px) {
-  .home-product-list .custom-responsive-margin {
-    margin-bottom: 40px;
+  100% {
+    background-color: #e2e2e2;
   }
 }
 
+/* ==========================================================
+  # Product List & Card Styles
+========================================================== */
 .home-product-list .list-title {
   position: relative;
   margin-bottom: 24px;
@@ -793,28 +1065,9 @@ onMounted(async () => {
   display: inline-block;
 }
 
-a {
-  text-decoration: none;
-}
-
-.banner-hover {
-  position: relative;
-  overflow: hidden;
-  cursor: pointer;
-}
-
-.banner-hover .hover-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.banner-hover:hover .hover-overlay {
-  opacity: 1;
+.color-selected {
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+  transform: scale(1.1);
+  transition: box-shadow 0.2s ease-in-out, transform 0.2s ease-in-out;
 }
 </style>
