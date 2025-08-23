@@ -26,6 +26,7 @@ return new class extends Migration
             $table->string('guest_address')->nullable();
             $table->string('guest_email')->nullable();
             $table->string('cancellation_reason')->nullable();
+            $table->string('note')->nullable();
         });
     }
 

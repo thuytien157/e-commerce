@@ -22,15 +22,17 @@ class Product extends Seeder
                                 Logo được thêu tinh tế ở mặt trước và túi sau, tạo điểm nhấn thời trang.
                                 Chất vải cao cấp, thoải mái
                                 Màu sắc hiện đại, dễ dàng phối với nhiều trang phục khác nhau',
+                'price' => 4990000
             ],
             [ //2
                 'category_id' => 2,
-                'name' => 'Quần jogger unisex lưng thun Jacquard Monogram',
+                'name' => 'Áo unisex Jacquard Monogram',
                 'description' => 'Thiết kế phom quần năng động, cá tính
                                 Dây rút điều chỉnh giúp tùy chỉnh độ ôm vừa vặn của quần
                                 Logo được thêu tinh tế ở mặt trước và túi sau, tạo điểm nhấn thời trang.
                                 Chất vải cao cấp, thoải mái
                                 Màu sắc hiện đại, dễ dàng phối với nhiều trang phục khác nhau',
+                'price' => 2990000,
             ],
 
         ]);

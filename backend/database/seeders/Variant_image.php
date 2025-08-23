@@ -13,23 +13,160 @@ class Variant_image extends Seeder
      */
     public function run(): void
     {
-        DB::table('variants')->insert([
+        DB::table('variant_images')->insert([
             [ //1
-                'product_id' => 1,
-                'sku' => 'SP-Q01-01-01',
-                'price' => 3990000,
-                'stock_quantity' => 100,
-                'slug' => 'quan-dai-unisex-ong-rong-lung-thun-varsity-sportive-black-s',
-                'main_image_url' => 'quan-dai-unisex-ong-rong-lung-thun-varsity-sportive',
+                'variant_id' => 1,
+                'image_url' => 'https://res.cloudinary.com/daqhc6id1/image/upload/v1741107765/products/lhautibbggb2gcypvvnm.jpg',
             ],
             [ //1
-                'product_id' => 1,
-                'sku' => 'SP-Q01-02-01',
-                'price' => 4990000,
-                'stock_quantity' => 100,
-                'slug' => 'quan-dai-unisex-ong-rong-lung-thun-varsity-sportive-white-s',
-                'main_image_url' => 'quan-dai-unisex-ong-rong-lung-thun-varsity-sportive',
+                'variant_id' => 1,
+                'image_url' => 'https://res.cloudinary.com/daqhc6id1/image/upload/v1741107765/products/bzrmx6ojerz3tmclsebg.jpg',
             ],
+            [ //1
+                'variant_id' => 1,
+                'image_url' => 'https://res.cloudinary.com/daqhc6id1/image/upload/v1741107765/products/htbfekbwxowdhfclujgt.jpg',
+            ],
+            [ //1
+                'variant_id' => 1,
+                'image_url' => 'https://res.cloudinary.com/daqhc6id1/image/upload/v1741107765/products/t0a0i7wm6c16ijiogyfe.jpg',
+            ],
+            [ //1
+                'variant_id' => 1,
+                'image_url' => 'https://res.cloudinary.com/daqhc6id1/image/upload/v1741107765/products/j2zxmcv1zi1oqahwnh2y.jpg',
+            ],
+            [ //1
+                'variant_id' => 2,
+                'image_url' => 'https://res.cloudinary.com/daqhc6id1/image/upload/v1741107764/products/zbsgbqhj3tds0wpkneak.jpg',
+            ],
+            [ //1
+                'variant_id' => 2,
+                'image_url' => 'https://res.cloudinary.com/daqhc6id1/image/upload/v1741107764/products/su9pgctwk148xxmx2q6a.jpg',
+            ],
+            [ //1
+                'variant_id' => 2,
+                'image_url' => 'https://res.cloudinary.com/daqhc6id1/image/upload/v1741107764/products/n5xjfk72jfcqm2o0boco.jpg',
+            ],
+            [ //1
+                'variant_id' => 2,
+                'image_url' => 'https://res.cloudinary.com/daqhc6id1/image/upload/v1741107765/products/u1vgxajgkoxkaegsbdd6.jpg',
+            ],
+            [ //1
+                'variant_id' => 3,
+                'image_url' => 'https://res.cloudinary.com/daqhc6id1/image/upload/v1741107765/products/lhautibbggb2gcypvvnm.jpg',
+            ],
+            [ //1
+                'variant_id' => 3,
+                'image_url' => 'https://res.cloudinary.com/daqhc6id1/image/upload/v1741107765/products/bzrmx6ojerz3tmclsebg.jpg',
+            ],
+            [ //1
+                'variant_id' => 3,
+                'image_url' => 'https://res.cloudinary.com/daqhc6id1/image/upload/v1741107765/products/htbfekbwxowdhfclujgt.jpg',
+            ],
+            [ //1
+                'variant_id' => 3,
+                'image_url' => 'https://res.cloudinary.com/daqhc6id1/image/upload/v1741107765/products/t0a0i7wm6c16ijiogyfe.jpg',
+            ],
+            [ //1
+                'variant_id' => 3,
+                'image_url' => 'https://res.cloudinary.com/daqhc6id1/image/upload/v1741107765/products/j2zxmcv1zi1oqahwnh2y.jpg',
+            ],
+            [ //1
+                'variant_id' => 4,
+                'image_url' => 'https://res.cloudinary.com/daqhc6id1/image/upload/v1741107764/products/zbsgbqhj3tds0wpkneak.jpg',
+            ],
+            [ //1
+                'variant_id' => 4,
+                'image_url' => 'https://res.cloudinary.com/daqhc6id1/image/upload/v1741107764/products/su9pgctwk148xxmx2q6a.jpg',
+            ],
+            [ //1
+                'variant_id' => 4,
+                'image_url' => 'https://res.cloudinary.com/daqhc6id1/image/upload/v1741107764/products/n5xjfk72jfcqm2o0boco.jpg',
+            ],
+            [ //1
+                'variant_id' => 4,
+                'image_url' => 'https://res.cloudinary.com/daqhc6id1/image/upload/v1741107765/products/u1vgxajgkoxkaegsbdd6.jpg',
+            ],
+            [ //1
+                'variant_id' => 5,
+                'image_url' => 'https://res.cloudinary.com/daqhc6id1/image/upload/v1741107773/products/szqtqzkx00xk1rk8meii.webp',
+            ],
+            [ //1
+                'variant_id' => 5,
+                'image_url' => 'https://res.cloudinary.com/daqhc6id1/image/upload/v1741107773/products/uqktmdsuzzwoakhr8zz8.webp',
+            ],
+            [ //1
+                'variant_id' => 5,
+                'image_url' => 'https://res.cloudinary.com/daqhc6id1/image/upload/v1741107773/products/lkg7oiyjrfjjqjqdvlyc.webp',
+            ],
+            [ //1
+                'variant_id' => 5,
+                'image_url' => 'https://res.cloudinary.com/daqhc6id1/image/upload/v1741107773/products/vczhj6ixpcbmkivb028d.webp',
+            ],
+            [ //1
+                'variant_id' => 5,
+                'image_url' => 'https://res.cloudinary.com/daqhc6id1/image/upload/v1741107773/products/ce0bym2bl1gnju4yqb6a.webp',
+            ],
+            [ //1
+                'variant_id' => 6,
+                'image_url' => 'https://res.cloudinary.com/daqhc6id1/image/upload/v1741107774/products/c3hkjvxx89ww2sjd43il.webp',
+            ],
+            [ //1
+                'variant_id' => 6,
+                'image_url' => 'https://res.cloudinary.com/daqhc6id1/image/upload/v1741107774/products/wqeszixlj3t1rxby3eev.webp',
+            ],
+            [ //1
+                'variant_id' => 6,
+                'image_url' => 'https://res.cloudinary.com/daqhc6id1/image/upload/v1741107774/products/z42w2702rbxk6rr2r7da.webp',
+            ],
+            [ //1
+                'variant_id' => 6,
+                'image_url' => 'https://res.cloudinary.com/daqhc6id1/image/upload/v1741107774/products/xnmzk0szqguvywwdjaoz.webp',
+            ],
+            [ //1
+                'variant_id' => 6,
+                'image_url' => 'https://res.cloudinary.com/daqhc6id1/image/upload/v1741107774/products/hgdsdm6mv1m5o48ogguy.webp',
+            ],
+            [ //1
+                'variant_id' => 7,
+                'image_url' => 'https://res.cloudinary.com/daqhc6id1/image/upload/v1741107773/products/szqtqzkx00xk1rk8meii.webp',
+            ],
+            [ //1
+                'variant_id' => 7,
+                'image_url' => 'https://res.cloudinary.com/daqhc6id1/image/upload/v1741107773/products/uqktmdsuzzwoakhr8zz8.webp',
+            ],
+            [ //1
+                'variant_id' => 7,
+                'image_url' => 'https://res.cloudinary.com/daqhc6id1/image/upload/v1741107773/products/lkg7oiyjrfjjqjqdvlyc.webp',
+            ],
+            [ //1
+                'variant_id' => 7,
+                'image_url' => 'https://res.cloudinary.com/daqhc6id1/image/upload/v1741107773/products/vczhj6ixpcbmkivb028d.webp',
+            ],
+            [ //1
+                'variant_id' => 7,
+                'image_url' => 'https://res.cloudinary.com/daqhc6id1/image/upload/v1741107773/products/ce0bym2bl1gnju4yqb6a.webp',
+            ],
+            [ //1
+                'variant_id' => 8,
+                'image_url' => 'https://res.cloudinary.com/daqhc6id1/image/upload/v1741107774/products/c3hkjvxx89ww2sjd43il.webp',
+            ],
+            [ //1
+                'variant_id' => 8,
+                'image_url' => 'https://res.cloudinary.com/daqhc6id1/image/upload/v1741107774/products/wqeszixlj3t1rxby3eev.webp',
+            ],
+            [ //1
+                'variant_id' => 8,
+                'image_url' => 'https://res.cloudinary.com/daqhc6id1/image/upload/v1741107774/products/z42w2702rbxk6rr2r7da.webp',
+            ],
+            [ //1
+                'variant_id' => 8,
+                'image_url' => 'https://res.cloudinary.com/daqhc6id1/image/upload/v1741107774/products/xnmzk0szqguvywwdjaoz.webp',
+            ],
+            [ //1
+                'variant_id' => 8,
+                'image_url' => 'https://res.cloudinary.com/daqhc6id1/image/upload/v1741107774/products/hgdsdm6mv1m5o48ogguy.webp',
+            ],
+
         ]);
     }
 }

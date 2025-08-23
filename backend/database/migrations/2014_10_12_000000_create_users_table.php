@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('provider_id')->nullable();
             $table->string('provider_name')->nullable();
             $table->enum('status', ['active', 'banned'])->default('active');
-            $table->enum('role', ['admin', 'customer'])->default('customer');
+            $table->enum('role', ['manager', 'admin', 'customer'])->default('customer');
             $table->rememberToken();
             $table->timestamps();
         });

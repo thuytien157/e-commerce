@@ -7,7 +7,8 @@ use App\Jobs\sendMail;
 use App\Models\Order as ModelsOrder;
 use App\Models\OrderItem;
 use App\Models\Variant;
-use Barryvdh\DomPDF\Facade\Pdf;
+use Barryvdh\Snappy\Facades\SnappyPdf as PDF;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon as SupportCarbon;
 use Illuminate\Support\Facades\Auth;
@@ -95,6 +96,7 @@ class Order extends Controller
             $order->guest_email = $request->guest_email;
             $order->total_amount = $request->total_amount;
             $order->shipping_money = $request->shipping_money;
+            $order->note = $request->note ?? null;
             $order->order_date = SupportCarbon::now();
             if ($request->payment_method == 'VNPAY') {
                 $order->payment_method = 'VNPAY';
@@ -283,7 +285,7 @@ class Order extends Controller
             $order->save();
 
             event(new OrderUpdated($order->id));
-
+            DB::commit();
             return response()->json([
                 'mess' => 'Huỷ đơn thành công và đã hoàn lại số lượng vào kho'
             ], 200);
@@ -315,6 +317,7 @@ class Order extends Controller
         }
 
         $order->status = $request->status;
+
         DB::beginTransaction();
         try {
             if ($request->status == 'Thất bại') {
@@ -328,7 +331,11 @@ class Order extends Controller
                 }
                 $order->cancellation_reason = $request->cancellation_reason;
             }
+            if ($request->status == 'Hoàn thành') {
+                $order->status_payments = 'Đã thanh toán';
+            }
             if ($order->save()) {
+                DB::commit();
                 event(new OrderUpdated($order->id));
                 return response()->json([
                     'mess' => 'Cập nhật trạng thái thành công'
@@ -429,9 +436,14 @@ class Order extends Controller
                 'guest_address' => $order->guest_address,
             ];
 
-            // Tạo PDF
-            $pdf = PDF::loadView('pdf.invoice', $pdfData);
-            return $pdf->stream('hoadon' . $order->id . '.pdf', ['Attachment' => 0]);
+            $pdf = PDF::loadView('pdf.invoice', $pdfData)
+                ->setPaper('A6', 'portrait')
+                ->setOption('margin-top', 5)
+                ->setOption('margin-bottom', 5)
+                ->setOption('margin-left', 5)
+                ->setOption('margin-right', 5);
+
+            return $pdf->stream('hoadon_' . $order->id . '.pdf', ['Attachment' => false]);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => false,

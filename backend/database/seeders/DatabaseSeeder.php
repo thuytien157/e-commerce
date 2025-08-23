@@ -17,6 +17,10 @@ class DatabaseSeeder extends Seeder
             Category::class,
             Product::class,
             Variant::class,
+            Variant_image::class,
+            Attribute::class,
+            Attribute_value::class,
+            Variant_attribute::class
         ]);
     }
 }

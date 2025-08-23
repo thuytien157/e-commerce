@@ -21,7 +21,8 @@ class Order extends Model
         'total_amount',
         'shipping_money',
         'order_date',
-        'cancellation_reason'
+        'cancellation_reason',
+        'note',
     ];
 
     public function orderItems(){

@@ -69,22 +69,25 @@
                           </a>
                         </h6>
                         <p class="mb-0 text-muted small">
-                          {{ item.quantity }}x - {{ item.selectedAttributes[0] }} -
-                          <span class="fw-bold">{{ formatNumber(item.price) }}VNĐ</span>
+                          {{ item.quantity }}x
+                          <template v-if="item.selectedAttributes && item.selectedAttributes.length > 0">
+                            - {{ item.selectedAttributes[0] }}
+                          </template>
+                          - <span class="fw-bold">{{ formatNumber(item.price) }}VNĐ</span>
                         </p>
                       </div>
 
                       <i class="bi bi-x-lg" @click.prevent="cartStore.removeItem(item.variantId)"></i>
                     </template>
-                    
-                    
+
+
 
                   </li>
                 </ul>
                 <ul class="list-unstyled shopping-list m-0 p-0" v-else>
                   <small>Chưa có sản phẩm được chọn</small>
                 </ul>
-                
+
                 <div class="bottom mt-3 border-top pt-3">
                   <div class="d-flex justify-content-between align-items-center mb-2">
                     <span>Tổng cộng</span>
@@ -179,9 +182,11 @@ import axios from "axios";
 import { useTokenUser } from "../store/useTokenUser";
 import Swal from "sweetalert2";
 import { useCartStore } from "../store/cart";
+import { useRouter } from "vue-router";
 
 const store = useTokenUser();
 const cartStore = useCartStore();
+const router = useRouter()
 const logout = async () => {
   try {
     await axios.get("http://127.0.0.1:8000/api/logout", {
@@ -191,6 +196,7 @@ const logout = async () => {
     });
 
     store.clearAuth();
+    router.push('/login')
     Swal.fire({
       toast: true,
       position: "top-end",
@@ -213,6 +219,7 @@ const logout = async () => {
     });
   }
 };
+
 const formatNumber = (num) => {
   return new Intl.NumberFormat("vi-VN").format(num);
 };

@@ -50,10 +50,10 @@
                     <i class="bi bi-box-seam me-2"></i>
                     Lịch sử mua hàng
                 </router-link>
-                <a href="#" class="list-group-item list-group-item-action text-primary rounded">
+                <button @click="logout" class="list-group-item list-group-item-action text-primary rounded">
                     <i class="bi bi-box-arrow-right me-2"></i>
                     Đăng xuất
-                </a>
+                </button>
             </div>
         </div>
     </div>
@@ -63,8 +63,10 @@ import axios from "axios";
 import { useTokenUser } from "../store/useTokenUser";
 import { onMounted, ref } from "vue";
 import Swal from "sweetalert2";
+import { useRouter } from "vue-router";
 
 const isLoading = ref(false);
+const router = useRouter()
 const user = ref({});
 const address = ref([]);
 const store = useTokenUser();
@@ -148,6 +150,39 @@ const handleFileChange = (event) => {
     const file = event.target.files[0];
     if (file) {
         updateAvatar(file);
+    }
+};
+
+const logout = async () => {
+    try {
+        await axios.get("http://127.0.0.1:8000/api/logout", {
+            headers: {
+                Authorization: `Bearer ${store.token}`,
+            },
+        });
+
+        store.clearAuth();
+        router.push('/login')
+        Swal.fire({
+            toast: true,
+            position: "top-end",
+            icon: "success",
+            title: "Đăng xuất thành công!",
+            showConfirmButton: false,
+            timer: 1000,
+            timerProgressBar: true,
+        });
+    } catch (error) {
+        console.error(error);
+        Swal.fire({
+            toast: true,
+            position: "top-end",
+            icon: "error",
+            title: "Đăng xuất thất bại",
+            showConfirmButton: false,
+            timer: 1000,
+            timerProgressBar: true,
+        });
     }
 };
 

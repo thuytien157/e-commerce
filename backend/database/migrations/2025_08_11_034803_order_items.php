@@ -18,7 +18,7 @@ return new class extends Migration
             $table->integer('quantity');
             $table->float('unit_price', 10, 2);
             $table->float('subtotal', 10, 2);
-            $table->boolean('reviewed');
+            $table->boolean('reviewed')->default(false);
         });
     }
 

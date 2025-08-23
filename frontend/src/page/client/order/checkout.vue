@@ -36,7 +36,6 @@ const email = ref("");
 const errors = ref({});
 const payment_method = ref("COD");
 
-// Biến loading mới
 const isLoading = ref(true);
 const isOrdering = ref(false);
 
@@ -190,7 +189,7 @@ const fillFormWithDefaultAddress = async () => {
   await fetchServices();
   await calculateShippingFee();
 };
-
+const note = ref(null)
 const order = async () => {
   isOrdering.value = true;
   errors.value = {};
@@ -234,6 +233,7 @@ const order = async () => {
       guest_address: `${address.value.address || ""}, ${wardName}, ${districtName}, ${provinceName}`,
       total_amount: totalPayment.value,
       shipping_money: shippingFee.value,
+      note: note.value,
       cartItems: cartStore.items.filter(item => item.isCheck)
     };
     const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
@@ -376,7 +376,7 @@ watch([selectedDistrict, selectedWard], async () => {
                 <input type="text" class="form-control" placeholder="Địa chỉ" v-model="address.address" />
               </div>
               <div class="mb-3">
-                <textarea class="form-control" rows="3" placeholder="Ghi chú"></textarea>
+                <textarea class="form-control" rows="3" placeholder="Ghi chú" v-model="note"></textarea>
               </div>
               <div class="d-flex justify-content-between align-items-center">
                 <a href="/cart" class="btn btn-outline-primary">

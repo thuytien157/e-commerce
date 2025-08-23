@@ -9,11 +9,15 @@
             font-family: DejaVu Sans, sans-serif;
             font-size: 11px;
             line-height: 1.4;
+            page-break-before: avoid;
+            page-break-after: avoid;
+            page-break-inside: avoid;
         }
 
         body {
             margin: 0;
             padding: 0;
+            overflow: visible !important;
         }
 
         .container {
@@ -163,12 +167,6 @@
                 </tr>
             </tbody>
         </table>
-
-        @if ($note)
-            <div class="section" style="margin-top: 10px;">
-                <p><strong>Ghi chú:</strong> {{ $note }}</p>
-            </div>
-        @endif
 
         <div class="footer" style="margin-top: 20px;">
             <p>CẢM ƠN QUÝ KHÁCH</p>
