@@ -1,5 +1,34 @@
 # 🛍️ Giới thiệu dự án SHOPGRID
 
+## 📌DEMO
+
+* **Link website**: https://shopgrid-vue.netlify.app
+
+### ✨Tài khoản thử nghiệm
+
+1. **Khách hàng:**
+
+```
+email: thuytien.hoctap@gmail.com
+password: Thuytien965002@
+```
+
+2. **Người bán:**
+
+```
+email: ntttien.work@gmail.com
+password: Thuytien965002@
+```
+
+3. **Thanh toán VNPAY:**
+
+```
+Số thẻ: 9704198526191432198
+Tên chủ thẻ:NGUYEN VAN A
+Ngày phát hành:07/15
+Mật khẩu OTP:123456
+```
+
 ## 📌 Mô tả
 
 * **ShopGrid** là một website bán hàng cơ bản, được thực hiện trong quá trình học và rèn luyện kỹ năng lập trình web. Giao diện và bố cục được tham khảo từ website  **MBL** , sau đó được tối ưu và xây dựng lại để phù hợp với mục tiêu học tập.
@@ -22,8 +51,6 @@ Dự án được chia thành 2 phần chính:
 * **GHN** : Tích hợp api tính phí ship và chọn địa chỉ.
 * **Queue (Laravel queue:work)** : Sử dụng để xử lý tác vụ gửi email nền (ví dụ: gửi OTP, thông báo khi đặt hàng) giúp hệ thống hoạt động mượt mà, không bị chậm.
 
-## ✨ DEMO
-
 ## ✨ Các tính năng
 
 ### Chức năng dành cho Khách hàng
@@ -44,7 +71,7 @@ Dự án được chia thành 2 phần chính:
 * **Quản lý đánh giá** : Trả lời đánh giá của khách hàng, duyệt đánh giá.
 * **Quản lý danh mục** : thêm, sửa, xoá danh mục (chỉ khi không có danh mục con và sản phẩm).
 * **Quản lý người dùng** : phân quyền và quản lý tài khoản manager, staff và customer; khoá tài khoản khách hàng khi cần.
-* **Thống kê** : doanh thu, trạng thái đơn hàng theo ngày/tháng/năm, tỷ lệ đánh giá, top khách hàng, top 5 sản phẩm bán chạy, sản phẩm tồn kho và cảnh báo.### DEMO
+* **Thống kê** : doanh thu, trạng thái đơn hàng theo ngày/tháng/năm, tỷ lệ đánh giá, top khách hàng, top 5 sản phẩm bán chạy, sản phẩm tồn kho và cảnh báo.
 
 ## ✨ ERD - Database Diagram
 
@@ -146,29 +173,4 @@ Chỉnh sửa file .env để cấu hình URL API backend
 
 ```
 npm run dev
-```
-
-### 3. Tài khoản thử nghiệm
-
-1. Khách hàng:
-
-```
-email: thuytien.hoctap@gmail.com
-password: Thuytien965002@
-```
-
-2. Người bán:
-
-```
-email: thuytien.hoctap@gmail.com
-password: Thuytien965002@
-```
-
-3. Thanh toán VNPAY:
-
-```
-Số thẻ: 9704198526191432198
-Tên chủ thẻ:NGUYEN VAN A
-Ngày phát hành:07/15
-Mật khẩu OTP:123456
 ```

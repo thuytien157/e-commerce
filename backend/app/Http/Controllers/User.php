@@ -169,13 +169,13 @@ class User extends Controller
 
             if ($user) {
                 if ($user->status === 'banned') {
-                    return redirect("http://localhost:5173/login-fail?banned=true");
+                    return redirect("https://shopgrid-vue.netlify.app/login-fail?banned=true");
                 }
             }
 
             if ($user && $user->provider_name === null) {
                 $token = $user->createToken('token')->plainTextToken;
-                return redirect("http://localhost:5173/login-success?token=$token&login_existing_account=true");
+                return redirect("https://shopgrid-vue.netlify.app/login-success?token=$token&username=" . urlencode($user->username) . '&id=' . $user->id . '&role=' . $user->role . '&login_existing_account=true');
             }
 
             if (!$user) {
@@ -190,9 +190,9 @@ class User extends Controller
             }
 
             $token = $user->createToken('token')->plainTextToken;
-            return redirect("http://localhost:5173/login-success?token=$token&username=" . urlencode($user->username) . '&id=' . $user->id . '&role=' . $user->role);
+            return redirect("https://shopgrid-vue.netlify.app/login-success?token=$token&username=" . urlencode($user->username) . '&id=' . $user->id . '&role=' . $user->role);
         } catch (\Exception $e) {
-            return redirect("http://localhost:5173/login-fail?error=Đăng nhập thất bại!");
+            return redirect("https://shopgrid-vue.netlify.app/login-fail?error=Đăng nhập thất bại!");
         }
     }
 
