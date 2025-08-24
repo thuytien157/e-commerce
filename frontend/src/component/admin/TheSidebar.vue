@@ -37,26 +37,13 @@
 import { ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import {
-    MenuFoldOutlined,
-    MenuUnfoldOutlined,
     DashboardOutlined,
     AppstoreOutlined,
-    FileAddOutlined,
-    UnorderedListOutlined,
     ShoppingOutlined,
     GoldOutlined,
     HistoryOutlined,
     FieldTimeOutlined,
-    TableOutlined,
-    OrderedListOutlined,
-    TeamOutlined,
-    UserAddOutlined,
     UserOutlined,
-    SafetyOutlined,
-    SolutionOutlined,
-    DeploymentUnitOutlined,
-    DeliveredProcedureOutlined,
-    ProfileOutlined,
 } from "@ant-design/icons-vue";
 
 const route = useRoute();
@@ -82,19 +69,19 @@ const menuItems = [
         key: "products-management",
         to: "/admin/product",
         label: "Sản phẩm",
-        icon: ShoppingOutlined,
+        icon: GoldOutlined,
     },
     {
         key: "attributes-management",
         to: "/admin/attribute",
         label: "Thuộc tính",
-        icon: ShoppingOutlined,
+        icon: HistoryOutlined,
     },
     {
         key: "reviews-management",
         to: "/admin/review",
         label: "Đánh giá",
-        icon: ShoppingOutlined,
+        icon: FieldTimeOutlined,
     },
     {
         key: "orders-management",
@@ -106,7 +93,7 @@ const menuItems = [
         key: "users-management",
         to: "/admin/user",
         label: "Người dùng",
-        icon: ShoppingOutlined,
+        icon: UserOutlined,
     },
 ];
 

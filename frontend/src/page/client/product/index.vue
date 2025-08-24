@@ -23,7 +23,7 @@ const getStaticData = async () => {
   try {
     const [catRes, attrRes] = await Promise.all([
       axios.get("http://127.0.0.1:8000/api/category"),
-      axios.get("http://127.00.0.1:8000/api/attribute")
+      axios.get("http://127.00.0.1:8000/api/attribute"),
     ]);
     categories.value = catRes.data.categories;
     attributes.value = attrRes.data.attributes;
@@ -41,7 +41,6 @@ const fetchProducts = async (page = 1) => {
     if (res.data && res.data.products) {
       products.value = res.data.products;
       pagination.value = res.data.pagination;
-
     } else {
       console.error("Dữ liệu sản phẩm không hợp lệ:", res.data);
       products.value = [];
@@ -144,8 +143,13 @@ onMounted(async () => {
       <div class="row">
         <div class="col-lg-3 col-12">
           <div class="d-lg-none d-flex justify-content-center mb-3">
-            <button class="btn btn-primary w-100" type="button" data-bs-toggle="offcanvas"
-              data-bs-target="#sidebarFilter" aria-controls="sidebarFilter">
+            <button
+              class="btn btn-primary w-100"
+              type="button"
+              data-bs-toggle="offcanvas"
+              data-bs-target="#sidebarFilter"
+              aria-controls="sidebarFilter"
+            >
               <i class="bi bi-filter-left"></i> Bộ lọc
             </button>
           </div>
@@ -159,17 +163,41 @@ onMounted(async () => {
                   <div class="skeleton-text"></div>
                 </div>
               </div>
-              <div class="form-check" v-else v-for="value in categories" :key="value.id">
-                <input class="form-check-input" type="checkbox" :value="value.id" :id="'category-' + value.id"
-                  v-model="selectedCategories" @change="fetchProducts()" />
+              <div
+                class="form-check"
+                v-else
+                v-for="value in categories"
+                :key="value.id"
+              >
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  :value="value.id"
+                  :id="'category-' + value.id"
+                  v-model="selectedCategories"
+                  @change="fetchProducts()"
+                />
                 <label class="form-check-label" :for="'category-' + value.id">
                   {{ value.name }} ({{ value.all_products_count }})
                 </label>
                 <div class="form-check ps-4" v-if="value.children.length > 0">
-                  <div class="mt-1" v-for="item in value.children" :key="item.id">
-                    <input class="form-check-input" type="checkbox" :value="item.id" :id="'category-' + item.id"
-                      v-model="selectedCategories" @change="fetchProducts()" />
-                    <label class="form-check-label" :for="'category-' + item.id">
+                  <div
+                    class="mt-1"
+                    v-for="item in value.children"
+                    :key="item.id"
+                  >
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      :value="item.id"
+                      :id="'category-' + item.id"
+                      v-model="selectedCategories"
+                      @change="fetchProducts()"
+                    />
+                    <label
+                      class="form-check-label"
+                      :for="'category-' + item.id"
+                    >
                       {{ item.name }} ({{ item.products_count }})
                     </label>
                   </div>
@@ -180,45 +208,89 @@ onMounted(async () => {
               <div class="single-widget condition">
                 <h3>{{ attribute.name }}</h3>
                 <div v-if="isLoading">
-                  <div v-if="attribute.name === 'Màu sắc'" class="d-flex gap-1 mt-2">
-                    <div v-for="n in 5" :key="'skeleton-color-' + n" class="skeleton-color"></div>
+                  <div
+                    v-if="attribute.name === 'Màu sắc'"
+                    class="d-flex gap-1 mt-2"
+                  >
+                    <div
+                      v-for="n in 5"
+                      :key="'skeleton-color-' + n"
+                      class="skeleton-color"
+                    ></div>
                   </div>
                   <div v-else class="d-flex gap-4">
-                    <div class="form-check" v-for="n in 3" :key="'skeleton-attribute-' + n">
+                    <div
+                      class="form-check"
+                      v-for="n in 3"
+                      :key="'skeleton-attribute-' + n"
+                    >
                       <div class="skeleton-checkbox"></div>
                       <div class="skeleton-text short"></div>
                     </div>
                   </div>
                 </div>
-                <div v-else
-                  :class="{ 'd-flex gap-4': attribute.name !== 'Màu sắc', 'd-flex gap-1 mt-2': attribute.name === 'Màu sắc' }">
-                  <div v-for="value in attribute.attribute_values" :key="value.id">
+                <div
+                  v-else
+                  :class="{
+                    'd-flex gap-4': attribute.name !== 'Màu sắc',
+                    'd-flex gap-1 mt-2': attribute.name === 'Màu sắc',
+                  }"
+                >
+                  <div
+                    v-for="value in attribute.attribute_values"
+                    :key="value.id"
+                  >
                     <template v-if="attribute.name === 'Màu sắc'">
-                      <div class="d-inline-block rounded-circle" :class="{
-                        'border-2 border-primary': isAttributeSelected(
-                          attribute.id,
-                          value.value_name
-                        ),
-                        'color-selected': isAttributeSelected(
-                          attribute.id,
-                          value.value_name
-                        ),
-                      }" @click="toggleAttributeFilter(attribute.id, value.value_name)" :style="{
-                        width: '1.35rem',
-                        height: '1.35rem',
-                        'background-color': value.value_name,
-                        cursor: 'pointer',
-                        border: isAttributeSelected(attribute.id, value.value_name)
-                          ? '2px solid #0d6efd'
-                          : '1px solid #ccc',
-                      }"></div>
+                      <div
+                        class="d-inline-block rounded-circle"
+                        :class="{
+                          'border-2 border-primary': isAttributeSelected(
+                            attribute.id,
+                            value.value_name
+                          ),
+                          'color-selected': isAttributeSelected(
+                            attribute.id,
+                            value.value_name
+                          ),
+                        }"
+                        @click="
+                          toggleAttributeFilter(attribute.id, value.value_name)
+                        "
+                        :style="{
+                          width: '1.35rem',
+                          height: '1.35rem',
+                          'background-color': value.value_name,
+                          cursor: 'pointer',
+                          border: isAttributeSelected(
+                            attribute.id,
+                            value.value_name
+                          )
+                            ? '2px solid #0d6efd'
+                            : '1px solid #ccc',
+                        }"
+                      ></div>
                     </template>
                     <template v-else>
                       <div class="form-check">
-                        <input class="form-check-input" type="checkbox" :value="value.value_name"
-                          :id="'attribute-' + value.id" @change="toggleAttributeFilter(attribute.id, value.value_name)"
-                          :checked="isAttributeSelected(attribute.id, value.value_name)" />
-                        <label class="form-check-label" :for="'attribute-' + value.id">
+                        <input
+                          class="form-check-input"
+                          type="checkbox"
+                          :value="value.value_name"
+                          :id="'attribute-' + value.id"
+                          @change="
+                            toggleAttributeFilter(
+                              attribute.id,
+                              value.value_name
+                            )
+                          "
+                          :checked="
+                            isAttributeSelected(attribute.id, value.value_name)
+                          "
+                        />
+                        <label
+                          class="form-check-label"
+                          :for="'attribute-' + value.id"
+                        >
                           {{ value.value_name }}
                         </label>
                       </div>
@@ -230,37 +302,87 @@ onMounted(async () => {
             <div class="single-widget condition">
               <h3>Giá</h3>
               <div class="form-check">
-                <input class="form-check-input" type="checkbox" id="flexCheckDefault1" value="1" v-model="selectedPrice"
-                  @change="fetchProducts()" />
-                <label class="form-check-label" for="flexCheckDefault1" style="font-size: 14px">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  id="flexCheckDefault1"
+                  value="1"
+                  v-model="selectedPrice"
+                  @change="fetchProducts()"
+                />
+                <label
+                  class="form-check-label"
+                  for="flexCheckDefault1"
+                  style="font-size: 14px"
+                >
                   Dưới 1,000,000VNĐ
                 </label>
               </div>
               <div class="form-check">
-                <input class="form-check-input" type="checkbox" value="1_2" id="flexCheckDefault2"
-                  v-model="selectedPrice" @change="fetchProducts()" />
-                <label class="form-check-label" for="flexCheckDefault2" style="font-size: 14px">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  value="1_2"
+                  id="flexCheckDefault2"
+                  v-model="selectedPrice"
+                  @change="fetchProducts()"
+                />
+                <label
+                  class="form-check-label"
+                  for="flexCheckDefault2"
+                  style="font-size: 14px"
+                >
                   1,000,000VNĐ - 2,000,000VNĐ
                 </label>
               </div>
               <div class="form-check">
-                <input class="form-check-input" type="checkbox" value="2_3" id="flexCheckDefault3"
-                  v-model="selectedPrice" @change="fetchProducts()" />
-                <label class="form-check-label" for="flexCheckDefault3" style="font-size: 14px">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  value="2_3"
+                  id="flexCheckDefault3"
+                  v-model="selectedPrice"
+                  @change="fetchProducts()"
+                />
+                <label
+                  class="form-check-label"
+                  for="flexCheckDefault3"
+                  style="font-size: 14px"
+                >
                   2,000,000VNĐ - 3,000,000VNĐ
                 </label>
               </div>
               <div class="form-check">
-                <input class="form-check-input" type="checkbox" value="3_4" id="flexCheckDefault3"
-                  v-model="selectedPrice" @change="fetchProducts()" />
-                <label class="form-check-label" for="flexCheckDefault3" style="font-size: 14px">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  value="3_4"
+                  id="flexCheckDefault3"
+                  v-model="selectedPrice"
+                  @change="fetchProducts()"
+                />
+                <label
+                  class="form-check-label"
+                  for="flexCheckDefault3"
+                  style="font-size: 14px"
+                >
                   3,000,000VNĐ - 4,000,000VNĐ
                 </label>
               </div>
               <div class="form-check">
-                <input class="form-check-input" type="checkbox" value="tren_4" id="flexCheckDefault4"
-                  v-model="selectedPrice" @change="fetchProducts()" />
-                <label class="form-check-label" for="flexCheckDefault4" style="font-size: 14px">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  value="tren_4"
+                  id="flexCheckDefault4"
+                  v-model="selectedPrice"
+                  @change="fetchProducts()"
+                />
+                <label
+                  class="form-check-label"
+                  for="flexCheckDefault4"
+                  style="font-size: 14px"
+                >
                   Trên 4,000,000VNĐ
                 </label>
               </div>
@@ -268,30 +390,70 @@ onMounted(async () => {
             <div class="single-widget condition">
               <h3>Đánh giá</h3>
               <div class="form-check">
-                <input class="form-check-input" type="checkbox" value="5" id="rating-5" v-model="selectedRating"
-                  @change="fetchProducts()" />
-                <label class="form-check-label" for="rating-5" style="font-size: 14px">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  value="5"
+                  id="rating-5"
+                  v-model="selectedRating"
+                  @change="fetchProducts()"
+                />
+                <label
+                  class="form-check-label"
+                  for="rating-5"
+                  style="font-size: 14px"
+                >
                   5 <i class="bi bi-star-fill text-warning"></i>
                 </label>
               </div>
               <div class="form-check">
-                <input class="form-check-input" type="checkbox" value="4_5" id="rating-4_5" v-model="selectedRating"
-                  @change="fetchProducts()" />
-                <label class="form-check-label" for="rating-4_5" style="font-size: 14px">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  value="4_5"
+                  id="rating-4_5"
+                  v-model="selectedRating"
+                  @change="fetchProducts()"
+                />
+                <label
+                  class="form-check-label"
+                  for="rating-4_5"
+                  style="font-size: 14px"
+                >
                   4 - 5 <i class="bi bi-star-fill text-warning"></i>
                 </label>
               </div>
               <div class="form-check">
-                <input class="form-check-input" type="checkbox" value="3_4" id="rating-3_4" v-model="selectedRating"
-                  @change="fetchProducts()" />
-                <label class="form-check-label" for="rating-3_4" style="font-size: 14px">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  value="3_4"
+                  id="rating-3_4"
+                  v-model="selectedRating"
+                  @change="fetchProducts()"
+                />
+                <label
+                  class="form-check-label"
+                  for="rating-3_4"
+                  style="font-size: 14px"
+                >
                   3 - 4 <i class="bi bi-star-fill text-warning"></i>
                 </label>
               </div>
               <div class="form-check">
-                <input class="form-check-input" type="checkbox" value="duoi_3" id="rating-below-3"
-                  v-model="selectedRating" @change="fetchProducts()" />
-                <label class="form-check-label" for="rating-below-3" style="font-size: 14px">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  value="duoi_3"
+                  id="rating-below-3"
+                  v-model="selectedRating"
+                  @change="fetchProducts()"
+                />
+                <label
+                  class="form-check-label"
+                  for="rating-below-3"
+                  style="font-size: 14px"
+                >
                   Dưới 3 <i class="bi bi-star-fill text-warning"></i>
                 </label>
               </div>
@@ -299,10 +461,22 @@ onMounted(async () => {
           </div>
         </div>
 
-        <div class="offcanvas offcanvas-start" tabindex="-1" id="sidebarFilter" aria-labelledby="sidebarFilterLabel">
+        <div
+          class="offcanvas offcanvas-start"
+          tabindex="-1"
+          id="sidebarFilter"
+          aria-labelledby="sidebarFilterLabel"
+        >
           <div class="offcanvas-header">
-            <h5 class="offcanvas-title" id="sidebarFilterLabel">Bộ lọc sản phẩm</h5>
-            <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            <h5 class="offcanvas-title" id="sidebarFilterLabel">
+              Bộ lọc sản phẩm
+            </h5>
+            <button
+              type="button"
+              class="btn-close text-reset"
+              data-bs-dismiss="offcanvas"
+              aria-label="Close"
+            ></button>
           </div>
           <div class="offcanvas-body">
             <div class="product-sidebar">
@@ -314,17 +488,44 @@ onMounted(async () => {
                     <div class="skeleton-text"></div>
                   </div>
                 </div>
-                <div class="form-check" v-else v-for="value in categories" :key="value.id">
-                  <input class="form-check-input" type="checkbox" :value="value.id" :id="'category-mobile-' + value.id"
-                    v-model="selectedCategories" @change="fetchProducts()" />
-                  <label class="form-check-label" :for="'category-mobile-' + value.id">
+                <div
+                  class="form-check"
+                  v-else
+                  v-for="value in categories"
+                  :key="value.id"
+                >
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    :value="value.id"
+                    :id="'category-mobile-' + value.id"
+                    v-model="selectedCategories"
+                    @change="fetchProducts()"
+                  />
+                  <label
+                    class="form-check-label"
+                    :for="'category-mobile-' + value.id"
+                  >
                     {{ value.name }} ({{ value.all_products_count }})
                   </label>
                   <div class="form-check ps-4" v-if="value.children.length > 0">
-                    <div class="mt-1" v-for="item in value.children" :key="item.id">
-                      <input class="form-check-input" type="checkbox" :value="item.id"
-                        :id="'category-mobile-' + item.id" v-model="selectedCategories" @change="fetchProducts()" />
-                      <label class="form-check-label" :for="'category-mobile-' + item.id">
+                    <div
+                      class="mt-1"
+                      v-for="item in value.children"
+                      :key="item.id"
+                    >
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        :value="item.id"
+                        :id="'category-mobile-' + item.id"
+                        v-model="selectedCategories"
+                        @change="fetchProducts()"
+                      />
+                      <label
+                        class="form-check-label"
+                        :for="'category-mobile-' + item.id"
+                      >
                         {{ item.name }} ({{ item.products_count }})
                       </label>
                     </div>
@@ -335,46 +536,95 @@ onMounted(async () => {
                 <div class="single-widget condition">
                   <h3>{{ attribute.name }}</h3>
                   <div v-if="isLoading">
-                    <div v-if="attribute.name === 'Màu sắc'" class="d-flex gap-1 mt-2">
-                      <div v-for="n in 5" :key="'skeleton-color-' + n" class="skeleton-color"></div>
+                    <div
+                      v-if="attribute.name === 'Màu sắc'"
+                      class="d-flex gap-1 mt-2"
+                    >
+                      <div
+                        v-for="n in 5"
+                        :key="'skeleton-color-' + n"
+                        class="skeleton-color"
+                      ></div>
                     </div>
                     <div v-else class="d-flex gap-4">
-                      <div class="form-check" v-for="n in 3" :key="'skeleton-attribute-' + n">
+                      <div
+                        class="form-check"
+                        v-for="n in 3"
+                        :key="'skeleton-attribute-' + n"
+                      >
                         <div class="skeleton-checkbox"></div>
                         <div class="skeleton-text short"></div>
                       </div>
                     </div>
                   </div>
-                  <div v-else
-                    :class="{ 'd-flex gap-4': attribute.name !== 'Màu sắc', 'd-flex gap-1 mt-2': attribute.name === 'Màu sắc' }">
-                    <div v-for="value in attribute.attribute_values" :key="value.id">
+                  <div
+                    v-else
+                    :class="{
+                      'd-flex gap-4': attribute.name !== 'Màu sắc',
+                      'd-flex gap-1 mt-2': attribute.name === 'Màu sắc',
+                    }"
+                  >
+                    <div
+                      v-for="value in attribute.attribute_values"
+                      :key="value.id"
+                    >
                       <template v-if="attribute.name === 'Màu sắc'">
-                        <div class="d-inline-block rounded-circle" :class="{
-                          'border-2 border-primary': isAttributeSelected(
-                            attribute.id,
-                            value.value_name
-                          ),
-                          'color-selected': isAttributeSelected(
-                            attribute.id,
-                            value.value_name
-                          ),
-                        }" @click="toggleAttributeFilter(attribute.id, value.value_name)" :style="{
-                          width: '1.35rem',
-                          height: '1.35rem',
-                          'background-color': value.value_name,
-                          cursor: 'pointer',
-                          border: isAttributeSelected(attribute.id, value.value_name)
-                            ? '2px solid #0d6efd'
-                            : '1px solid #ccc',
-                        }"></div>
+                        <div
+                          class="d-inline-block rounded-circle"
+                          :class="{
+                            'border-2 border-primary': isAttributeSelected(
+                              attribute.id,
+                              value.value_name
+                            ),
+                            'color-selected': isAttributeSelected(
+                              attribute.id,
+                              value.value_name
+                            ),
+                          }"
+                          @click="
+                            toggleAttributeFilter(
+                              attribute.id,
+                              value.value_name
+                            )
+                          "
+                          :style="{
+                            width: '1.35rem',
+                            height: '1.35rem',
+                            'background-color': value.value_name,
+                            cursor: 'pointer',
+                            border: isAttributeSelected(
+                              attribute.id,
+                              value.value_name
+                            )
+                              ? '2px solid #0d6efd'
+                              : '1px solid #ccc',
+                          }"
+                        ></div>
                       </template>
                       <template v-else>
                         <div class="form-check">
-                          <input class="form-check-input" type="checkbox" :value="value.value_name"
+                          <input
+                            class="form-check-input"
+                            type="checkbox"
+                            :value="value.value_name"
                             :id="'attribute-mobile-' + value.id"
-                            @change="toggleAttributeFilter(attribute.id, value.value_name)"
-                            :checked="isAttributeSelected(attribute.id, value.value_name)" />
-                          <label class="form-check-label" :for="'attribute-mobile-' + value.id">
+                            @change="
+                              toggleAttributeFilter(
+                                attribute.id,
+                                value.value_name
+                              )
+                            "
+                            :checked="
+                              isAttributeSelected(
+                                attribute.id,
+                                value.value_name
+                              )
+                            "
+                          />
+                          <label
+                            class="form-check-label"
+                            :for="'attribute-mobile-' + value.id"
+                          >
                             {{ value.value_name }}
                           </label>
                         </div>
@@ -386,37 +636,87 @@ onMounted(async () => {
               <div class="single-widget condition">
                 <h3>Giá</h3>
                 <div class="form-check">
-                  <input class="form-check-input" type="checkbox" id="flexCheckDefault1-mobile" value="1"
-                    v-model="selectedPrice" @change="fetchProducts()" />
-                  <label class="form-check-label" for="flexCheckDefault1-mobile" style="font-size: 14px">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    id="flexCheckDefault1-mobile"
+                    value="1"
+                    v-model="selectedPrice"
+                    @change="fetchProducts()"
+                  />
+                  <label
+                    class="form-check-label"
+                    for="flexCheckDefault1-mobile"
+                    style="font-size: 14px"
+                  >
                     Dưới 1,000,000VNĐ
                   </label>
                 </div>
                 <div class="form-check">
-                  <input class="form-check-input" type="checkbox" value="1_2" id="flexCheckDefault2-mobile"
-                    v-model="selectedPrice" @change="fetchProducts()" />
-                  <label class="form-check-label" for="flexCheckDefault2-mobile" style="font-size: 14px">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    value="1_2"
+                    id="flexCheckDefault2-mobile"
+                    v-model="selectedPrice"
+                    @change="fetchProducts()"
+                  />
+                  <label
+                    class="form-check-label"
+                    for="flexCheckDefault2-mobile"
+                    style="font-size: 14px"
+                  >
                     1,000,000VNĐ - 2,000,000VNĐ
                   </label>
                 </div>
                 <div class="form-check">
-                  <input class="form-check-input" type="checkbox" value="2_3" id="flexCheckDefault3-mobile"
-                    v-model="selectedPrice" @change="fetchProducts()" />
-                  <label class="form-check-label" for="flexCheckDefault3-mobile" style="font-size: 14px">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    value="2_3"
+                    id="flexCheckDefault3-mobile"
+                    v-model="selectedPrice"
+                    @change="fetchProducts()"
+                  />
+                  <label
+                    class="form-check-label"
+                    for="flexCheckDefault3-mobile"
+                    style="font-size: 14px"
+                  >
                     2,000,000VNĐ - 3,000,000VNĐ
                   </label>
                 </div>
                 <div class="form-check">
-                  <input class="form-check-input" type="checkbox" value="3_4" id="flexCheckDefault3-mobile"
-                    v-model="selectedPrice" @change="fetchProducts()" />
-                  <label class="form-check-label" for="flexCheckDefault3-mobile" style="font-size: 14px">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    value="3_4"
+                    id="flexCheckDefault3-mobile"
+                    v-model="selectedPrice"
+                    @change="fetchProducts()"
+                  />
+                  <label
+                    class="form-check-label"
+                    for="flexCheckDefault3-mobile"
+                    style="font-size: 14px"
+                  >
                     3,000,000VNĐ - 4,000,000VNĐ
                   </label>
                 </div>
                 <div class="form-check">
-                  <input class="form-check-input" type="checkbox" value="tren_4" id="flexCheckDefault4-mobile"
-                    v-model="selectedPrice" @change="fetchProducts()" />
-                  <label class="form-check-label" for="flexCheckDefault4-mobile" style="font-size: 14px">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    value="tren_4"
+                    id="flexCheckDefault4-mobile"
+                    v-model="selectedPrice"
+                    @change="fetchProducts()"
+                  />
+                  <label
+                    class="form-check-label"
+                    for="flexCheckDefault4-mobile"
+                    style="font-size: 14px"
+                  >
                     Trên 4,000,000VNĐ
                   </label>
                 </div>
@@ -424,30 +724,70 @@ onMounted(async () => {
               <div class="single-widget condition">
                 <h3>Đánh giá</h3>
                 <div class="form-check">
-                  <input class="form-check-input" type="checkbox" value="5" id="rating-5-mobile"
-                    v-model="selectedRating" @change="fetchProducts()" />
-                  <label class="form-check-label" for="rating-5-mobile" style="font-size: 14px">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    value="5"
+                    id="rating-5-mobile"
+                    v-model="selectedRating"
+                    @change="fetchProducts()"
+                  />
+                  <label
+                    class="form-check-label"
+                    for="rating-5-mobile"
+                    style="font-size: 14px"
+                  >
                     5 <i class="bi bi-star-fill text-warning"></i>
                   </label>
                 </div>
                 <div class="form-check">
-                  <input class="form-check-input" type="checkbox" value="4_5" id="rating-4_5-mobile"
-                    v-model="selectedRating" @change="fetchProducts()" />
-                  <label class="form-check-label" for="rating-4_5-mobile" style="font-size: 14px">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    value="4_5"
+                    id="rating-4_5-mobile"
+                    v-model="selectedRating"
+                    @change="fetchProducts()"
+                  />
+                  <label
+                    class="form-check-label"
+                    for="rating-4_5-mobile"
+                    style="font-size: 14px"
+                  >
                     4 - 5 <i class="bi bi-star-fill text-warning"></i>
                   </label>
                 </div>
                 <div class="form-check">
-                  <input class="form-check-input" type="checkbox" value="3_4" id="rating-3_4-mobile"
-                    v-model="selectedRating" @change="fetchProducts()" />
-                  <label class="form-check-label" for="rating-3_4-mobile" style="font-size: 14px">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    value="3_4"
+                    id="rating-3_4-mobile"
+                    v-model="selectedRating"
+                    @change="fetchProducts()"
+                  />
+                  <label
+                    class="form-check-label"
+                    for="rating-3_4-mobile"
+                    style="font-size: 14px"
+                  >
                     3 - 4 <i class="bi bi-star-fill text-warning"></i>
                   </label>
                 </div>
                 <div class="form-check">
-                  <input class="form-check-input" type="checkbox" value="duoi_3" id="rating-below-3-mobile"
-                    v-model="selectedRating" @change="fetchProducts()" />
-                  <label class="form-check-label" for="rating-below-3-mobile" style="font-size: 14px">
+                  <input
+                    class="form-check-input"
+                    type="checkbox"
+                    value="duoi_3"
+                    id="rating-below-3-mobile"
+                    v-model="selectedRating"
+                    @change="fetchProducts()"
+                  />
+                  <label
+                    class="form-check-label"
+                    for="rating-below-3-mobile"
+                    style="font-size: 14px"
+                  >
                     Dưới 3 <i class="bi bi-star-fill text-warning"></i>
                   </label>
                 </div>
@@ -463,7 +803,11 @@ onMounted(async () => {
                 <div class="col-lg-7 col-md-8 col-12">
                   <div class="product-sorting">
                     <label for="sorting">Lọc theo:</label>
-                    <select @change="sortProducts($event.target.value)" class="form-control" id="sorting">
+                    <select
+                      @change="sortProducts($event.target.value)"
+                      class="form-control"
+                      id="sorting"
+                    >
                       <option value="">Sắp xếp mặc định</option>
                       <option value="name_asc">Tên: A-Z</option>
                       <option value="name_desc">Tên: Z-A</option>
@@ -475,12 +819,28 @@ onMounted(async () => {
                 <div class="col-lg-5 col-md-4 col-12">
                   <nav>
                     <div class="nav nav-tabs" id="nav-tab" role="tablist">
-                      <button class="nav-link active" id="nav-grid-tab" data-bs-toggle="tab" data-bs-target="#nav-grid"
-                        type="button" role="tab" aria-controls="nav-grid" aria-selected="true">
+                      <button
+                        class="nav-link active"
+                        id="nav-grid-tab"
+                        data-bs-toggle="tab"
+                        data-bs-target="#nav-grid"
+                        type="button"
+                        role="tab"
+                        aria-controls="nav-grid"
+                        aria-selected="true"
+                      >
                         <i class="bi bi-list-task"></i>
                       </button>
-                      <button class="nav-link" id="nav-list-tab" data-bs-toggle="tab" data-bs-target="#nav-list"
-                        type="button" role="tab" aria-controls="nav-list" aria-selected="false">
+                      <button
+                        class="nav-link"
+                        id="nav-list-tab"
+                        data-bs-toggle="tab"
+                        data-bs-target="#nav-list"
+                        type="button"
+                        role="tab"
+                        aria-controls="nav-list"
+                        aria-selected="false"
+                      >
                         <i class="bi bi-grid"></i>
                       </button>
                     </div>
@@ -489,9 +849,19 @@ onMounted(async () => {
               </div>
             </div>
             <div class="tab-content mt-1" id="nav-tabContent">
-              <div class="tab-pane fade show active" id="nav-grid" role="tabpanel" aria-labelledby="nav-grid-tab">
+              <div
+                class="tab-pane fade show active"
+                id="nav-grid"
+                role="tabpanel"
+                aria-labelledby="nav-grid-tab"
+              >
                 <div class="row">
-                  <div class="col-lg-4 col-md-6 col-12" v-if="isLoading" v-for="n in 6" :key="'skeleton-grid-' + n">
+                  <div
+                    class="col-lg-4 col-md-6 col-12"
+                    v-if="isLoading"
+                    v-for="n in 6"
+                    :key="'skeleton-grid-' + n"
+                  >
                     <div class="single-product h-100">
                       <div class="product-image skeleton-image"></div>
                       <div class="product-info">
@@ -502,11 +872,22 @@ onMounted(async () => {
                     </div>
                   </div>
 
-                  <template v-else v-for="product in products" :key="product.id">
-                    <div class="col-lg-4 col-md-6 col-12" v-if="product.status == 'published'">
+                  <template
+                    v-else
+                    v-for="product in products"
+                    :key="product.id"
+                  >
+                    <div
+                      class="col-lg-4 col-md-6 col-12"
+                      v-if="product.status == 'published'"
+                    >
                       <div class="single-product h-100">
                         <div class="product-image">
-                          <img :src="product.variants[0].image" alt="#" style="height: 250px; object-fit: cover" />
+                          <img
+                            :src="product.variants[0].image"
+                            alt="#"
+                            style="height: 250px; object-fit: cover"
+                          />
                           <div class="button">
                             <button @click="openModal(product.id)" class="btn">
                               <i class="lni lni-cart"></i> Thêm vào giỏ
@@ -515,46 +896,80 @@ onMounted(async () => {
                         </div>
                         <div class="product-info">
                           <h4 class="title">
-                            <router-link :to="`/product-detail/${product.variants[0].slug}/${product.id}`">{{
-                              product.name }}</router-link>
+                            <router-link
+                              :to="`/product-detail/${product.variants[0].slug}/${product.id}`"
+                              >{{ product.name }}</router-link
+                            >
                           </h4>
-                          <Rating :rating="product.rating" :reviewCount="product.reviews_count" />
+                          <Rating
+                            :rating="product.rating"
+                            :reviewCount="product.reviews_count"
+                          />
                           <div class="price">
-                            <span>{{ FormatData.formatNumber(product.price) }}VNĐ</span>
+                            <span
+                              >{{
+                                FormatData.formatNumber(product.price)
+                              }}VNĐ</span
+                            >
                           </div>
                           <div class="d-flex gap-1 mt-2">
-                            <span v-for="value in FormatData.uniqueColors(product.variants)"
-                              :key="value.attribute_value_id" class="d-inline-block rounded-circle" style="
-                                      width: 0.75rem;
-                                      height: 0.75rem;
-                                      border: 1px solid #ccc;
-                                    " :style="{
-                                      'background-color': value.attribute_name,
-                                    }">
+                            <span
+                              v-for="value in FormatData.uniqueColors(
+                                product.variants
+                              )"
+                              :key="value.attribute_value_id"
+                              class="d-inline-block rounded-circle"
+                              style="
+                                width: 0.75rem;
+                                height: 0.75rem;
+                                border: 1px solid #ccc;
+                              "
+                              :style="{
+                                'background-color': value.attribute_name,
+                              }"
+                            >
                             </span>
                           </div>
                         </div>
                       </div>
                     </div>
                   </template>
-
                 </div>
                 <div class="row">
                   <div class="col-12">
-                    <div v-if="pagination.last_page > 1" class="pagination-container">
+                    <div
+                      v-if="pagination.last_page > 1"
+                      class="pagination-container"
+                    >
                       <ul class="pagination-list">
                         <li>
-                          <a href="javascript:void(0)" :class="{ disabled: currentPage === 1 }"
-                            @click.prevent="goToPage(currentPage - 1)">
+                          <a
+                            href="javascript:void(0)"
+                            :class="{ disabled: currentPage === 1 }"
+                            @click.prevent="goToPage(currentPage - 1)"
+                          >
                             <i class="lni lni-chevron-left"></i>
                           </a>
                         </li>
-                        <li v-for="page in pagination.last_page" :key="page" :class="{ active: page === currentPage }">
-                          <a href="javascript:void(0)" @click.prevent="goToPage(page)">{{ page }}</a>
+                        <li
+                          v-for="page in pagination.last_page"
+                          :key="page"
+                          :class="{ active: page === currentPage }"
+                        >
+                          <a
+                            href="javascript:void(0)"
+                            @click.prevent="goToPage(page)"
+                            >{{ page }}</a
+                          >
                         </li>
                         <li>
-                          <a href="javascript:void(0)" :class="{ disabled: currentPage === pagination.last_page }"
-                            @click.prevent="goToPage(currentPage + 1)">
+                          <a
+                            href="javascript:void(0)"
+                            :class="{
+                              disabled: currentPage === pagination.last_page,
+                            }"
+                            @click.prevent="goToPage(currentPage + 1)"
+                          >
                             <i class="lni lni-chevron-right"></i>
                           </a>
                         </li>
@@ -564,9 +979,19 @@ onMounted(async () => {
                 </div>
               </div>
 
-              <div class="tab-pane fade" id="nav-list" role="tabpanel" aria-labelledby="nav-list-tab">
+              <div
+                class="tab-pane fade"
+                id="nav-list"
+                role="tabpanel"
+                aria-labelledby="nav-list-tab"
+              >
                 <div class="row">
-                  <div class="col-lg-12 col-md-12 col-12" v-if="isLoading" v-for="n in 4" :key="'skeleton-list-' + n">
+                  <div
+                    class="col-lg-12 col-md-12 col-12"
+                    v-if="isLoading"
+                    v-for="n in 4"
+                    :key="'skeleton-list-' + n"
+                  >
                     <div class="single-product">
                       <div class="row align-items-center">
                         <div class="col-lg-4 col-md-4 col-12">
@@ -584,15 +1009,28 @@ onMounted(async () => {
                     </div>
                   </div>
 
-                  <template v-else v-for="product in products" :key="product.id">
-                    <div class="col-lg-12 col-md-12 col-12" v-if="product.status == 'published'">
-                      <div class="single-product" v-if="product.status == 'published'">
+                  <template
+                    v-else
+                    v-for="product in products"
+                    :key="product.id"
+                  >
+                    <div
+                      class="col-lg-12 col-md-12 col-12"
+                      v-if="product.status == 'published'"
+                    >
+                      <div
+                        class="single-product"
+                        v-if="product.status == 'published'"
+                      >
                         <div class="row align-items-center">
                           <div class="col-lg-4 col-md-4 col-12">
                             <div class="product-image">
                               <img :src="product.variants[0].image" alt="#" />
                               <div class="button">
-                                <button @click="openModal(product.id)" class="btn">
+                                <button
+                                  @click="openModal(product.id)"
+                                  class="btn"
+                                >
                                   <i class="lni lni-cart"></i> Thêm vào giỏ
                                 </button>
                               </div>
@@ -601,23 +1039,38 @@ onMounted(async () => {
                           <div class="col-lg-8 col-md-8 col-12">
                             <div class="product-info">
                               <h4 class="title">
-                                <router-link :to="`/product-detail/${product.variants[0].slug}/${product.id}`">{{
-                                  product.name }}</router-link>
+                                <router-link
+                                  :to="`/product-detail/${product.variants[0].slug}/${product.id}`"
+                                  >{{ product.name }}</router-link
+                                >
                               </h4>
-                              <Rating :rating="product.rating" :reviewCount="product.reviews_count" />
+                              <Rating
+                                :rating="product.rating"
+                                :reviewCount="product.reviews_count"
+                              />
                               <div class="price">
-                                <span>{{ FormatData.formatNumber(product.price) }}VNĐ</span>
+                                <span
+                                  >{{
+                                    FormatData.formatNumber(product.price)
+                                  }}VNĐ</span
+                                >
                               </div>
                               <div class="d-flex gap-1 mt-2">
-                                <span v-for="value in FormatData.uniqueColors(
-                                  product.variants
-                                )" :key="value.attribute_value_id" class="d-inline-block rounded-circle" style="
-                                        width: 1.75rem;
-                                        height: 1.75rem;
-                                        border: 1px solid #ccc;
-                                      " :style="{
-                                        'background-color': value.attribute_name,
-                                      }">
+                                <span
+                                  v-for="value in FormatData.uniqueColors(
+                                    product.variants
+                                  )"
+                                  :key="value.attribute_value_id"
+                                  class="d-inline-block rounded-circle"
+                                  style="
+                                    width: 1.75rem;
+                                    height: 1.75rem;
+                                    border: 1px solid #ccc;
+                                  "
+                                  :style="{
+                                    'background-color': value.attribute_name,
+                                  }"
+                                >
                                 </span>
                               </div>
                             </div>
@@ -628,21 +1081,40 @@ onMounted(async () => {
 
                     <div class="row">
                       <div class="col-12">
-                        <div v-if="pagination.last_page > 1" class="pagination-container">
+                        <div
+                          v-if="pagination.last_page > 1"
+                          class="pagination-container"
+                        >
                           <ul class="pagination-list">
                             <li>
-                              <a href="javascript:void(0)" :class="{ disabled: currentPage === 1 }"
-                                @click.prevent="goToPage(currentPage - 1)">
+                              <a
+                                href="javascript:void(0)"
+                                :class="{ disabled: currentPage === 1 }"
+                                @click.prevent="goToPage(currentPage - 1)"
+                              >
                                 <i class="lni lni-chevron-left"></i>
                               </a>
                             </li>
-                            <li v-for="page in pagination.last_page" :key="page"
-                              :class="{ active: page === currentPage }">
-                              <a href="javascript:void(0)" @click.prevent="goToPage(page)">{{ page }}</a>
+                            <li
+                              v-for="page in pagination.last_page"
+                              :key="page"
+                              :class="{ active: page === currentPage }"
+                            >
+                              <a
+                                href="javascript:void(0)"
+                                @click.prevent="goToPage(page)"
+                                >{{ page }}</a
+                              >
                             </li>
                             <li>
-                              <a href="javascript:void(0)" :class="{ disabled: currentPage === pagination.last_page }"
-                                @click.prevent="goToPage(currentPage + 1)">
+                              <a
+                                href="javascript:void(0)"
+                                :class="{
+                                  disabled:
+                                    currentPage === pagination.last_page,
+                                }"
+                                @click.prevent="goToPage(currentPage + 1)"
+                              >
                                 <i class="lni lni-chevron-right"></i>
                               </a>
                             </li>
@@ -651,17 +1123,20 @@ onMounted(async () => {
                       </div>
                     </div>
                   </template>
-
                 </div>
-
               </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-    <ProductModal v-if="productData" :product="productData" :is-visible="showModal" @close="closeModal"
-      @add-to-cart="handleAddToCart" />
+    <ProductModal
+      v-if="productData"
+      :product="productData"
+      :is-visible="showModal"
+      @close="closeModal"
+      @add-to-cart="handleAddToCart"
+    />
   </section>
 </template>
 <style scoped>
@@ -1014,7 +1489,7 @@ a {
 }
 
 @media only screen and (min-width: 768px) and (max-width: 991px),
-(max-width: 767px) {
+  (max-width: 767px) {
   .single-product .product-info .title a {
     font-size: 15px;
   }

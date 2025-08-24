@@ -5,7 +5,11 @@
             <div class="product-info-container">
                 <div class="product-images">
                     <img :src="mainImage" alt="Sản phẩm chính" class="main-product-image" />
-                    
+                    <div class="image-previews">
+                        <img v-for="image in currentVariantImages" :key="image.id" :src="image.image_url"
+                            alt="Ảnh xem trước" class="preview-image" :class="{ active: mainImage === image.image_url }"
+                            @click="mainImage = image.image_url" />
+                    </div>
                 </div>
 
                 <div class="product-details">
@@ -75,6 +79,7 @@ import { ref, toRefs, watch } from "vue";
 import useProductVariants from "../store/useProductVariants";
 import FormatData from "../store/FormatData";
 import { useCartStore } from "../store/cart";
+import Swal from "sweetalert2";
 
 const props = defineProps({
     product: {
@@ -133,6 +138,20 @@ const addToCart = () => {
     }
 
     const selectedAttributesValues = Object.values(selectedAttributesData);
+
+    if (cartStore.quantity > currentVariant.value.stock_quantity) {
+        Swal.fire({
+            toast: true,
+            position: "top-end",
+            icon: "error",
+            title: "Số lượng vượt quá tồn kho!",
+            showConfirmButton: false,
+            timer: 1500,
+            timerProgressBar: true,
+        });
+        return;
+    }
+
 
     const item = {
         id: props.product.id,

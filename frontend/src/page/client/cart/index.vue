@@ -23,7 +23,7 @@ const formatNumber = (num) => {
                                 <div class="ms-3">
                                     <p class="mb-1 fw-bold">{{ item.productName }}</p>
                                     <div class="text-muted small"> {{ item.selectedAttributes.join(", ") }}</div>
-                                    
+
                                 </div>
                             </div>
                             <div class="cart-action-col d-flex justify-content-between">

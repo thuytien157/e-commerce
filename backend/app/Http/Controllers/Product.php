@@ -244,6 +244,19 @@ class Product extends Controller
         ]);
     }
 
+    function getVariantById($id){
+        $variant = ModelsVariant::find($id);
+        if(!$variant){
+            return response()->json([
+                'mess' => 'Biến thể không tồn tại'
+            ], 404);
+        }
+
+        return response()->json([
+            'variant' => $variant
+        ]);
+    }
+
 
     /**
      * Show the form for creating a new resource.
@@ -268,7 +281,7 @@ class Product extends Controller
                 'status' => 'required',
                 'variants' => 'required|array',
                 'variants.*.sku' => 'required|string|max:255|unique:variants,sku',
-                'variants.*.stock_quantity' => 'required|numeric|min:0',
+                'variants.*.stock_quantity' => 'required|numeric|min:1',
                 'variants.*.slug' => 'required|string|max:255|unique:variants,slug',
                 'variants.*.image' => 'required|image|max:2048',
                 'variants.*.attributes' => 'required|array',
@@ -287,6 +300,8 @@ class Product extends Controller
                 'status.required' => 'Vui lòng chọn trạng thái.',
                 'variants.required' => 'Vui lòng thêm ít nhất một biến thể.',
                 'variants.array' => 'Dữ liệu biến thể không hợp lệ.',
+                'variants.*.stock_quantity.required' => 'Vui lòng nhập tồn kho.',
+                'variants.*.stock_quantity.min' => 'Tồn kho phải lớn hơn 1.',
                 'variants.*.sku.required' => 'Vui lòng nhập SKU.',
                 'variants.*.sku.unique' => 'SKU đã tồn tại.',
                 'variants.*.slug.required' => 'Vui lòng nhập slug.',
@@ -419,7 +434,7 @@ class Product extends Controller
                 'status' => 'required',
                 'variants' => 'required|array',
                 'variants.*.sku' => 'required|string|max:255|unique:variants,sku,' . $id . ',product_id',
-                'variants.*.stock_quantity' => 'required|numeric|min:0',
+                'variants.*.stock_quantity' => 'required|numeric|min:1',
                 'variants.*.slug' => 'required|string|max:255|unique:variants,slug,' . $id . ',product_id',
                 'variants.*.image' => 'required_without:variants.*.image_url|nullable|image|max:2048',
                 'variants.*.image_url' => 'nullable|string',
@@ -442,6 +457,8 @@ class Product extends Controller
                 'variants.required' => 'Vui lòng thêm ít nhất một biến thể.',
                 'variants.array' => 'Dữ liệu biến thể không hợp lệ.',
                 'variants.*.sku.required' => 'Vui lòng nhập SKU.',
+                'variants.*.stock_quantity.required' => 'Vui lòng nhập tồn kho.',
+                'variants.*.stock_quantity.min' => 'Tồn kho phải lớn hơn 1.',
                 'variants.*.sku.unique' => 'SKU đã tồn tại.',
                 'variants.*.slug.required' => 'Vui lòng nhập slug.',
                 'variants.*.slug.unique' => 'Slug đã tồn tại.',

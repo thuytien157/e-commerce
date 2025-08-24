@@ -62,6 +62,7 @@ const openModal = async (productId) => {
     `http://127.0.0.1:8000/api/products_detail/${productId}`
   );
   productData.value = res.data.product;
+  cartStore.quantity = 1
 };
 function closeModal() {
   showModal.value = false;

@@ -413,20 +413,20 @@ onMounted(() => {
           <div class="card-body">
             <div class="mb-3 row">
               <div class="col-6">
-                <label for="name" class="form-label">Tên sản phẩm</label><br />
-                <input type="text" class="form-control" id="name" :disabled="!productform.order_count"
-                  v-model="productform.name" />
+                <label for="name" class="form-label">Tên sản phẩm</label
+                  :disabled="isEdit && !productform.order_count"><br />
+                <input type="text" class="form-control" id="name" v-model="productform.name" />
               </div>
               <div class="col-6">
                 <label for="price" class="form-label">Giá</label><br />
-                <input type="number" class="form-control" id="price" :disabled="!productform.order_count"
+                <input type="number" class="form-control" id="price" :disabled="isEdit && !productform.order_count"
                   v-model="productform.price" />
               </div>
             </div>
             <div class="mb-3 row">
               <div class="col-6">
                 <label for="category" class="form-label">Danh mục</label><br />
-                <select class="form-select rounded-2" :disabled="!productform.order_count"
+                <select class="form-select rounded-2" :disabled="isEdit && !productform.order_count"
                   v-model="productform.category_id">
                   <option :value="null">Chọn danh mục</option>
                   <template v-for="category in categories" :key="category.id">
@@ -441,7 +441,7 @@ onMounted(() => {
               </div>
               <div class="col-6">
                 <label for="price" class="form-label">Trạng thái sản phẩm</label><br />
-                <select class="form-select" id="category" :disabled="!productform.order_count"
+                <select class="form-select" id="category" :disabled="isEdit && !productform.order_count"
                   v-model="productform.status">
                   <option :value="null" disabled>
                     Chọn trạng thái sản phẩm

@@ -46,6 +46,7 @@ Route::put('/lock/{id}', [User::class, 'lockUser'])->middleware('auth:sanctum');
 
 
 Route::get('/products_detail/{id}', [Product::class, 'getProductById']);
+Route::get('/variant/{id}', [Product::class, 'getVariantById']);
 Route::put('/product/hidden/{id}', [Product::class, 'hiddenProduct']);
 Route::resource('product', Product::class);
 

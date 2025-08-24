@@ -5,6 +5,7 @@ import FormatData from "@/component/store/FormatData";
 import useProductVariants from "@/component/store/useProductVariants";
 import { useCartStore } from "@/component/store/cart";
 import Rating from "@/component/client/Rating.vue";
+import Swal from "sweetalert2";
 const props = defineProps({
     productId: {
         type: [String, Number],
@@ -80,14 +81,53 @@ const decrement = () => {
 };
 
 const increment = () => {
-    cartStore.quantity++;
+    if (cartStore.quantity > currentVariant.value?.stock_quantity) {
+        Swal.fire({
+            toast: true,
+            position: "top-end",
+            icon: "error",
+            title: "Số lượng vượt quá tồn kho!",
+            showConfirmButton: false,
+            timer: 1500,
+            timerProgressBar: true,
+        });
+    } else {
+        cartStore.quantity++;
+    }
 };
 
 const cartStore = useCartStore();
 
 const handleAddToCart = (itemToAdd) => {
-    cartStore.addItem(itemToAdd);
+    const availableQuantity = currentVariant.value?.stock_quantity ?? 0;
+    const requestedQuantity = cartStore.quantity;
+
+    if (requestedQuantity > availableQuantity) {
+        Swal.fire({
+            toast: true,
+            position: "top-end",
+            icon: "error",
+            title: "Số lượng vượt quá tồn kho!",
+            showConfirmButton: false,
+            timer: 1500,
+            timerProgressBar: true,
+        });
+    } else if (requestedQuantity <= 0) {
+        Swal.fire({
+            toast: true,
+            position: "top-end",
+            icon: "error",
+            title: "Số lượng không hợp lệ!",
+            showConfirmButton: false,
+            timer: 1500,
+            timerProgressBar: true,
+        });
+    } else {
+        cartStore.addItem(itemToAdd);
+        cartStore.quantity = 1
+    }
 };
+
 const showModal = ref(false);
 const selectedImage = ref('');
 
@@ -101,6 +141,7 @@ function closeImage() {
 }
 onMounted(async () => {
     getProductById(props.productId);
+    cartStore.quantity = 1
 });
 </script>
 <template>
@@ -169,6 +210,9 @@ onMounted(async () => {
                                 <i class="lni lni-tag"></i> Danh mục:
                                 <a href="javascript:void(0)">{{ product.category_name }}</a>
                             </p>
+                            <p class="category">
+                                <i class="lni lni-tag"></i> Tồn kho: {{ currentVariant.stock_quantity }}
+                            </p>
                             <h3 class="price">
                                 {{ FormatData.formatNumber(product.price) }}VND
                             </h3>
@@ -224,14 +268,14 @@ onMounted(async () => {
                                         <div class="input-group quantity-control border overflow-hidden rounded-1">
                                             <button class="btn btn-outline-primary rounded-1 fw-bold"
                                                 @click="decrement">
-                                                +
+                                                -
                                             </button>
                                             <input type="text"
                                                 class="form-control text-center border-0 bg-light text-dark"
                                                 v-model="cartStore.quantity" />
                                             <button class="btn btn-outline-primary rounded-1 fw-bold"
                                                 @click="increment">
-                                                -
+                                                +
                                             </button>
                                         </div>
                                     </div>
@@ -309,42 +353,43 @@ onMounted(async () => {
                                 style="max-height: 800px; overflow-y: auto;">
                                 <h4 class="title">Đánh giá</h4>
                                 <!-- Start Single Review -->
-                                 <template v-for="value in product.reviews">
+                                <template v-for="value in product.reviews">
                                     <div class="single-review" v-if="value.status == 'published'">
-                                    <img :src="value.customer_avatar" alt="#" class="border avatar" />
-                                    <div class="review-info">
-                                        <div class="d-flex justify-content-between">
-                                            <h4>
-                                                {{ value.comment }}
-                                                <span>{{ value.customer_name }}</span>
-                                            </h4>
-                                            <Rating :rating="value.rating" />
+                                        <img :src="value.customer_avatar" alt="#" class="border avatar" />
+                                        <div class="review-info">
+                                            <div class="d-flex justify-content-between">
+                                                <h4>
+                                                    {{ value.comment }}
+                                                    <span>{{ value.customer_name }}</span>
+                                                </h4>
+                                                <Rating :rating="value.rating" />
+                                            </div>
+
+                                            <img v-for="img in value.image" :key="img.id" :src="img.image_url" alt=""
+                                                class="w-25" @click="openImage(img.image_url)"
+                                                style="cursor: pointer" />
+                                            <hr>
+                                            <div v-if="value.reply_text" class="admin-reply-container">
+                                                <div class="admin-reply-header">
+                                                    <span class="admin-tag">Shop <i
+                                                            class="bi bi-cart-check-fill"></i></span>
+                                                </div>
+                                                <div class="admin-reply-text">
+                                                    <p>{{ value.reply_text }}</p>
+                                                </div>
+                                            </div>
                                         </div>
 
-                                        <img v-for="img in value.image" :key="img.id" :src="img.image_url" alt=""
-                                            class="w-25" @click="openImage(img.image_url)" style="cursor: pointer" />
-                                        <hr>
-                                        <div v-if="value.reply_text" class="admin-reply-container">
-                                            <div class="admin-reply-header">
-                                                <span class="admin-tag">Shop <i
-                                                        class="bi bi-cart-check-fill"></i></span>
-                                            </div>
-                                            <div class="admin-reply-text">
-                                                <p>{{ value.reply_text }}</p>
-                                            </div>
+
+
+                                        <!-- Modal xem ảnh -->
+                                        <div v-if="showModal" class="modal-backdrop" @click="closeImage">
+                                            <img :src="selectedImage" class="modal-image" />
                                         </div>
+
                                     </div>
+                                </template>
 
-
-
-                                    <!-- Modal xem ảnh -->
-                                    <div v-if="showModal" class="modal-backdrop" @click="closeImage">
-                                        <img :src="selectedImage" class="modal-image" />
-                                    </div>
-
-                                </div>
-                                 </template>
-                                
                                 <!-- End Single Review -->
 
                             </div>

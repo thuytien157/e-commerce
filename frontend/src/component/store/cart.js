@@ -1,6 +1,8 @@
 import { defineStore } from "pinia";
 import { ref, computed, watch } from "vue";
 import { useTokenUser } from "./useTokenUser";
+import Swal from "sweetalert2";
+import axios from "axios";
 
 export const useCartStore = defineStore("cart", () => {
   const store = useTokenUser();
@@ -42,7 +44,7 @@ export const useCartStore = defineStore("cart", () => {
   );
 
   const cartLength = computed(() => {
-    return items.value.filter(item => item.isCheck).length;
+    return items.value.filter((item) => item.isCheck).length;
   });
   const totalPrice = computed(() => {
     return items.value
@@ -54,6 +56,7 @@ export const useCartStore = defineStore("cart", () => {
     const existingItem = items.value.find(
       (item) => item.variantId === product.variantId
     );
+
     if (existingItem) {
       existingItem.quantity++;
     } else {
@@ -72,12 +75,33 @@ export const useCartStore = defineStore("cart", () => {
     items.value = [];
   };
 
-  const increment = (variantId) => {
+  const increment = async (variantId) => {
     const item = items.value.find((i) => i.variantId === variantId);
-    if (item) {
-      item.quantity++;
-      saveCart();
+    if (!item) {
+      console.log("Sản phẩm không tìm thấy trong giỏ hàng!");
+      return;
     }
+
+    const res = await axios.get(
+      `http://127.0.0.1:8000/api/variant/${variantId}`
+    );
+    const stockQuantity = res.data.variant.stock_quantity;
+
+    if (item.quantity >= stockQuantity) {
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "error",
+        title: `Số lượng sản phẩm đã đạt tối đa trong kho (${stockQuantity})!`,
+        showConfirmButton: false,
+        timer: 2000,
+        timerProgressBar: true,
+      });
+      return;
+    }
+
+    item.quantity++;
+    saveCart();
   };
 
   const decrement = (variantId) => {
@@ -92,8 +116,8 @@ export const useCartStore = defineStore("cart", () => {
   };
 
   const removeCheckedItems = () => {
-      items.value = items.value.filter(item => !item.isCheck);
-      saveCart();
+    items.value = items.value.filter((item) => !item.isCheck);
+    saveCart();
   };
 
   return {
@@ -108,6 +132,6 @@ export const useCartStore = defineStore("cart", () => {
     loadCart,
     quantity,
     checkbox,
-    removeCheckedItems
+    removeCheckedItems,
   };
 });
