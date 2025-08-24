@@ -178,7 +178,7 @@ const store = useTokenUser();
 const router = useRouter()
 const logout = async () => {
     try {
-        await axios.get("http://127.0.0.1:8000/api/logout", {
+        await axios.get(`${import.meta.env.VITE_URL_API}api/logout`, {
             headers: {
                 Authorization: `Bearer ${store.token}`,
             },
@@ -228,7 +228,7 @@ const fetchRevenue = async () => {
     if (revenueTo.value) params.append("to", revenueTo.value);
 
     const res = await fetch(
-        "http://127.0.0.1:8000/api/revenue?" + params.toString()
+        `${import.meta.env.VITE_URL_API}api/revenue?` + params.toString()
     );
     const data = await res.json();
 
@@ -292,7 +292,7 @@ const fetchStatus = async () => {
     if (statusTo.value) params.append("to", statusTo.value);
 
     const res = await fetch(
-        "http://127.0.0.1:8000/api/status-order?" + params.toString()
+        `${import.meta.env.VITE_URL_API}api/status-order?` + params.toString()
     );
     const data = await res.json();
 
@@ -331,7 +331,7 @@ let orderReviewChartInstance = null;
 const fetchOrderReview = async () => {
     loadingOrderReview.value = true;
     try {
-        const res = await axios.get("http://127.0.0.1:8000/api/order-review");
+        const res = await axios.get(`${import.meta.env.VITE_URL_API}api/order-review`);
         const data = res.data;
 
         const labels = ["Đã đánh giá", "Chưa đánh giá"];
@@ -397,7 +397,7 @@ const transformedBestSellers = ref([]);
 const fetchProductSelling = async () => {
     loadingBestSellers.value = true;
     try {
-        const res = await axios.get("http://127.0.0.1:8000/api/product-selling");
+        const res = await axios.get(`${import.meta.env.VITE_URL_API}api/product-selling`);
         transformedBestSellers.value = res.data.transformedBestSellers;
     } catch (error) {
         console.log(error);
@@ -410,7 +410,7 @@ const transformedSoldOuts = ref([]);
 const fetchProductSoldOut = async () => {
     loadingSoldOuts.value = true;
     try {
-        const res = await axios.get("http://127.0.0.1:8000/api/product-soldout");
+        const res = await axios.get(`${import.meta.env.VITE_URL_API}api/product-soldout`);
         transformedSoldOuts.value = res.data.transformedSoldOuts;
     } catch (error) {
         console.log(error);
@@ -423,7 +423,7 @@ const topCustomers = ref([]);
 const fetchTopCustomers = async () => {
     loadingTopCustomers.value = true;
     try {
-        const res = await axios.get("http://127.0.0.1:8000/api/top-customer");
+        const res = await axios.get(`${import.meta.env.VITE_URL_API}api/top-customer`);
         topCustomers.value = res.data.customers;
     } catch (error) {
         console.log(error);

@@ -91,7 +91,7 @@ const fetchOrderStatus = async () => {
         return;
     }
     try {
-        const res = await axios.get(`http://127.0.0.1:8000/api/order-info/${orderId.value}`);
+        const res = await axios.get(`${import.meta.env.VITE_URL_API}api/order-info/${orderId.value}`);
         orderInfo.value = res.data.order || {};
         paymentStatus.value = res.data.order?.status_payments || "";
         methodLabel.value = res.data.order?.payment_method || "Không xác định";
@@ -105,7 +105,7 @@ const fetchOrderStatus = async () => {
 
 const repayOrder = async (orderId) => {
     try {
-        const response = await axios.post(`http://127.0.0.1:8000/api/order/${orderId}/repay`);
+        const response = await axios.post(`${import.meta.env.VITE_URL_API}api/order/${orderId}/repay`);
         if (response.data.return_url) {
             window.location.href = response.data.return_url;
         }

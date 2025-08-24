@@ -44,7 +44,7 @@ const findCategoryInTree = (categories, id) => {
 
 const getAllCategory = async () => {
   try {
-    const res = await axios.get("http://127.0.0.1:8000/api/category");
+    const res = await axios.get(`${import.meta.env.VITE_URL_API}api/category`);
     categories.value = res.data.categories;
 
     if (isEdit.value) {
@@ -104,7 +104,7 @@ const insertCategory = async () => {
   try {
     if (isEdit.value) {
       const id = props.categoryId;
-      await axios.put(`http://127.0.0.1:8000/api/category/${id}`, {
+      await axios.put(`${import.meta.env.VITE_URL_API}api/category/${id}`, {
         name: newCategory.value.name,
         slug: newCategory.value.slug,
         parent_id: newCategory.value.parent_id,
@@ -120,7 +120,7 @@ const insertCategory = async () => {
         timerProgressBar: true,
       });
     } else {
-      await axios.post("http://127.0.0.1:8000/api/category", {
+      await axios.post(`${import.meta.env.VITE_URL_API}api/category`, {
         name: newCategory.value.name,
         slug: newCategory.value.slug,
         parent_id: newCategory.value.parent_id,

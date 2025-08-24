@@ -74,7 +74,7 @@ const emits = defineEmits(["user-loaded"]);
 const getUserById = async () => {
     isLoading.value = true;
     try {
-        const res = await axios.get("http://127.0.0.1:8000/api/user", {
+        const res = await axios.get(`${import.meta.env.VITE_URL_API}api/user`, {
             headers: {
                 Authorization: `Bearer ${store.token}`,
             },
@@ -96,7 +96,7 @@ const updateAvatar = async (file) => {
 
     try {
         const res = await axios.post(
-            "http://127.0.0.1:8000/api/update-avatar",
+            `${import.meta.env.VITE_URL_API}api/update-avatar`,
             formData,
             {
                 headers: {
@@ -155,7 +155,7 @@ const handleFileChange = (event) => {
 
 const logout = async () => {
     try {
-        await axios.get("http://127.0.0.1:8000/api/logout", {
+        await axios.get(`${import.meta.env.VITE_URL_API}api/logout`, {
             headers: {
                 Authorization: `Bearer ${store.token}`,
             },

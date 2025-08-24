@@ -15,10 +15,10 @@ const isLoading = ref(true);
 
 const getAllProduct = async () => {
   try {
-    const res = await axios.get("http://127.0.0.1:8000/api/product");
+    const res = await axios.get(`${import.meta.env.VITE_URL_API}api/product`);
     allProducts.value = res.data.products;
 
-    const response = await axios.get("http://127.0.0.1:8000/api/category");
+    const response = await axios.get(`${import.meta.env.VITE_URL_API}api/category`);
     allCategories.value = response.data.categories;
   } catch (error) {
     console.log(error);
@@ -87,7 +87,7 @@ const hiddenProduct = async (id, status) => {
 
     if (result.isConfirmed) {
       isLoading.value = true;
-      await axios.put(`http://127.0.0.1:8000/api/product/hidden/${id}`, {
+      await axios.put(`${import.meta.env.VITE_URL_API}api/product/hidden/${id}`, {
         status: status,
       });
       await getAllProduct();

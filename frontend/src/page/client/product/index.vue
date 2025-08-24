@@ -22,8 +22,8 @@ const selectedPrice = ref([]);
 const getStaticData = async () => {
   try {
     const [catRes, attrRes] = await Promise.all([
-      axios.get("http://127.0.0.1:8000/api/category"),
-      axios.get("http://127.00.0.1:8000/api/attribute"),
+      axios.get(`${import.meta.env.VITE_URL_API}api/category`),
+      axios.get(`${import.meta.env.VITE_URL_API}api/attribute`),
     ]);
     categories.value = catRes.data.categories;
     attributes.value = attrRes.data.attributes;
@@ -35,7 +35,7 @@ const getStaticData = async () => {
 const fetchProducts = async (page = 1) => {
   currentPage.value = page;
   try {
-    const url = `http://127.0.0.1:8000/api/product?page=${currentPage.value}&${queryParams.value}`;
+    const url = `${import.meta.env.VITE_URL_API}api/product?page=${currentPage.value}&${queryParams.value}`;
     const res = await axios.get(url);
 
     if (res.data && res.data.products) {
@@ -115,7 +115,7 @@ const productData = ref(null);
 const openModal = async (productId) => {
   showModal.value = true;
   const res = await axios.get(
-    `http://127.0.0.1:8000/api/products_detail/${productId}`
+    `${import.meta.env.VITE_URL_API}api/products_detail/${productId}`
   );
   productData.value = res.data.product;
 };

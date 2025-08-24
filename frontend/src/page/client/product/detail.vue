@@ -18,7 +18,7 @@ const getProductById = async (productId) => {
     isLoading.value = true
     try {
         const res = await axios.get(
-            `http://127.0.0.1:8000/api/products_detail/${productId}?${queryParams.value}`
+            `${import.meta.env.VITE_URL_API}api/products_detail/${productId}?${queryParams.value}`
         );
         product.value = res.data.product;
         // console.log("sss" + product.value);

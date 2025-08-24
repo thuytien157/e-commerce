@@ -76,7 +76,7 @@ import { ref } from "vue";
 import { useRouter } from "vue-router";
 const isLoading = ref(false);
 function redirectGG() {
-    window.location.href = "http://127.0.0.1:8000/api/google/redirect";
+    window.location.href = `${import.meta.env.VITE_URL_API}api/google/redirect`;
 }
 const email = ref("");
 const password = ref("");
@@ -89,7 +89,7 @@ const login = async () => {
 
     try {
         const res = await axios.post(
-            "http://127.0.0.1:8000/api/login",
+            `${import.meta.env.VITE_URL_API}api/login`,
             {
                 email: email.value,
                 password: password.value,

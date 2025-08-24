@@ -16,7 +16,7 @@ const isLoading = ref(true);
 
 const getAllUsers = async () => {
   try {
-    const res = await axios.get("http://127.0.0.1:8000/api/user-info", {
+    const res = await axios.get(`${import.meta.env.VITE_URL_API}api/user-info`, {
       headers: { Authorization: `Bearer ${store.token}` },
     });
     users.value = res.data.users;
@@ -163,7 +163,7 @@ const assignRole = async (id) => {
       cancelButtonText: "Hủy",
     });
     if (result.isConfirmed) {
-      await axios.put(`http://127.0.0.1:8000/api/assign-role/${id}`, null, {
+      await axios.put(`${import.meta.env.VITE_URL_API}api/assign-role/${id}`, null, {
         headers: { Authorization: `Bearer ${store.token}` },
       });
       Swal.fire({
@@ -200,7 +200,7 @@ const lockRole = async (id, status) => {
       cancelButtonText: "Hủy",
     });
     if (result.isConfirmed) {
-      await axios.put(`http://127.0.0.1:8000/api/lock/${id}`, {
+      await axios.put(`${import.meta.env.VITE_URL_API}api/lock/${id}`, {
         status: status
       }, {
         headers: { Authorization: `Bearer ${store.token}` },

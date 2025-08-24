@@ -19,7 +19,7 @@ const isLoading = ref(true);
 
 const getAllOrders = async () => {
   try {
-    const res = await axios.get("http://127.0.0.1:8000/api/order");
+    const res = await axios.get(`${import.meta.env.VITE_URL_API}api/order`);
     orders.value = res.data.orders;
   } catch (error) {
     console.log(error);
@@ -83,7 +83,7 @@ const updateStatus = async (id, status, cancellationReason = null) => {
     });
     if (result.isConfirmed) {
       isLoading.value = true;
-      await axios.put(`http://127.0.0.1:8000/api/order-update-status/${id}`, {
+      await axios.put(`${import.meta.env.VITE_URL_API}api/order-update-status/${id}`, {
         status: status,
         cancellation_reason: cancellationReason,
       });
@@ -198,7 +198,7 @@ const selectOrder = (order) => {
 
 const printInvoice = (record) => {
   axios
-    .get(`http://127.0.0.1:8000/api/invoice/${record}`, {
+    .get(`${import.meta.env.VITE_URL_API}api/invoice/${record}`, {
       responseType: "blob",
     })
     .then((response) => {

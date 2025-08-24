@@ -19,7 +19,7 @@ const getOrder = async () => {
     isLoading.value = true;
     try {
         const res = await axios.get(
-            "http://127.0.0.1:8000/api/order-history-user",
+            `${import.meta.env.VITE_URL_API}api/order-history-user`,
             {
                 headers: { Authorization: `Bearer ${store.token}` },
             }
@@ -37,7 +37,7 @@ const filterOrderByStatus = async (status) => {
     isLoading.value = true;
     try {
         const res = await axios.get(
-            `http://127.0.0.1:8000/api/order-history-user?status=${status}`,
+            `${import.meta.env.VITE_URL_API}api/order-history-user?status=${status}`,
             {
                 headers: { Authorization: `Bearer ${store.token}` },
             }
@@ -73,7 +73,7 @@ const getStatusClass = (status) => {
 const repayOrder = async (orderId) => {
     try {
         const response = await axios.post(
-            `http://127.0.0.1:8000/api/order/${orderId}/repay`
+            `${import.meta.env.VITE_URL_API}api/order/${orderId}/repay`
         );
         if (response.data.return_url) {
             window.location.href = response.data.return_url;
@@ -88,7 +88,7 @@ const openReviewModal = async (orderId) => {
     isLoadingModal.value = true;
     try {
         const res = await axios.get(
-            `http://127.0.0.1:8000/api/order-info/${orderId}`,
+            `${import.meta.env.VITE_URL_API}api/order-info/${orderId}`,
             {
                 headers: { Authorization: `Bearer ${store.token}` },
             }
@@ -167,7 +167,7 @@ const submitAllReviews = async () => {
             formData.append(`images[${index}]`, image);
         });
 
-        return axios.post("http://127.0.0.1:8000/api/review", formData, {
+        return axios.post(`${import.meta.env.VITE_URL_API}api/review`, formData, {
             headers: {
                 Authorization: `Bearer ${store.token}`,
             },

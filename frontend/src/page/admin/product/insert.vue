@@ -30,7 +30,7 @@ const allAttributes = ref([]);
 
 const fetchCategories = async () => {
   try {
-    const response = await axios.get("http://127.0.0.1:8000/api/category");
+    const response = await axios.get(`${import.meta.env.VITE_URL_API}api/category`);
     categories.value = response.data.categories;
   } catch (error) {
     console.log(error);
@@ -39,7 +39,7 @@ const fetchCategories = async () => {
 
 const fetchAttributes = async () => {
   try {
-    const response = await axios.get("http://127.0.0.1:8000/api/attribute");
+    const response = await axios.get(`${import.meta.env.VITE_URL_API}api/attribute`);
     allAttributes.value = response.data.attributes;
   } catch (error) {
     console.log(error);
@@ -195,7 +195,7 @@ const errors = ref({});
 const fetchProductDetail = async (id) => {
   try {
     const res = await axios.get(
-      `http://127.0.0.1:8000/api/products_detail/${id}`
+      `${import.meta.env.VITE_URL_API}api/products_detail/${id}`
     );
     const product = res.data.product;
 
@@ -281,7 +281,7 @@ const saveProduct = async () => {
     if (isEdit.value) {
       formData.append("_method", "PUT");
       res = await axios.post(
-        `http://127.0.0.1:8000/api/product/${props.productId}`,
+        `${import.meta.env.VITE_URL_API}api/product/${props.productId}`,
         formData,
         {
           headers: {
@@ -299,7 +299,7 @@ const saveProduct = async () => {
         timerProgressBar: true,
       });
     } else {
-      res = await axios.post("http://127.0.0.1:8000/api/product", formData, {
+      res = await axios.post(`${import.meta.env.VITE_URL_API}api/product`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },

@@ -13,7 +13,7 @@ const isLoading = ref(true);
 
 const getAllAttributes = async () => {
     try {
-        const res = await axios.get("http://127.0.0.1:8000/api/attribute");
+        const res = await axios.get(`${import.meta.env.VITE_URL_API}api/attribute`);
         allAttributes.value = res.data.attributes;
     } catch (error) {
         console.log(error);
@@ -67,7 +67,7 @@ const deleteAttribute = async (id) => {
 
         if (result.isConfirmed) {
             isLoading.value = true;
-            await axios.delete(`http://127.0.0.1:8000/api/attribute/${id}`);
+            await axios.delete(`${import.meta.env.VITE_URL_API}api/attribute/${id}`);
             await getAllAttributes();
             Swal.fire({
                 toast: true,
@@ -109,7 +109,7 @@ const deleteAttributeValue = async (id) => {
 
         if (result.isConfirmed) {
             isLoading.value = true;
-            await axios.delete(`http://127.0.0.1:8000/api/attribute-value/${id}`);
+            await axios.delete(`${import.meta.env.VITE_URL_API}api/attribute-value/${id}`);
             await getAllAttributes();
             Swal.fire({
                 toast: true,

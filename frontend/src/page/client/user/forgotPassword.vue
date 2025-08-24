@@ -96,7 +96,7 @@ const seconds = ref(0);
 const sendMail = async () => {
     try {
         isLoading.value = true;
-        const res = await axios.post("http://127.0.0.1:8000/api/sendcode", {
+        const res = await axios.post(`${import.meta.env.VITE_URL_API}api/sendcode`, {
             email: email.value,
         });
         Swal.fire({
@@ -214,7 +214,7 @@ const verifyResetCode = async () => {
     }
     try {
         isLoading.value = true;
-        const res = await axios.post("http://127.0.0.1:8000/api/verify-code", {
+        const res = await axios.post(`${import.meta.env.VITE_URL_API}api/verify-code`, {
             email: email.value,
             token: otpCode.value,
         });
@@ -257,7 +257,7 @@ const password_confirm = ref("");
 const resetPass = async () => {
     isLoading.value = true;
     try {
-        const res = await axios.post("http://127.0.0.1:8000/api/reset-password", {
+        const res = await axios.post(`${import.meta.env.VITE_URL_API}api/reset-password`, {
             email: email.value,
             password: password.value,
             password_confirmation: password_confirm.value,

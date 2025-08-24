@@ -18,7 +18,7 @@ const getOrderbyId = async (orderId) => {
     try {
         isLoading.value = true;
         const res = await axios.get(
-            `http://127.0.0.1:8000/api/order-info/${orderId}`
+            `${import.meta.env.VITE_URL_API}api/order-info/${orderId}`
         );
         order.value = res.data.order;
         // console.log(order.value);
@@ -61,7 +61,7 @@ const check = ref(false)
 const errors = ref({})
 const cancelOrder = async (orderId) => {
     try {
-        await axios.put("http://127.0.0.1:8000/api/cancel-order", {
+        await axios.put(`${import.meta.env.VITE_URL_API}api/cancel-order`, {
             id: orderId,
             cancellation_reason: cancellation_reason.value
         });
@@ -153,7 +153,7 @@ const newAddress = computed(() => {
 
 const updateAddressOrder = async (orderId) => {
     try {
-        await axios.put("http://127.0.0.1:8000/api/update-order-address", {
+        await axios.put(`${import.meta.env.VITE_URL_API}api/update-order-address`, {
             id: orderId,
             address: newAddress.value,
             provinces: selectedProvince.value,
@@ -184,7 +184,7 @@ const updateAddressOrder = async (orderId) => {
 
 
 const printInvoice = (record) => {
-  axios.get(`http://127.0.0.1:8000/api/invoice/${record}`, {
+  axios.get(`${import.meta.env.VITE_URL_API}api/invoice/${record}`, {
     responseType: 'blob'
   })
     .then(response => {

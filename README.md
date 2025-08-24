@@ -28,7 +28,7 @@ Dự án được chia thành 2 phần chính:
 
 ### Chức năng dành cho Khách hàng
 
-* Người dùng có thể  **đăng nhập/đăng ký** , khôi phục mật khẩu và quản lý tối đa 3 địa chỉ nhận hàng.
+* Người dùng có thể  **đăng nhập/đăng ký** bằng google , khôi phục mật khẩu và quản lý tối đa 3 địa chỉ nhận hàng.
 * Xem **danh sách sản phẩm** với các bộ lọc: mới, bán chạy, đánh giá cao, theo danh mục hoặc theo giá.
 * Xem **chi tiết sản phẩm** và thêm **các biến thể** (màu sắc, kích cỡ) vào giỏ hàng.
 * Thực hiện **đặt hàng** với tài khoản hoặc khách vãng lai; hỗ trợ thanh toán COD hoặc online qua  **VNPay** .

@@ -244,7 +244,7 @@ const fetchAddressForEdit = async (addressId) => {
 
     try {
         const res = await axios.get(
-            `http://127.0.0.1:8000/api/addresses/${addressId}`,
+            `${import.meta.env.VITE_URL_API}api/addresses/${addressId}`,
             {
                 headers: { Authorization: `Bearer ${store.token}` }
             }
@@ -283,7 +283,7 @@ const saveAddress = async () => {
     try {
         if (isEditMode.value) {
             await axios.put(
-                `http://127.0.0.1:8000/api/edit-address/${props.addressId}`,
+                `${import.meta.env.VITE_URL_API}api/edit-address/${props.addressId}`,
                 payload,
                 { headers: { Authorization: `Bearer ${store.token}` } }
             );
@@ -298,7 +298,7 @@ const saveAddress = async () => {
             });
         } else {
             await axios.post(
-                "http://127.0.0.1:8000/api/insert-address",
+                `${import.meta.env.VITE_URL_API}api/insert-address`,
                 payload,
                 { headers: { Authorization: `Bearer ${store.token}` } }
             );

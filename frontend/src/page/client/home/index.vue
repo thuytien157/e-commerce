@@ -18,8 +18,8 @@ const selectedCategoryTopRated = ref(null);
 
 const getAllProducts = async () => {
   try {
-    const res = await axios.get("http://127.0.0.1:8000/api/product");
-    const response = await axios.get("http://127.0.0.1:8000/api/category");
+    const res = await axios.get(`${import.meta.env.VITE_URL_API}api/product`);
+    const response = await axios.get(`${import.meta.env.VITE_URL_API}api/category`);
     top_rated.value = res.data.top_rated;
     console.log("sss" + top_rated.value);
 
@@ -35,7 +35,7 @@ const getAllProducts = async () => {
 
 const sortProducts = async (value, section) => {
   try {
-    const apiUrl = `http://127.0.0.1:8000/api/product?categories=${value}`;
+    const apiUrl = `${import.meta.env.VITE_URL_API}api/product?categories=${value}`;
     const res = await axios.get(apiUrl);
 
     if (section === "new_arrivals") {
@@ -59,7 +59,7 @@ const productData = ref(null);
 const openModal = async (productId) => {
   showModal.value = true;
   const res = await axios.get(
-    `http://127.0.0.1:8000/api/products_detail/${productId}`
+    `${import.meta.env.VITE_URL_API}api/products_detail/${productId}`
   );
   productData.value = res.data.product;
   cartStore.quantity = 1

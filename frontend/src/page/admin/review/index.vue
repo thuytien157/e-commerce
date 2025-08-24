@@ -17,7 +17,7 @@ const isLoading = ref(true);
 
 const getAllReviews = async () => {
   try {
-    const res = await axios.get("http://127.0.0.1:8000/api/review");
+    const res = await axios.get(`${import.meta.env.VITE_URL_API}api/review`);
     reviews.value = res.data.reviews;
   } catch (error) {
     console.log(error);
@@ -83,7 +83,7 @@ const replyReview = async () => {
 
     if (result.isConfirmed) {
       await axios.put(
-        `http://127.0.0.1:8000/api/review/reply/${id}`,
+        `${import.meta.env.VITE_URL_API}api/review/reply/${id}`,
         {
           reply_text: reply_text.value,
         },
@@ -122,7 +122,7 @@ const hideReview = async (id) => {
     });
 
     if (result.isConfirmed) {
-      await axios.put(`http://127.0.0.1:8000/api/review/hide/${id}`);
+      await axios.put(`${import.meta.env.VITE_URL_API}api/review/hide/${id}`);
       await getAllReviews();
       Swal.fire({
         toast: true,

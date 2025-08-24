@@ -46,7 +46,7 @@ const totalPayment = computed(() => {
 const getUserById = async () => {
   try {
     if (store.token) {
-      const res = await axios.get("http://127.0.0.1:8000/api/user", {
+      const res = await axios.get(`${import.meta.env.VITE_URL_API}api/user`, {
         headers: {
           Authorization: `Bearer ${store.token}`,
         },
@@ -123,7 +123,7 @@ const fetchServices = async () => {
     return;
   }
   try {
-    const res = await axios.post("http://127.0.0.1:8000/api/ghn/service", {
+    const res = await axios.post(`${import.meta.env.VITE_URL_API}api/ghn/service`, {
       to_district_id: selectedDistrict.value,
     });
     services.value = res.data;
@@ -249,7 +249,7 @@ const order = async () => {
       return;
     }
 
-    const res = await axios.post("http://127.0.0.1:8000/api/order", orderData);
+    const res = await axios.post(`${import.meta.env.VITE_URL_API}api/order`, orderData);
 
     if (res.data.return_url) {
       window.location.href = res.data.return_url;

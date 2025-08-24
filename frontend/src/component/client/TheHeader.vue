@@ -1,6 +1,4 @@
 <template>
-  <!-- top header -->
-
   <div class="header position-sticky top-0 bg-white bg-opacity-90 shadow-sm z-3">
     <div class="container">
       <div class="d-flex align-items-center pt-2 pb-2 border-bottom">
@@ -79,9 +77,6 @@
 
                       <i class="bi bi-x-lg" @click.prevent="cartStore.removeItem(item.variantId)"></i>
                     </template>
-
-
-
                   </li>
                 </ul>
                 <ul class="list-unstyled shopping-list m-0 p-0" v-else>
@@ -106,6 +101,26 @@
           <button class="navbar-toggler me-3" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasMenu">
             <span class="navbar-toggler-icon"></span>
           </button>
+          
+          <div class="me-2">
+            <router-link to="/login" class="text-decoration-none text-primary-black" v-if="!store.username">
+              <button class="icon-btn me-2">
+                <i class="bi bi-people"></i>
+              </button>
+            </router-link>
+            <template v-else>
+              <div class="d-flex align-items-center">
+                <router-link to="/account/address-list" class="text-decoration-none me-2" style="color: #3866bc">
+                  <p v-if="store.username" class="mb-0 username-display">
+                    {{ store.username }}
+                  </p>
+                </router-link>
+                <button class="icon-btn" @click="logout" title="Đăng xuất">
+                  <i class="bi bi-box-arrow-right"></i>
+                </button>
+              </div>
+            </template>
+          </div>
           <div class="cart-dropdown position-relative">
             <a href="/cart" class="icon-btn text-dark" title="Giỏ hàng">
               <i class="bi bi-cart position-relative">
@@ -156,7 +171,7 @@
             </button>
             <input type="text" class="input-search" placeholder="search..." />
           </div>
-
+          
           <div class="d-flex flex-column align-items-start">
             <a href="/login" class="text-decoration-none text-primary-black">
               <button class="icon-btn text-dark mb-2">
@@ -177,6 +192,7 @@
     </div>
   </div>
 </template>
+
 <script setup>
 import axios from "axios";
 import { useTokenUser } from "../store/useTokenUser";
@@ -189,7 +205,7 @@ const cartStore = useCartStore();
 const router = useRouter()
 const logout = async () => {
   try {
-    await axios.get("http://127.0.0.1:8000/api/logout", {
+    await axios.get(`${import.meta.env.VITE_URL_API}api/logout`, {
       headers: {
         Authorization: `Bearer ${store.token}`,
       },

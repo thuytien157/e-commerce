@@ -13,7 +13,7 @@ const isLoading = ref(true);
 
 const getAllCategories = async () => {
     try {
-        const res = await axios.get("http://127.0.0.1:8000/api/category");
+        const res = await axios.get(`${import.meta.env.VITE_URL_API}api/category`);
         allCategories.value = res.data.categories;
     } catch (error) {
         console.log(error);
@@ -66,7 +66,7 @@ const deleteCategory = async (id) => {
 
         if (result.isConfirmed) {
             isLoading.value = true;
-            await axios.delete(`http://127.0.0.1:8000/api/category/${id}`);
+            await axios.delete(`${import.meta.env.VITE_URL_API}api/category/${id}`);
             await getAllCategories();
             Swal.fire({
                 toast: true,

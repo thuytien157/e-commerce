@@ -45,7 +45,7 @@ const insertAttribute = async () => {
   try {
     if (isEdit.value) {
       const id = props.attributeId;
-      await axios.put(`http://127.0.0.1:8000/api/attribute/${id}`, {
+      await axios.put(`${import.meta.env.VITE_URL_API}api/attribute/${id}`, {
         name: newAttribute.value.name,
         type: newAttribute.value.type,
         values: filteredValues,
@@ -60,7 +60,7 @@ const insertAttribute = async () => {
         timerProgressBar: true,
       });
     } else {
-      await axios.post("http://127.0.0.1:8000/api/attribute", {
+      await axios.post(`${import.meta.env.VITE_URL_API}api/attribute`, {
         name: newAttribute.value.name,
         type: newAttribute.value.type,
         values: filteredValues,
@@ -89,7 +89,7 @@ const insertAttribute = async () => {
 const fetchAttribute = async (id) => {
   try {
     const res = await axios.get(
-      `http://127.0.0.1:8000/api/attribute/${id}/edit`
+      `${import.meta.env.VITE_URL_API}api/attribute/${id}/edit`
     );
     const attributeData = res.data.attribute;
     newAttribute.value.name = attributeData.name;

@@ -116,20 +116,33 @@ class Product extends Controller
                 break;
         }
 
-        $products = $baseQuery->groupBy('products.id')->paginate($perPage);
+        $products = $baseQuery
+        ->select('products.*')
+        ->groupBy('products.id')
+        ->paginate($perPage);
 
         $transformedProducts = $this->transformProducts($products->items());
 
-        $newArrivalsQuery = clone $baseQuery;
-        $newArrivals = $newArrivalsQuery->latest('created_at')->take(4)->get();
-        $transformedNewArrivals = $this->transformProducts($newArrivals);
+        $newArrivals = ModelsProduct::with('variants.attributes')
+        ->latest('created_at')
+        ->take(4)
+        ->get();
+    $transformedNewArrivals = $this->transformProducts($newArrivals);
 
-        $bestSellersQuery = clone $baseQuery;
-        $bestSellers = $bestSellersQuery->withSum('orderItems', 'quantity')->orderByDesc('order_items_sum_quantity')->take(8)->get();
-        $transformedBestSellers = $this->transformProducts($bestSellers);
+    // Sửa lỗi: Tạo một truy vấn mới cho Best Sellers
+    $bestSellers = ModelsProduct::with('variants.attributes', 'orderItems')
+        ->withSum('orderItems', 'quantity')
+        ->orderByDesc('order_items_sum_quantity')
+        ->take(8)
+        ->get();
+    $transformedBestSellers = $this->transformProducts($bestSellers);
 
-        $topRatedProductsQuery = clone $baseQuery;
-        $topRatedProducts = $topRatedProductsQuery->withAvg('reviews as average_rating', 'rating')->orderByDesc('average_rating')->take(4)->get();
+    // Sửa lỗi: Tạo một truy vấn mới cho Top Rated
+    $topRatedProducts = ModelsProduct::with('variants.attributes', 'reviews')
+        ->withAvg('reviews as average_rating', 'rating')
+        ->orderByDesc('average_rating')
+        ->take(4)
+        ->get();
         $transformedTopRated = $this->transformProducts($topRatedProducts);
 
         return response()->json([
