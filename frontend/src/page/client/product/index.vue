@@ -190,8 +190,8 @@ onMounted(async () => {
                   </div>
                 </div>
                 <div v-else :class="{
-                  'd-flex gap-4': attribute.name !== 'Màu sắc',
-                  'd-flex gap-1 mt-2': attribute.name === 'Màu sắc',
+                  'd-flex gap-4 flex-wrap': attribute.name !== 'Màu sắc',
+                  'd-flex gap-1 mt-2 flex-wrap': attribute.name === 'Màu sắc',
                 }">
                   <div v-for="value in attribute.attribute_values" :key="value.id">
                     <template v-if="attribute.name === 'Màu sắc'">
