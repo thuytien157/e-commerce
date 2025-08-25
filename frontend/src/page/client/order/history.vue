@@ -10,7 +10,7 @@ import Swal from "sweetalert2";
 const store = useTokenUser();
 const orders = ref(null);
 const isLoading = ref(true);
-const currentStatus = ref("pendingConfirmation");
+const currentStatus = ref("");
 const orderToReview = ref(null);
 const isLoadingReview = ref(false);
 const errors = ref({});
@@ -235,6 +235,10 @@ onMounted(async () => {
                 <div class="col-12 col-md-8 col-lg-9 bg-white p-3" style="border-radius: 10px">
                     <h4 class="fw-bold mb-4">Đơn hàng đã mua</h4>
                     <div class="order-tabs d-flex flex-nowrap overflow-auto gap-3 mb-1">
+                        <button class="tab-item" :class="{ active: currentStatus === '' }"
+                            @click="filterOrderByStatus('')">
+                            Tất cả
+                        </button>
                         <button class="tab-item" :class="{ active: currentStatus === 'pendingConfirmation' }"
                             @click="filterOrderByStatus('pendingConfirmation')">
                             Chờ xác nhận

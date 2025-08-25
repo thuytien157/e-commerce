@@ -68,7 +68,7 @@ class Review extends Controller
             $review->order_item_id = $orderItem->id;
             $review->rating = (float)$request->rating;
             $review->comment = $request->comment;
-            $review->create_at = SupportCarbon::now();
+            $review->created_at = SupportCarbon::now();
             $review->save();
 
             if ($request->hasFile('images')) {

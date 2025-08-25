@@ -1,4 +1,5 @@
 <script setup>
+import router from "@/router";
 import axios from "axios";
 import Swal from "sweetalert2";
 import { computed, onMounted, ref, watch } from "vue";
@@ -298,6 +299,7 @@ const saveProduct = async () => {
         timer: 2000,
         timerProgressBar: true,
       });
+        route.push('/admin/product')
     } else {
       res = await axios.post(`${import.meta.env.VITE_URL_API}api/product`, formData, {
         headers: {
@@ -314,7 +316,7 @@ const saveProduct = async () => {
         timerProgressBar: true,
       });
     }
-
+    route.push('/admin/product')
     errors.value = {};
     if (!isEdit.value) {
       productform.value = {
@@ -414,8 +416,8 @@ onMounted(() => {
             <div class="mb-3 row">
               <div class="col-6">
                 <label for="name" class="form-label">Tên sản phẩm</label
-                  :disabled="isEdit && !productform.order_count"><br />
-                <input type="text" class="form-control" id="name" v-model="productform.name" />
+                  ><br />
+                <input type="text" class="form-control" id="name" :disabled="isEdit && !productform.order_count" v-model="productform.name" />
               </div>
               <div class="col-6">
                 <label for="price" class="form-label">Giá</label><br />

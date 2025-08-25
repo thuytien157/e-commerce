@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Events\OrderUpdated;
-use App\Jobs\sendMail;
+use App\Jobs\SendMail;
 use App\Models\Order as ModelsOrder;
 use App\Models\OrderItem;
 use App\Models\Variant;

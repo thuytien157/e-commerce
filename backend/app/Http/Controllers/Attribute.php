@@ -99,7 +99,7 @@ class Attribute extends Controller
     public function update(Request $request, string $id)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|unique:attributes,name,'.$id,
+            'name' => 'required|string|unique:attributes,name,' . $id,
             'type' => 'required|string',
             'values' => 'required|array|min:1',
         ], [
@@ -118,22 +118,32 @@ class Attribute extends Controller
         $attribute = ModelsAttribute::find($id);
         $attribute->name = $request->name;
         $attribute->type = $request->type;
+        $attribute->save();
 
-        // Xóa và thêm lại các giá trị thuộc tính
-        $attribute->attributeValues()->delete();
-        if ($attribute->save()) {
-            foreach ($request->values as $key => $value) {
-                $attribute_value = new AttributeValue();
-                $attribute_value->attribute_id = $attribute->id;
-                $attribute_value->value_name = $value;
-                $attribute_value->save();
-            }
+        $newValues = $request->values;
 
-            return response()->json([
-                'mess' => 'Sửa thành công'
-            ], 200);
+        $existingValues = $attribute->attributeValues()->pluck('value_name', 'id')->toArray();
+
+        foreach ($newValues as $valueName) {
+            $attributeValue = $attribute->attributeValues()->firstOrCreate(
+                ['value_name' => $valueName],
+                ['attribute_id' => $attribute->id]
+            );
         }
+
+        foreach ($attribute->attributeValues as $attrValue) {
+            if (!in_array($attrValue->value_name, $newValues)) {
+                if ($attrValue->variants()->count() == 0) {
+                    $attrValue->delete();
+                }
+            }
+        }
+
+        return response()->json([
+            'mess' => 'Sửa thành công'
+        ], 200);
     }
+
 
     /**
      * Remove the specified resource from storage.

@@ -413,7 +413,6 @@ class User extends Controller
             $request->all(),
             [
                 'customer_name' => 'required|string',
-                // Sửa rule digits thành 10 hoặc sử dụng regex để chặt chẽ hơn
                 'phone' => ['required', 'regex:/^0[0-9]{9}$/'],
                 ValidationRule::unique('addresses', 'phone')->ignore($address_id),
                 'address' => 'required',
@@ -453,10 +452,12 @@ class User extends Controller
         $address->address = $request->address;
         if ($request->default) {
             Address::where('customer_id', $id)
+                ->where('id', '!=', $address->id)
                 ->update(['default' => false]);
+            $address->default = true;
+        } else {
+            $address->default = false;
         }
-        $address->default = $request->default;
-
         if ($address->save()) {
             return response()->json([
                 'mess' => 'Sửa thành công'

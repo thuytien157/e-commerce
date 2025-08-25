@@ -41,10 +41,6 @@
             <hr class="my-3" />
 
             <div class="list-group list-group-flush text-start">
-                <a href="/update-user" class="list-group-item list-group-item-action text-decoration-none rounded mb-2">
-                    <i class="bi bi-person me-2"></i>
-                    Thông tin tài khoản
-                </a>
                 <router-link to="/order-history"
                     class="list-group-item list-group-item-action text-decoration-none rounded mb-2">
                     <i class="bi bi-box-seam me-2"></i>

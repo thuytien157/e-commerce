@@ -251,6 +251,7 @@ const order = async () => {
 
     const res = await axios.post(`${import.meta.env.VITE_URL_API}api/order`, orderData);
 
+    cartStore.removeCheckedItems();
     if (res.data.return_url) {
       window.location.href = res.data.return_url;
       return;
@@ -274,7 +275,7 @@ const order = async () => {
       });
     }
 
-    cartStore.removeCheckedItems();
+    
   } catch (error) {
     if (error.response && error.response.status === 422) {
       errors.value = {};
