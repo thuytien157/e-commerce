@@ -299,7 +299,7 @@ const saveProduct = async () => {
         timer: 2000,
         timerProgressBar: true,
       });
-        route.push('/admin/product')
+        
     } else {
       res = await axios.post(`${import.meta.env.VITE_URL_API}api/product`, formData, {
         headers: {
@@ -316,7 +316,7 @@ const saveProduct = async () => {
         timerProgressBar: true,
       });
     }
-    route.push('/admin/product')
+    
     errors.value = {};
     if (!isEdit.value) {
       productform.value = {
