@@ -249,7 +249,7 @@ onMounted(async () => {
                 <li>
                   Sản phẩm
                   <a
-                    :href="`http://localhost:5173/product-detail/${review.product.variants[0].slug}/${review.product.id}`">{{
+                    :href="`https://shopgrid-vue.netlify.app/${review.product.variants[0].slug}/${review.product.id}`">{{
                     review.product.id }}</a>
                 </li>
               </ul>
