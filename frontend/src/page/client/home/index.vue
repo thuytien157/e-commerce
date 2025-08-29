@@ -35,7 +35,7 @@ const getAllProducts = async () => {
 
 const sortProducts = async (value, section) => {
   try {
-    const apiUrl = `${import.meta.env.VITE_URL_API}api/product?categories=${value}`;
+    const apiUrl = `${import.meta.env.VITE_URL_API}api/product?page=1&categories=${value}`;
     const res = await axios.get(apiUrl);
 
     if (section === "new_arrivals") {
