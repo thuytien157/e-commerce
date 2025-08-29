@@ -16,15 +16,27 @@ const selectedCategoryNewArrivals = ref(null);
 const selectedCategoryBestSellers = ref(null);
 const selectedCategoryTopRated = ref(null);
 
+const originalData = ref({
+  new_arrivals: [],
+  best_sellers: [],
+  top_rated: []
+});
+
 const getAllProducts = async () => {
   try {
     const res = await axios.get(`${import.meta.env.VITE_URL_API}api/product`);
     const response = await axios.get(`${import.meta.env.VITE_URL_API}api/category`);
-    top_rated.value = res.data.top_rated;
-    console.log("sss" + top_rated.value);
 
-    best_sellers.value = res.data.best_sellers;
-    new_arrivals.value = res.data.new_arrivals;
+    // Lưu dữ liệu gốc để filter frontend
+    originalData.value.new_arrivals = res.data.new_arrivals;
+    originalData.value.best_sellers = res.data.best_sellers;
+    originalData.value.top_rated = res.data.top_rated;
+
+    // Gán dữ liệu hiển thị mặc định
+    new_arrivals.value = [...originalData.value.new_arrivals];
+    best_sellers.value = [...originalData.value.best_sellers];
+    top_rated.value = [...originalData.value.top_rated];
+
     categories.value = response.data.categories;
   } catch (error) {
     console.log(error);
@@ -33,25 +45,30 @@ const getAllProducts = async () => {
   }
 };
 
-const sortProducts = async (value, section) => {
-  try {
-    const apiUrl = `${import.meta.env.VITE_URL_API}api/product?page=1&categories=${value}`;
-    const res = await axios.get(apiUrl);
+const sortProducts = (value, section) => {
+  let source = originalData.value[section]; 
+  let filtered = [];
 
-    if (section === "new_arrivals") {
-      new_arrivals.value = res.data.new_arrivals;
-      selectedCategoryNewArrivals.value = value;
-    } else if (section === "best_sellers") {
-      best_sellers.value = res.data.best_sellers;
-      selectedCategoryBestSellers.value = value;
-    } else if (section === "top_rated") {
-      top_rated.value = res.data.top_rated;
-      selectedCategoryTopRated.value = value;
-    }
-  } catch (error) {
-    console.log(error);
+  if (value === "all") {
+    filtered = [...source];
+  } else {
+    filtered = source.filter(product =>
+      product.category_id === value
+    );
+  }
+
+  if (section === "new_arrivals") {
+    new_arrivals.value = filtered;
+    selectedCategoryNewArrivals.value = value;
+  } else if (section === "best_sellers") {
+    best_sellers.value = filtered;
+    selectedCategoryBestSellers.value = value;
+  } else if (section === "top_rated") {
+    top_rated.value = filtered;
+    selectedCategoryTopRated.value = value;
   }
 };
+
 
 
 const showModal = ref(false);
