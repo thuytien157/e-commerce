@@ -527,7 +527,7 @@ onMounted(() => {
                   </div>
                   <div class="mb-3">
                     <label class="form-label">Ảnh chính</label><br />
-                    <input :disabled="!variant.order_count == 0" type="file" class="form-control"
+                    <input type="file" class="form-control"
                       @change="onMainImageChange($event, index)" />
                     <div v-if="variant.image_preview" class="mt-2 text-center">
                       <img :src="variant.image_preview" @click="openImage(variant.image_preview)" alt="Variant Image"
@@ -536,7 +536,7 @@ onMounted(() => {
                   </div>
                   <div class="mb-3">
                     <label class="form-label">Ảnh chi tiết</label>
-                    <input type="file" :disabled="!variant.order_count == 0" class="form-control" multiple
+                    <input type="file" class="form-control" multiple
                       @change="onDetailImagesChange($event, index)" />
                     <div v-if="variant.images_preview.length" class="mt-2 text-center">
                       <div v-for="(img, i) in variant.images_preview" :key="i" @click="openImage(img)"
