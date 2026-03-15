@@ -445,13 +445,7 @@ watch([selectedDistrict, selectedWard], async () => {
 
             <div>
               <h6 class="mb-2">Phương thức thanh toán</h6>
-              <div class="form-check">
-                <input class="form-check-input" type="radio" name="payment" id="vnpay" value="VNPAY"
-                  v-model="payment_method" />
-                <label class="form-check-label d-flex align-items-center" for="vnpay">
-                  <span class="me-2">Thanh toán qua VNPAY</span>
-                </label>
-              </div>
+              
               <div class="form-check">
                 <input class="form-check-input" type="radio" name="payment" id="cod" value="COD"
                   v-model="payment_method" />
